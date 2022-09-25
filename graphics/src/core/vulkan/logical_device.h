@@ -49,7 +49,9 @@ namespace undicht {
             void submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {});
             void submitOnTransferQueue(const VkCommandBuffer& cmd);
 
-            void presentOnPresentQueue(const VkSwapchainKHR& swap_chain, const uint32_t& image_index, const std::vector<VkSemaphore>& wait_on = {});
+            void presentOnPresentQueue(const VkSwapchainKHR& swap_chain, uint32_t image_index, const std::vector<VkSemaphore>& wait_on = {});
+
+            uint32_t findMemory(VkMemoryType mem_type) const;
 
             void waitForProcessesToFinish() const;
 

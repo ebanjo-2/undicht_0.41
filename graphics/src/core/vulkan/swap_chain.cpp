@@ -20,7 +20,7 @@ namespace undicht {
 
             // choosing the features of the swap chain
             _surface_format = chooseSurfaceFormat(_physical_device_handle, surface);
-            _present_mode = choosePresentMode(_physical_device_handle, surface);
+            _present_mode = choosePresentMode(_physical_device_handle, surface, preferred);
             _swap_image_count = chooseSwapImageCount(_physical_device_handle, surface);
 
             // "recreating" the swap chain
@@ -94,7 +94,7 @@ namespace undicht {
         uint32_t SwapChain::acquireNextSwapImage(VkSemaphore signal_sem, VkFence signal_fen) {
 
             uint32_t next_image;
-            vkAcquireNextImageKHR(_device_handle, _swap_chain, UINT32_MAX, signal_sem, signal_fen, &next_image);
+            vkAcquireNextImageKHR(_device_handle, _swap_chain, UINT64_MAX, signal_sem, signal_fen, &next_image);
 
             return next_image;
         }

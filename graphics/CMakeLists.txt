@@ -34,6 +34,9 @@ set(GRAPHICS_CORE_SOURCES
     
     src/core/vulkan/pipeline.h
     src/core/vulkan/pipeline.cpp
+    
+    src/core/vulkan/buffer.h
+    src/core/vulkan/buffer.cpp
 )
 
 set(GRAPHICS_WINDOW_SOURCES

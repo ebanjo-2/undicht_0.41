@@ -12,13 +12,15 @@ class HelloWorldApp :public undicht::Engine {
 
 protected:
 
-    // sync objects
-    undicht::vulkan::Fence _render_finished_fence;
-    undicht::vulkan::Semaphore _swap_image_ready;
-    undicht::vulkan::Semaphore _render_finished_semaphore;
+    uint32_t _current_frame = 0;
+
+    // sync objects (one for every swap image)
+    std::vector<undicht::vulkan::Fence> _render_finished_fences;
+    std::vector<undicht::vulkan::Semaphore> _swap_image_ready;
+    std::vector<undicht::vulkan::Semaphore> _render_finished_semaphores;
 
     // commands
-    undicht::vulkan::CommandBuffer _draw_command;
+    std::vector<undicht::vulkan::CommandBuffer> _draw_commands;
 
     // Shader
     undicht::vulkan::Shader _shader;

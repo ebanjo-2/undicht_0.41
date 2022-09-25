@@ -22,7 +22,7 @@ namespace undicht {
          _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());
 
          // initializing the swap chain for the main window
-         _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_FIFO_KHR);
+         _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_FIFO_RELAXED_KHR);
 
          // creating a render-pass that can be used to draw to the swap images
          _default_render_pass.addOutputAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);

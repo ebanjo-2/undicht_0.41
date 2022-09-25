@@ -1,5 +1,6 @@
 #include "logical_device.h"
 #include "set"
+#include "debug.h"
 
 namespace undicht {
 
@@ -81,11 +82,32 @@ namespace undicht {
 
         }
 
-        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, const uint32_t& image_index, const std::vector<VkSemaphore>& wait_on) {
+        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, uint32_t image_index, const std::vector<VkSemaphore>& wait_on) {
 
             VkPresentInfoKHR info = createPresentInfo(swap_chain, image_index, wait_on);
             vkQueuePresentKHR(_present_queue, &info);
 
+        }
+
+        uint32_t LogicalDevice::findMemory(VkMemoryType mem_type) const {
+
+            // getting the physical devices memory properties
+            VkPhysicalDeviceMemoryProperties properties;
+            vkGetPhysicalDeviceMemoryProperties(_physical_device, &properties);
+
+            // searching for the right memory
+            for(int i = 0; i < properties.memoryTypeCount; i++) {
+
+                if(!((1 << i) & mem_type.heapIndex))
+                    continue; // heapIndex is used as a bitfield which specifies the types that can be used
+
+                if(properties.memoryTypes[i].propertyFlags == mem_type.propertyFlags)
+                    return i;
+
+            }
+
+            UND_ERROR << "failed to find the right type of vram\n";
+            return 0;
         }
 
         void LogicalDevice::waitForProcessesToFinish() const {

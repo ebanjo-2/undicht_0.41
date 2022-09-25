@@ -22,7 +22,7 @@ namespace undicht {
             bool m_fullscreen = false;
             uint32_t m_width = 0;
             uint32_t m_height = 0;
-            bool m_has_resized = 0; // since the last frame
+            bool m_has_resized = false; // since the last frame
 
             public:
 

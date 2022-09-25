@@ -28,7 +28,6 @@ namespace undicht {
         vulkan::RenderPass _default_render_pass;
         std::vector<vulkan::Framebuffer> _default_framebuffer; // one for each image of the swap chain
 
-
         bool _should_stop = false;
 
     public:

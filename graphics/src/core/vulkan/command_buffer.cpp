@@ -12,11 +12,9 @@ namespace undicht {
 
         }
 
-        void CommandBuffer::cleanUp() {
-
+        /*void CommandBuffer::cleanUp() {
             // the command buffer gets destroyed with the command pool
-
-        }
+        }*/
 
         const VkCommandBuffer& CommandBuffer::getCommandBuffer() const {
 
@@ -41,6 +39,8 @@ namespace undicht {
 
         }
 
+        ////////////////////////////////////////// graphics commands //////////////////////////////////////
+
         void CommandBuffer::beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value) {
 
             VkRenderPassBeginInfo info = createRenderPassBeginInfo(render_pass, frame_buffer, extent, clear_value);
@@ -63,6 +63,12 @@ namespace undicht {
             vkCmdDraw(_cmd_buffer, vertex_count, instance_count, first_vertex, first_instance);
         }
 
+        /////////////////////////////////// other gpu commands ////////////////////////////////////////////////
+
+        void CommandBuffer::copyBuffer(const VkBuffer& src, VkBuffer& dst, const VkBufferCopy& copy_info) {
+
+            vkCmdCopyBuffer(_cmd_buffer, src, dst, 1, &copy_info);
+        }
 
         /////////////////////////////// creating command buffer related structs ///////////////////////////////
 
@@ -106,7 +112,6 @@ namespace undicht {
 
             return info;
         }
-
 
     } // vulkan
 
