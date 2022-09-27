@@ -44,3 +44,4 @@ cmake-build-debug/
 *.exe
 *.out
 *.app
+*.spv

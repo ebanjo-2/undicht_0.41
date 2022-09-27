@@ -1,4 +1,5 @@
 #include "logical_device.h"
+#include "debug.h"
 #include "set"
 
 namespace undicht {
@@ -35,6 +36,28 @@ namespace undicht {
 
         }
 
+        uint32_t LogicalDevice::getMemoryTypeIndex(VkMemoryType mem_type) const {
+            
+            // getting the physical devices memory properties
+            VkPhysicalDeviceMemoryProperties properties;
+            vkGetPhysicalDeviceMemoryProperties(_physical_device, &properties);
+
+            // searching for the right memory
+            for(int i = 0; i < properties.memoryTypeCount; i++) {
+
+                if(!(mem_type.heapIndex & (1 << i)))
+                    continue; // heapIndex is used as a bitfield which specifies the types that can be used
+
+                if((properties.memoryTypes[i].propertyFlags & mem_type.propertyFlags) == mem_type.propertyFlags)
+                    return i;
+
+            }
+
+            UND_ERROR << "failed to find the right type of vram\n";
+            return 0;
+        }
+
+
         const VkDevice& LogicalDevice::getDevice() const {
 
             return _device;
@@ -70,14 +93,17 @@ namespace undicht {
             return _transfer_cmds;
         }
 
-        void LogicalDevice::submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) {
+        void LogicalDevice::submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) const {
 
             VkSubmitInfo info = createSubmitInfo(cmd, wait_on, wait_stages, signal_sem);
             vkQueueSubmit(_graphics_queue, 1, &info, signal_fen);
 
         }
 
-        void LogicalDevice::submitOnTransferQueue(const VkCommandBuffer& cmd){
+        void LogicalDevice::submitOnTransferQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) const {
+
+            VkSubmitInfo info = createSubmitInfo(cmd, wait_on, wait_stages, signal_sem);
+            vkQueueSubmit(_transfer_queue, 1, &info, signal_fen);
 
         }
 
@@ -88,10 +114,19 @@ namespace undicht {
 
         }
 
+        void LogicalDevice::waitGraphicsQueueIdle() const {
+            
+            vkQueueWaitIdle(_graphics_queue);
+        }
+
+        void LogicalDevice::waitTransferQueueIdle() const {
+            
+            vkQueueWaitIdle(_transfer_queue);
+        }
+
         void LogicalDevice::waitForProcessesToFinish() const {
 
             vkDeviceWaitIdle(_device);
-
         }
 
         ////////////////////////////// finding the correct queue families //////////////////////////////

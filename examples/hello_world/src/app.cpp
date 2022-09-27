@@ -2,6 +2,17 @@
 #include "debug.h"
 #include "file_tools.h"
 
+const std::vector<float> vertices = {
+    -0.5f,-0.5f, 0.0f,  0.0f, 1.0f,
+    0.5f,-0.5f, 0.0f,  1.0f, 1.0f, 
+    0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 
+    -0.5f, 0.0f, 0.0f,  0.0f, 0.0f
+};
+
+const std::vector<int> indices = {
+    0, 1, 2, 2, 3, 0
+};
+
 
 void HelloWorldApp::init() {
 
@@ -25,10 +36,18 @@ void HelloWorldApp::init() {
     // init the pipeline
     _pipeline.setViewport(_swap_chain.getExtent());
     _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
+    _pipeline.addVertexBinding(0, 5 * sizeof(float)); // per vertex data
+    _pipeline.addVertexAttribute(0, 0, 0, VK_FORMAT_R32G32B32_SFLOAT); // position
+    _pipeline.addVertexAttribute(0, 1, 3 * sizeof(float), VK_FORMAT_R32G32_SFLOAT); // uv
     _pipeline.setBlending(0, false);
     _pipeline.setInputAssembly();
     _pipeline.setRasterizationState(false);
     _pipeline.init(_gpu.getDevice(), _default_render_pass.getRenderPass());
+
+    // init the vertex buffer
+    _vertex_buffer.init(_gpu);
+    _vertex_buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0);
+    _vertex_buffer.setIndexData(indices.data(), indices.size() * sizeof(int), 0);
 
 }
 
@@ -48,7 +67,9 @@ void HelloWorldApp::mainLoop() {
     _draw_command.beginCommandBuffer(true);
     _draw_command.beginRenderPass(_default_render_pass.getRenderPass(),_default_framebuffer.at(swap_image_id).getFramebuffer(), _swap_chain.getExtent(), clear_value);
     _draw_command.bindGraphicsPipeline(_pipeline.getPipeline());
-    _draw_command.draw(3); // triangle has 3 vertices
+    _draw_command.bindVertexBuffer(_vertex_buffer.getVertexBuffer().getBuffer(), 0);
+    _draw_command.bindIndexBuffer(_vertex_buffer.getIndexBuffer().getBuffer());
+    _draw_command.draw(6, true); // one triangle has 3 vertices, drawing 2 triangles
     _draw_command.endRenderPass();
     _draw_command.endCommandBuffer();
 
@@ -66,6 +87,9 @@ void HelloWorldApp::cleanUp() {
 
     // waiting for processes to finish
     _gpu.waitForProcessesToFinish();
+
+    // destroy the renderer
+    _vertex_buffer.cleanUp();
 
     // destroy the pipeline
     _pipeline.cleanUp();

@@ -34,6 +34,9 @@ set(GRAPHICS_CORE_SOURCES
     
     src/core/vulkan/pipeline.h
     src/core/vulkan/pipeline.cpp
+    
+    src/core/vulkan/buffer.h
+    src/core/vulkan/buffer.cpp
 )
 
 set(GRAPHICS_WINDOW_SOURCES
@@ -48,7 +51,10 @@ set(GRAPHICS_WINDOW_SOURCES
     src/window/glfw/window.cpp
 )
 
-set(GRAPHICS_PIPELINE_SOURCES
+set(GRAPHICS_RENDERER_SOURCES
+
+		src/renderer/vulkan/vertex_buffer.h
+	  src/renderer/vulkan/vertex_buffer.cpp
 
 )
 
@@ -60,12 +66,13 @@ add_library(graphics
 
     ${GRAPHICS_WINDOW_SOURCES}
     ${GRAPHICS_CORE_SOURCES}
-    ${GRAPHICS_PIPELINE_SOURCES}
+    ${GRAPHICS_RENDERER_SOURCES}
     ${GRAPHICS_USER_INTERFACE_SOURCES}
 
 )
 
 target_include_directories(graphics PUBLIC src)
+
 
 # linking undicht core
 target_link_libraries(graphics core)
@@ -83,3 +90,4 @@ target_link_libraries(graphics ${Vulkan_LIBRARIES})
 
 # adding a custom target for building the engines shaders
 add_custom_target(shader COMMAND bash ${PROJECT_SOURCE_DIR}/graphics/src/shader/compile.sh)
+add_dependencies(graphics shader)

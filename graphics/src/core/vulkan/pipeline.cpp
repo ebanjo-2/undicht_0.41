@@ -151,9 +151,9 @@ namespace undicht {
             * @param input_rate: the data can be updated per vertex or per instance */
 
             VkVertexInputBindingDescription info{};
-            info.binding = 0;
-            info.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            info.stride = 0;
+            info.binding = binding;
+            info.inputRate = input_rate;
+            info.stride = stride;
 
             return info;
         }

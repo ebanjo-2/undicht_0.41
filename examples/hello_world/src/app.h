@@ -7,6 +7,7 @@
 #include "core/vulkan/command_buffer.h"
 #include "core/vulkan/shader.h"
 #include "core/vulkan/pipeline.h"
+#include "renderer/vulkan/vertex_buffer.h"
 
 class HelloWorldApp :public undicht::Engine {
 
@@ -25,6 +26,9 @@ protected:
 
     // Pipeline
     undicht::vulkan::Pipeline _pipeline;
+
+    // renderer
+    undicht::vulkan::VertexBuffer _vertex_buffer;
 
 public:
 

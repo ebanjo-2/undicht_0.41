@@ -20,7 +20,7 @@ namespace undicht {
 
             // choosing the features of the swap chain
             _surface_format = chooseSurfaceFormat(_physical_device_handle, surface);
-            _present_mode = choosePresentMode(_physical_device_handle, surface);
+            _present_mode = choosePresentMode(_physical_device_handle, surface, preferred);
             _swap_image_count = chooseSwapImageCount(_physical_device_handle, surface);
 
             // "recreating" the swap chain
