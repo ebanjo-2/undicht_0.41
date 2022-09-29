@@ -37,6 +37,15 @@ set(GRAPHICS_CORE_SOURCES
     
     src/core/vulkan/buffer.h
     src/core/vulkan/buffer.cpp
+    
+    src/core/vulkan/formats.h
+    src/core/vulkan/formats.cpp
+    
+    src/core/vulkan/descriptor_set.h
+    src/core/vulkan/descriptor_set.cpp
+    
+    src/core/vulkan/descriptor_pool.h
+    src/core/vulkan/descriptor_pool.cpp
 )
 
 set(GRAPHICS_WINDOW_SOURCES
@@ -55,7 +64,9 @@ set(GRAPHICS_RENDERER_SOURCES
 
 		src/renderer/vulkan/vertex_buffer.h
 	  src/renderer/vulkan/vertex_buffer.cpp
-
+	  
+		src/renderer/vulkan/uniform_buffer.h
+	  src/renderer/vulkan/uniform_buffer.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES

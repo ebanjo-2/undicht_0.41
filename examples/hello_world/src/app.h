@@ -8,6 +8,7 @@
 #include "core/vulkan/shader.h"
 #include "core/vulkan/pipeline.h"
 #include "renderer/vulkan/vertex_buffer.h"
+#include "renderer/vulkan/uniform_buffer.h"
 
 class HelloWorldApp :public undicht::Engine {
 
@@ -29,6 +30,7 @@ protected:
 
     // renderer
     undicht::vulkan::VertexBuffer _vertex_buffer;
+    undicht::vulkan::UniformBuffer _uniform_buffer;
 
 public:
 

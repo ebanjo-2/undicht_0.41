@@ -1,6 +1,9 @@
 #include "app.h"
 #include "debug.h"
 #include "file_tools.h"
+#include "core/vulkan/formats.h"
+
+using namespace undicht;
 
 const std::vector<float> vertices = {
     -0.5f,-0.5f, 0.0f,  0.0f, 1.0f,
@@ -11,6 +14,10 @@ const std::vector<float> vertices = {
 
 const std::vector<int> indices = {
     0, 1, 2, 2, 3, 0
+};
+
+const std::vector<float> color = {
+    0.0f, 0.0f, 1.0f,
 };
 
 
@@ -37,17 +44,20 @@ void HelloWorldApp::init() {
     _pipeline.setViewport(_swap_chain.getExtent());
     _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
     _pipeline.addVertexBinding(0, 5 * sizeof(float)); // per vertex data
-    _pipeline.addVertexAttribute(0, 0, 0, VK_FORMAT_R32G32B32_SFLOAT); // position
-    _pipeline.addVertexAttribute(0, 1, 3 * sizeof(float), VK_FORMAT_R32G32_SFLOAT); // uv
+    _pipeline.addVertexAttribute(0, 0, 0, vulkan::translate(UND_VEC3F)); // position
+    _pipeline.addVertexAttribute(0, 1, 3 * sizeof(float), vulkan::translate(UND_VEC2F)); // uv
     _pipeline.setBlending(0, false);
     _pipeline.setInputAssembly();
     _pipeline.setRasterizationState(false);
     _pipeline.init(_gpu.getDevice(), _default_render_pass.getRenderPass());
 
-    // init the vertex buffer
+    // init the renderer
     _vertex_buffer.init(_gpu);
     _vertex_buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0);
     _vertex_buffer.setIndexData(indices.data(), indices.size() * sizeof(int), 0);
+
+    _uniform_buffer.init(_gpu, BufferLayout({UND_VEC3F})); // color
+    _uniform_buffer.setAttribute(0, color.data(), 3 * sizeof(float));
 
 }
 
@@ -89,6 +99,7 @@ void HelloWorldApp::cleanUp() {
     _gpu.waitForProcessesToFinish();
 
     // destroy the renderer
+    _uniform_buffer.cleanUp();
     _vertex_buffer.cleanUp();
 
     // destroy the pipeline
