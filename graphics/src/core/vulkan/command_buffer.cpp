@@ -69,6 +69,11 @@ namespace undicht {
             vkCmdBindIndexBuffer(_cmd_buffer, buffer, 0, VK_INDEX_TYPE_UINT32);
         }
 
+        void CommandBuffer::bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout) {
+
+            vkCmdBindDescriptorSets(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &set, 0, nullptr);
+        }
+
         void CommandBuffer::draw(uint32_t vertex_count, bool draw_indexed, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
             
             if(draw_indexed)
@@ -83,6 +88,20 @@ namespace undicht {
             // make sure the dst buffer has enough memory allocated
 
             vkCmdCopyBuffer(_cmd_buffer, src, dst, 1, &copy_region);
+        }
+
+        void CommandBuffer::copy(const VkBuffer& src, const VkImage& dst, VkImageLayout layout, const VkBufferImageCopy& copy_region) {
+            // copy data between a buffer and an images memory
+            // make sure the image has enough memory allocated
+
+            vkCmdCopyBufferToImage(_cmd_buffer, src, dst, layout, 1, &copy_region);
+        }
+
+
+        void CommandBuffer::pipelineBarrier(const VkImageMemoryBarrier& barrier, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
+
+            vkCmdPipelineBarrier(_cmd_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
         }
 
         /////////////////////////////// creating command buffer related structs ///////////////////////////////

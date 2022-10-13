@@ -33,6 +33,8 @@ namespace undicht {
             
             vkFreeMemory(_device_handle, _memory, {});
             vkDestroyBuffer(_device_handle, _buffer, {});
+
+            _allocated_mem_size = 0;
         }
 
         const VkBuffer& Buffer::getBuffer() const {

@@ -5,6 +5,12 @@ layout(location = 1) in vec2 aUv;
 
 layout(location = 0) out vec2 uv;
 
+layout(binding = 0) uniform UniformBufferObject {
+	vec3 color;
+	float brightness;
+} ubo;
+
+
 void main() {
 
 	uv = aUv;

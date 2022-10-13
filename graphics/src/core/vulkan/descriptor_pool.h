@@ -1,6 +1,7 @@
 #ifndef DESCRIPTOR_POOL_H
 #define DESCRIPTOR_POOL_H
 
+#include "vector"
 #include "vulkan/vulkan.h"
 
 namespace undicht {
@@ -24,6 +25,9 @@ namespace undicht {
 
         protected:
             // creating descriptor pool related structs
+
+            VkDescriptorPoolSize static createDescriptorPoolSize(uint32_t pool_size, VkDescriptorType type);
+            VkDescriptorPoolCreateInfo static createDescriptorPoolCreateInfo(uint32_t max_sets, const std::vector<VkDescriptorPoolSize>& pool_sizes);
 
         };
         

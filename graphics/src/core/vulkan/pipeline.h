@@ -27,7 +27,6 @@ namespace undicht {
             VkPipelineMultisampleStateCreateInfo _multisample_state;
             std::vector<VkPipelineColorBlendAttachmentState> _blend_attachments;
             VkPipelineColorBlendStateCreateInfo _color_blend_state;
-            std::vector<VkDescriptorSetLayoutBinding> _shader_input_bindings;
 
             VkPipeline _pipeline;
             VkPipelineLayout _layout; // contains info about the input to the shaders (ubo and texture bindings, push constants)
@@ -44,12 +43,13 @@ namespace undicht {
             void setRasterizationState(bool enable_culling, bool cull_ccw_faces = true, bool wire_frame = false);
             // void setMultisampleState(uint32_t samples);
             void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
-            void setShaderInput(uint32_t binding, VkDescriptorType descriptor_type);
+            void setShaderInput(const VkDescriptorSetLayout& layout);
 
             void init(const VkDevice& device, VkRenderPass render_pass);
             void cleanUp();
 
             const VkPipeline& getPipeline() const;
+            const VkPipelineLayout& getPipelineLayout() const;
 
         protected:
             // creating pipeline related structs

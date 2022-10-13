@@ -56,6 +56,7 @@ namespace undicht {
             VkMemoryAllocateInfo static createMemoryAllocateInfo(uint32_t byte_size, uint32_t mem_type_index);
 
         public:
+        
             VkBufferCopy static createBufferCopy(uint32_t byte_size, uint32_t src_offset, uint32_t dst_offset);
 
         };

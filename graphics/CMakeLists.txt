@@ -46,6 +46,12 @@ set(GRAPHICS_CORE_SOURCES
     
     src/core/vulkan/descriptor_pool.h
     src/core/vulkan/descriptor_pool.cpp
+    
+    src/core/vulkan/descriptor_set_layout.h
+    src/core/vulkan/descriptor_set_layout.cpp
+    
+    src/core/vulkan/sampler.h
+    src/core/vulkan/sampler.cpp
 )
 
 set(GRAPHICS_WINDOW_SOURCES
@@ -67,6 +73,9 @@ set(GRAPHICS_RENDERER_SOURCES
 	  
 		src/renderer/vulkan/uniform_buffer.h
 	  src/renderer/vulkan/uniform_buffer.cpp
+	  
+	  src/renderer/vulkan/texture.h
+	  src/renderer/vulkan/texture.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES

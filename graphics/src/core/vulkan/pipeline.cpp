@@ -72,11 +72,9 @@ namespace undicht {
             _blend_attachments.at(attachment) = createPipelineColorBlendAttachmentState(enable_blending, color_blend_op, alpha_blend_op);
         }
 
-        void Pipeline::setShaderInput(uint32_t binding, VkDescriptorType descriptor_type) {
+        void Pipeline::setShaderInput(const VkDescriptorSetLayout& layout) {
 
-            if(binding >= _shader_input_bindings.size()) _shader_input_bindings.resize(binding + 1);
-
-            _shader_input_bindings.at(binding) = createDescriptorSetLayoutBinding(descriptor_type);
+            _descriptor_set_layout = layout;
         }
 
         void Pipeline::init(const VkDevice& device, VkRenderPass render_pass) {
@@ -89,9 +87,6 @@ namespace undicht {
             _multisample_state = createPipelineMultisampleStateCreateInfo();
 
             // creating the pipeline layout
-            VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info = createDescriptorSetLayoutCreateInfo(_shader_input_bindings);
-            vkCreateDescriptorSetLayout(device, &descriptor_set_layout_info, {}, &_descriptor_set_layout);
-
             VkPipelineLayoutCreateInfo layout_info = createPipelineLayoutCreateInfo(_descriptor_set_layout);
             vkCreatePipelineLayout(device, &layout_info, {}, &_layout);
 
@@ -122,7 +117,6 @@ namespace undicht {
         void Pipeline::cleanUp() {
 
             vkDestroyPipelineLayout(_device_handle, _layout, {});
-            vkDestroyDescriptorSetLayout(_device_handle, _descriptor_set_layout, {});
             vkDestroyPipeline(_device_handle, _pipeline, {});
         }
 
@@ -130,6 +124,12 @@ namespace undicht {
 
             return _pipeline;
         }
+
+        const VkPipelineLayout& Pipeline::getPipelineLayout() const {
+            
+            return _layout;
+        }
+
 
         /////////////////////////////////// creating pipeline related structs ///////////////////////////////////
 
