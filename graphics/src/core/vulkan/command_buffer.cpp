@@ -41,9 +41,9 @@ namespace undicht {
 
         }
 
-        void CommandBuffer::beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value) {
+        void CommandBuffer::beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values) {
 
-            VkRenderPassBeginInfo info = createRenderPassBeginInfo(render_pass, frame_buffer, extent, clear_value);
+            VkRenderPassBeginInfo info = createRenderPassBeginInfo(render_pass, frame_buffer, extent, clear_values);
             vkCmdBeginRenderPass(_cmd_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 
         }
@@ -131,7 +131,7 @@ namespace undicht {
             return info;
         }
 
-        VkRenderPassBeginInfo CommandBuffer::createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value) {
+        VkRenderPassBeginInfo CommandBuffer::createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values) {
 
             VkRenderPassBeginInfo info{};
             info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -141,8 +141,8 @@ namespace undicht {
             info.renderArea.offset.y = 0;
             info.renderArea.extent = extent;
             info.framebuffer = frame_buffer;
-            info.clearValueCount = 1;
-            info.pClearValues = &clear_value;
+            info.clearValueCount = clear_values.size();
+            info.pClearValues = clear_values.data();
 
             return info;
         }

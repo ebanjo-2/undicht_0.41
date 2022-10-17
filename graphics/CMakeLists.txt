@@ -76,6 +76,9 @@ set(GRAPHICS_RENDERER_SOURCES
 	  
 	  src/renderer/vulkan/texture.h
 	  src/renderer/vulkan/texture.cpp
+	  
+	  src/renderer/vulkan/descriptor_set_cache.h
+	  src/renderer/vulkan/descriptor_set_cache.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES

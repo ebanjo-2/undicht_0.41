@@ -17,7 +17,7 @@ namespace undicht {
             VkImage _image = VK_NULL_HANDLE;
             VkDeviceMemory _memory = VK_NULL_HANDLE;
             VkMemoryPropertyFlags _mem_properties{};
-            VkImageView _image_view;
+            VkImageView _image_view = VK_NULL_HANDLE;
 
             VkFormat _format;
             VkExtent3D _extent;
@@ -40,15 +40,18 @@ namespace undicht {
         protected:
             // creating image related structs
 
-            VkImageCreateInfo static createImageCreateInfo(VkExtent3D extent, uint32_t layers, VkFormat format);
-            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, const VkFormat& format);
+            VkImageCreateInfo static createImageCreateInfo(VkExtent3D extent, uint32_t layers, VkFormat format, VkImageUsageFlags usage);
+            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, const VkFormat& format, VkImageAspectFlags flags);
             VkMemoryAllocateInfo static createMemoryAllocateInfo(uint32_t byte_size, uint32_t mem_type_index);
 
         public:
 
-            VkImageSubresourceRange static createImageSubresourceRange();
+            VkImageSubresourceRange static createImageSubresourceRange(VkImageAspectFlags flags);
             VkImageMemoryBarrier static createImageMemoryBarrier(VkImage image, VkImageSubresourceRange range, VkImageLayout old_layout, VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access);
-            VkBufferImageCopy static createBufferImageCopy(VkExtent3D extent);
+            VkBufferImageCopy static createBufferImageCopy(VkExtent3D extent, VkImageAspectFlags flags);
+
+            VkImageAspectFlags static chooseImageAspectFlags(const VkFormat& format);
+            VkImageUsageFlags static chooseImageUsageFlags(const VkFormat& format);
         };
 
     } // vulkan

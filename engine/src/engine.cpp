@@ -26,15 +26,23 @@ namespace undicht {
 
          // creating a render-pass that can be used to draw to the swap images
          _default_render_pass.addOutputAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-         _default_render_pass.addSubPass({0}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+         _default_render_pass.addOutputAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+         _default_render_pass.addSubPass({0, 1}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
          _default_render_pass.init(_gpu.getDevice());
 
          // creating a framebuffer for every swap image
          _default_framebuffer.resize(_swap_chain.getSwapImageCount());
+         _depth_buffers.resize(_swap_chain.getSwapImageCount());
          for(int i = 0; i < _swap_chain.getSwapImageCount(); i++) {
-             _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));
-             _default_framebuffer.at(i).init(_gpu.getDevice(), _default_render_pass, _swap_chain.getExtent());
-         }
+            // init the depth buffer
+            _depth_buffers.at(i).init(_gpu.getDevice());
+            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, VK_FORMAT_D32_SFLOAT);
+            
+            // init the framebuffer
+            _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));
+            _default_framebuffer.at(i).setAttachment(1, _depth_buffers.at(i).getImageView());
+            _default_framebuffer.at(i).init(_gpu.getDevice(), _default_render_pass, _swap_chain.getExtent());
+        }
 
      }
 
@@ -79,6 +87,9 @@ namespace undicht {
          for(vulkan::Framebuffer& fbo : _default_framebuffer)
              fbo.cleanUp();
 
+        for(vulkan::Image& depth : _depth_buffers)
+            depth.cleanUp();
+
          // destroying the default render pass
          _default_render_pass.cleanUp();
 
@@ -107,9 +118,14 @@ namespace undicht {
         // reinitializing the framebuffers
         _default_framebuffer.resize(_swap_chain.getSwapImageCount());
         for(int i = 0; i < _swap_chain.getSwapImageCount(); i++) {
-            _default_framebuffer.at(i).cleanUp();
-            _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));
-            _default_framebuffer.at(i).init(_gpu.getDevice(), _default_render_pass, _swap_chain.getExtent());
+            // resize the depth buffer
+            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, VK_FORMAT_D32_SFLOAT);
+            // reinit the framebuffer
+             _default_framebuffer.at(i).cleanUp();
+             _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));
+             _default_framebuffer.at(i).setAttachment(1, _depth_buffers.at(i).getImageView());
+             _default_framebuffer.at(i).init(_gpu.getDevice(), _default_render_pass, _swap_chain.getExtent());
+
         }
 
     }

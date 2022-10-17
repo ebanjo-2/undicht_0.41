@@ -6,8 +6,8 @@ layout(location = 1) in vec2 aUv;
 layout(location = 0) out vec2 uv;
 
 layout(binding = 0) uniform UniformBufferObject {
-	vec3 color;
-	float brightness;
+	mat4 proj;
+	mat4 view;
 } ubo;
 
 
@@ -16,6 +16,8 @@ void main() {
 	uv = aUv;
 
 	//output the position of each vertex
-	gl_Position = vec4(aPos, 1.0f);
-
+	gl_Position = ubo.proj * ubo.view * vec4(aPos, 1.0f);
+	
+	// positive y is up, change my mind
+	gl_Position.y = -gl_Position.y;	
 }

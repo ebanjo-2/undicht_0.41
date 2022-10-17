@@ -77,6 +77,12 @@ namespace undicht {
             _descriptor_set_layout = layout;
         }
 
+        void Pipeline::setDepthStencilState(bool enable_depth_test, bool write_depth_values) {
+
+            _depth_stencil_state = createPipelineDepthStencilStateCreateInfo(enable_depth_test, write_depth_values);
+        }
+
+
         void Pipeline::init(const VkDevice& device, VkRenderPass render_pass) {
 
             _device_handle = device;
@@ -103,6 +109,7 @@ namespace undicht {
             info.pRasterizationState = &_rasterization_state;
             info.pMultisampleState = &_multisample_state;
             info.pColorBlendState = &_color_blend_state;
+            info.pDepthStencilState = &_depth_stencil_state;
             info.layout = _layout;
             info.renderPass = render_pass;
             info.subpass = 0;
@@ -258,6 +265,19 @@ namespace undicht {
             color_blending.pAttachments = blend_attachments.data();
 
             return color_blending;
+        }
+
+        VkPipelineDepthStencilStateCreateInfo Pipeline::createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values) {
+            
+            VkPipelineDepthStencilStateCreateInfo depth_stencil{};
+            depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depth_stencil.depthTestEnable = depth_test;
+            depth_stencil.depthWriteEnable = write_depth_values;
+            depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+            depth_stencil.depthBoundsTestEnable = VK_FALSE;
+            depth_stencil.stencilTestEnable = VK_FALSE;
+
+            return depth_stencil;
         }
 
         VkViewport Pipeline::createViewport(const VkExtent2D& extent) {

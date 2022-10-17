@@ -27,6 +27,7 @@ namespace undicht {
             VkPipelineMultisampleStateCreateInfo _multisample_state;
             std::vector<VkPipelineColorBlendAttachmentState> _blend_attachments;
             VkPipelineColorBlendStateCreateInfo _color_blend_state;
+            VkPipelineDepthStencilStateCreateInfo _depth_stencil_state;
 
             VkPipeline _pipeline;
             VkPipelineLayout _layout; // contains info about the input to the shaders (ubo and texture bindings, push constants)
@@ -44,6 +45,7 @@ namespace undicht {
             // void setMultisampleState(uint32_t samples);
             void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
             void setShaderInput(const VkDescriptorSetLayout& layout);
+            void setDepthStencilState(bool enable_depth_test, bool write_depth_values = true);
 
             void init(const VkDevice& device, VkRenderPass render_pass);
             void cleanUp();
@@ -63,6 +65,7 @@ namespace undicht {
             VkPipelineMultisampleStateCreateInfo static createPipelineMultisampleStateCreateInfo();
             VkPipelineColorBlendAttachmentState static createPipelineColorBlendAttachmentState(bool enable_blending = false, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
             VkPipelineColorBlendStateCreateInfo static createPipelineColorBlendStateCreateInfo(const std::vector<VkPipelineColorBlendAttachmentState>& blend_attachments);
+            VkPipelineDepthStencilStateCreateInfo static createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values);
             VkViewport static createViewport(const VkExtent2D& extent);
             VkRect2D static createScissor(const VkExtent2D& extent);
             VkPipelineViewportStateCreateInfo static createPipelineViewportStateCreateInfo(const VkViewport& viewport, const VkRect2D& scissor);

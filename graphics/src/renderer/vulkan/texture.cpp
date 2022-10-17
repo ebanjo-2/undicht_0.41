@@ -67,7 +67,7 @@ namespace undicht {
             _transfer_buffer.setData(byte_size, 0, data);
 
             // copy data from transfer buffer to texture
-            VkBufferImageCopy copy_info = Image::createBufferImageCopy(_image.getExtent());
+            VkBufferImageCopy copy_info = Image::createBufferImageCopy(_image.getExtent(), VK_IMAGE_ASPECT_COLOR_BIT);
             _copy_cmd.beginCommandBuffer(true);
             _copy_cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
             _copy_cmd.endCommandBuffer();
@@ -83,7 +83,7 @@ namespace undicht {
 
         void Texture::transitionToLayout(VkImageLayout new_layout, VkAccessFlags new_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
 
-            VkImageSubresourceRange range = Image::createImageSubresourceRange();
+            VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
             VkImageMemoryBarrier barrier = Image::createImageMemoryBarrier(_image.getImage(), range, _layout, new_layout, _access_flags, new_access);
             
             _layout_cmd.beginCommandBuffer(true);

@@ -26,7 +26,7 @@ namespace undicht {
             void endCommandBuffer();
 
             // graphics commands
-            void beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value = {0.0f, 0.0f, 0.0f, 1.0f});
+            void beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values);
             void endRenderPass();
             void bindGraphicsPipeline(const VkPipeline& pipeline);
             void bindVertexBuffer(const VkBuffer& buffer, uint32_t binding);
@@ -44,7 +44,7 @@ namespace undicht {
 
             VkCommandBufferAllocateInfo static createCommandBufferAllocateInfo(const VkCommandPool& command_pool, uint32_t count = 1);
             VkCommandBufferBeginInfo static createCommandBufferBeginInfo(bool single_use);
-            VkRenderPassBeginInfo static createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value);
+            VkRenderPassBeginInfo static createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values);
             
         };
 

@@ -26,6 +26,8 @@ namespace undicht {
         vulkan::LogicalDevice _gpu;
         vulkan::SwapChain _swap_chain;
         vulkan::RenderPass _default_render_pass;
+        
+        std::vector<vulkan::Image> _depth_buffers;
         std::vector<vulkan::Framebuffer> _default_framebuffer; // one for each image of the swap chain
 
 

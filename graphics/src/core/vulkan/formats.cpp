@@ -51,6 +51,11 @@ namespace undicht {
                 {FixedType(Type::INT, 8, 4), VK_FORMAT_R64G64B64A64_SINT},
                 {UND_R8G8B8A8, VK_FORMAT_R8G8B8A8_SRGB},
                 {UND_B8G8R8A8, VK_FORMAT_B8G8R8A8_SRGB},
+
+                // depth buffer formats
+                {UND_DEPTH32F, VK_FORMAT_D32_SFLOAT},
+                {UND_DEPTH32f_STENCIL8, VK_FORMAT_D32_SFLOAT_S8_UINT},
+                {UND_DEPTH24_STENCIL8, VK_FORMAT_D24_UNORM_S8_UINT},
         };
 
         VkFormat translate(const FixedType& type) {

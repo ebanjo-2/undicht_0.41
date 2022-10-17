@@ -197,6 +197,7 @@ namespace undicht {
             // specifying the features the device is going to use
             VkPhysicalDeviceFeatures features{};
             features.samplerAnisotropy = VK_TRUE;
+            features.fillModeNonSolid = VK_TRUE;
 
             // creating the logical device
             VkDeviceCreateInfo info = createDeviceCreateInfo(queue_create_infos, extensions, features);

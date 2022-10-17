@@ -1,4 +1,4 @@
-add_executable(hello_world src/main.cpp src/app.h src/app.cpp)
+add_executable(hello_world src/main.cpp src/app.h src/app.cpp src/frame.h src/frame.cpp)
 
 target_link_libraries(hello_world core graphics tools engine)
 
