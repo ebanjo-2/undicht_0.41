@@ -1,4 +1,5 @@
 #include "uniform_buffer.h"
+#include "debug.h"
 
 namespace undicht {
 
@@ -56,7 +57,6 @@ namespace undicht {
                 if(offset % alignment)
                     offset += alignment - (offset % alignment);
 
-                //UND_LOG << i << " offset: " << offset << "\n";
                 offsets.push_back(offset);
 
                 last_size = current_size;

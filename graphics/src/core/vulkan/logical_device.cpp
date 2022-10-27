@@ -83,6 +83,21 @@ namespace undicht {
             return _transfer_queue_id;
         }
 
+        const VkQueue& LogicalDevice::getGraphicsQueue() const {
+            
+            return _graphics_queue;
+        }
+
+        const VkQueue& LogicalDevice::getPresentQueue() const {
+
+            return _present_queue;
+        }
+
+        const VkQueue& LogicalDevice::getTransferQueue() const {
+
+            return _transfer_queue;
+        }
+
         const VkCommandPool& LogicalDevice::getGraphicsCmdPool() const {
 
             return _graphics_cmds;

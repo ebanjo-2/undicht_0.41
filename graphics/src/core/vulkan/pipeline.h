@@ -41,7 +41,7 @@ namespace undicht {
             void addVertexAttribute(uint32_t binding, uint32_t location, uint32_t offset, VkFormat format);
             void setInputAssembly(VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
             void setViewport(const VkExtent2D& extent);
-            void setRasterizationState(bool enable_culling, bool cull_ccw_faces = true, bool wire_frame = false);
+            void setRasterizationState(bool enable_culling, bool cull_ccw_faces = false, bool wire_frame = false);
             // void setMultisampleState(uint32_t samples);
             void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
             void setShaderInput(const VkDescriptorSetLayout& layout);

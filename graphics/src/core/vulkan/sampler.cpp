@@ -14,11 +14,17 @@ namespace undicht {
             _max_filter = filter;
         }
 
+        void Sampler::setMipMapMode(VkSamplerMipmapMode mode) {
+            
+            _mip_map_mode = mode;
+        }
+
+
         void Sampler::init(const VkDevice& device) {
 
             _device_handle = device;
 
-            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, false, 1.0f);
+            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, _mip_map_mode, false, 1.0f);
             vkCreateSampler(_device_handle, &info, {}, &_sampler);
 
         }
@@ -36,7 +42,7 @@ namespace undicht {
 
         //////////////////////////// creating sampler related structs /////////////////////////////
 
-        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, bool anisotropy, float max_anisotropy) {
+        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy) {
             
             VkSamplerCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -52,10 +58,10 @@ namespace undicht {
             info.unnormalizedCoordinates = VK_FALSE; // use uv range of [0,1] instead of the actual pixel size
             info.compareEnable = VK_FALSE;
             info.compareOp = VK_COMPARE_OP_ALWAYS;
-            info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            info.mipmapMode = mip_map_mode;
             info.mipLodBias = 0.0f;
             info.minLod = 0.0f;
-            info.maxLod = 0.0f;
+            info.maxLod = 16.0f; // max number of mip levels
 
             return info;
         }

@@ -85,13 +85,18 @@ set(GRAPHICS_USER_INTERFACE_SOURCES
 
 )
 
+set(GRAPHICS_IMGUI_SOURCES
+		src/imgui/vulkan/imgui_api.h
+		src/imgui/vulkan/imgui_api.cpp
+)
+
 add_library(graphics
 
     ${GRAPHICS_WINDOW_SOURCES}
     ${GRAPHICS_CORE_SOURCES}
     ${GRAPHICS_RENDERER_SOURCES}
     ${GRAPHICS_USER_INTERFACE_SOURCES}
-
+		${GRAPHICS_IMGUI_SOURCES}
 )
 
 target_include_directories(graphics PUBLIC src)
@@ -106,6 +111,16 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(extern/glfw)
 target_link_libraries(graphics glfw)
+
+#linking imgui
+set(IMGUI_PATH  "extern/imgui")
+file(GLOB IMGUI_SOURCES ${IMGUI_PATH}/*.cpp) 
+file(GLOB IMGUI_BACKEND ${IMGUI_PATH}/backends/imgui_impl_glfw.cpp ${IMGUI_PATH}/backends/imgui_impl_vulkan.cpp) 
+add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUI_BACKEND})
+target_include_directories(imgui PUBLIC extern/imgui)
+target_link_libraries(imgui ${Vulkan_LIBRARIES} glfw)
+
+target_link_libraries(graphics imgui)
 
 # linking vulkan
 target_include_directories(graphics PRIVATE ${Vulkan_INCLUDE_DIRS})

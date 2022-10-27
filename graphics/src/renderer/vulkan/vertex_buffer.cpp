@@ -1,5 +1,6 @@
 #include "vertex_buffer.h"
 #include "vector"
+#include "debug.h"
 
 namespace undicht {
 
@@ -70,14 +71,16 @@ namespace undicht {
         ////////////////////////////////////// internal funktions //////////////////////////////
 
         void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst) {
+            
+            if(dst.getAllocatedSize() < byte_size + offset) dst.allocate(*_device_handle, byte_size + offset);
+
+            if(!byte_size) return;
 
             // storing the data in the transfer buffer
             if(_transfer_buffer.getAllocatedSize() < byte_size) _transfer_buffer.allocate(*_device_handle, byte_size);
             _transfer_buffer.setData(byte_size, 0, data);
 
             // using a command buffer to copy the data to the dst buffer
-            if(dst.getAllocatedSize() < byte_size + offset) dst.allocate(*_device_handle, byte_size + offset);
-
             VkBufferCopy copy_info = Buffer::createBufferCopy(byte_size, 0, offset);
             _copy_cmd.beginCommandBuffer(true);
             _copy_cmd.copy(_transfer_buffer.getBuffer(), dst.getBuffer(), copy_info);

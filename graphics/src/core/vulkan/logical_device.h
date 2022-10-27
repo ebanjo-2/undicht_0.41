@@ -45,6 +45,10 @@ namespace undicht {
             uint32_t getPresentQueueFamily() const;
             uint32_t getTransferQueueFamily() const;
 
+            const VkQueue& getGraphicsQueue() const;
+            const VkQueue& getPresentQueue() const;
+            const VkQueue& getTransferQueue() const;
+
             const VkCommandPool& getGraphicsCmdPool() const;
             const VkCommandPool& getTransferCmdPool() const;
 

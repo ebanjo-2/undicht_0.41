@@ -104,6 +104,13 @@ namespace undicht {
 
         }
 
+        void CommandBuffer::blitImage(const VkImage& image, const VkImageBlit& blit) {
+
+            vkCmdBlitImage(_cmd_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+        
+        }
+
+
         /////////////////////////////// creating command buffer related structs ///////////////////////////////
 
         VkCommandBufferAllocateInfo CommandBuffer::createCommandBufferAllocateInfo(const VkCommandPool& command_pool, uint32_t count) {

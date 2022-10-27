@@ -64,6 +64,10 @@ protected:
     // scene
     TexturedModel _model;
 
+    // measuring performance
+    long _frame_counter = 0;
+    long _start_time;
+
 public:
 
     void init();

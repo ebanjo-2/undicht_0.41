@@ -215,8 +215,8 @@ namespace undicht {
             info.rasterizerDiscardEnable = VK_FALSE;
             info.polygonMode = polygon_mode;
             info.lineWidth = 1.0f;
-            info.cullMode = VK_CULL_MODE_NONE;
-            info.frontFace = VK_FRONT_FACE_CLOCKWISE;
+            info.cullMode = enable_culling?VK_CULL_MODE_BACK_BIT:VK_CULL_MODE_NONE;
+            info.frontFace = front_face;
             info.depthBiasEnable = VK_FALSE;
             info.depthBiasConstantFactor = 0.0f;
             info.depthBiasClamp = 0.0f;

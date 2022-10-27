@@ -38,6 +38,7 @@ namespace undicht {
             void copy(const VkBuffer& src, const VkBuffer& dst, const VkBufferCopy& copy_region);
             void copy(const VkBuffer& src, const VkImage& dst, VkImageLayout layout, const VkBufferImageCopy& copy_region);
             void pipelineBarrier(const VkImageMemoryBarrier& barrier, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage);
+            void blitImage(const VkImage& image, const VkImageBlit& blit);
 
         protected:
             // creating command buffer related structs

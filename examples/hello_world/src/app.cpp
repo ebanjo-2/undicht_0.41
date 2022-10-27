@@ -6,17 +6,6 @@
 
 using namespace undicht;
 
-const std::vector<float> vertices = {
-    -0.5f,-0.5f, 0.0f,  0.0f, 1.0f,
-    0.5f,-0.5f, 0.0f,  1.0f, 1.0f, 
-    0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 
-    -0.5f, 0.0f, 0.0f,  0.0f, 0.0f
-};
-
-const std::vector<int> indices = {
-    0, 1, 2, 2, 3, 0
-};
-
 void HelloWorldApp::init() {
 
     UND_LOG << "Init HelloWorldApp\n";
@@ -42,7 +31,7 @@ void HelloWorldApp::init() {
     _pipeline.setBlending(0, false);
     _pipeline.setDepthStencilState(true, true);
     _pipeline.setInputAssembly();
-    _pipeline.setRasterizationState(true, true, false);
+    _pipeline.setRasterizationState(true, false, false);
     _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
     _pipeline.init(_gpu.getDevice(), _default_render_pass.getRenderPass());
 
@@ -55,6 +44,7 @@ void HelloWorldApp::init() {
     // init the renderer
     _sampler.setMinFilter(VK_FILTER_LINEAR);
     _sampler.setMaxFilter(VK_FILTER_LINEAR);
+    _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
     _sampler.init(_gpu.getDevice());
 
     _uniform_buffer.init(_gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
@@ -66,9 +56,22 @@ void HelloWorldApp::init() {
     _camera.setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
     _camera.setAxesRotation({0,0,90});
     
+
 }
 
 void HelloWorldApp::mainLoop() {
+
+    _frame_counter++;
+
+    if(_frame_counter == 50) {
+        _start_time = getTimeMillesec();
+    }
+
+    if(_frame_counter == 550) {
+        long total_time = getTimeMillesec() - _start_time;
+        UND_LOG << "500 frames in " << total_time << "ms, average of " << 1000.0f / (total_time / 500.0f) << " FPS\n";
+        stop();
+    }
 
     if(_main_window.isMinimized()) return;
 
@@ -175,6 +178,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
     for(undicht::tools::ImageData& data : textures) {
 
         undicht::vulkan::Texture t;
+        t.setMipMaps(true);
         loadTexture(data, t);
         _model._textures.push_back(t);
 

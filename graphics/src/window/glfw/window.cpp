@@ -134,6 +134,8 @@ namespace undicht {
             glfwWaitEvents();
         }
 
+        ////////////////////////////////////////// events /////////////////////////////////////
+
         bool Window::shouldClose() const{
 
             return glfwWindowShouldClose(m_window);
@@ -149,9 +151,21 @@ namespace undicht {
             return glfwGetWindowAttrib(m_window, GLFW_ICONIFIED);
         }
 
+        ///////////////////////////////////// user input /////////////////////////////////////
+
+        bool Window::isKeyPressed(int key_id) {
+
+            return glfwGetKey(m_window, key_id);
+        }
+
         const VkSurfaceKHR& Window::getSurface() const {
 
             return m_surface;
+        }
+
+        const GLFWwindow* Window::getWindow() const {
+
+            return m_window;
         }
 
 

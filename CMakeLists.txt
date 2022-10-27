@@ -25,3 +25,4 @@ add_subdirectory(engine)
 
 # adding examples
 add_subdirectory(examples/hello_world)
+add_subdirectory(examples/tonk_game)

@@ -52,7 +52,11 @@ namespace undicht {
             bool hasResized() const;
             bool isMinimized() const;
 
+            // user input
+            bool isKeyPressed(int key_id);
+
             const VkSurfaceKHR& getSurface() const;
+            const GLFWwindow* getWindow() const;
 
         };
 

@@ -16,12 +16,14 @@ namespace undicht {
 
             VkFilter _min_filter = VK_FILTER_LINEAR;
             VkFilter _max_filter = VK_FILTER_LINEAR;
+            VkSamplerMipmapMode _mip_map_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
         public:
 
             // set these settings before initializing the sampler
             void setMinFilter(VkFilter filter);
             void setMaxFilter(VkFilter filter);
+            void setMipMapMode(VkSamplerMipmapMode mode);
 
             void init(const VkDevice& device);
             void cleanUp();
@@ -31,7 +33,7 @@ namespace undicht {
         protected:
             // creating sampler related structs
 
-            VkSamplerCreateInfo static createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, bool anisotropy, float max_anisotropy);
+            VkSamplerCreateInfo static createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy);
 
         };
 

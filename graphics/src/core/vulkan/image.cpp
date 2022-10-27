@@ -20,9 +20,11 @@ namespace undicht {
             _image = image;
             _own_image = false;
             _format = format;
+            _mip_levels = 1;
+            _layers = 1;
 
             // creating the image view
-            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _mip_levels, _layers, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &info, {}, &_image_view);
 
         }
@@ -53,11 +55,12 @@ namespace undicht {
             return _extent;
         }
 
-        void Image::allocate(const LogicalDevice& device, uint32_t width, uint32_t height, uint32_t depth, uint32_t layers, VkFormat format) {
+        void Image::allocate(const LogicalDevice& device, uint32_t width, uint32_t height, uint32_t depth, uint32_t layers, uint32_t mip_levels, VkFormat format) {
             
             _format = format;
             _extent = {width, height, depth};
             _layers = layers;
+            _mip_levels = mip_levels;
             
             // freeing previously allocated memory 
             if(_image != VK_NULL_HANDLE) vkDestroyImage(_device_handle, _image, {});
@@ -67,7 +70,7 @@ namespace undicht {
             _own_image = true;
 
             // creating the image
-            VkImageCreateInfo info = createImageCreateInfo(_extent, layers, format, chooseImageUsageFlags(_format));
+            VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format));
             vkCreateImage(_device_handle, &info, {}, &_image);
 
             // getting the drivers? requirements needed for the texture
@@ -88,21 +91,21 @@ namespace undicht {
             vkBindImageMemory(_device_handle, _image, _memory, 0);
 
             // creating the image view
-            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &image_view_info, {}, &_image_view);
 
         }
 
         //////////////////////////// creating image related structs ////////////////////////////
 
-        VkImageCreateInfo Image::createImageCreateInfo(VkExtent3D extent, uint32_t layers, VkFormat format, VkImageUsageFlags usage) {
+        VkImageCreateInfo Image::createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage) {
 
             VkImageCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             info.extent = extent;
             info.imageType = extent.depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
             info.arrayLayers = layers;
-            info.mipLevels = 1;
+            info.mipLevels = mip_levels;
             info.format = format;
             info.tiling = VK_IMAGE_TILING_OPTIMAL;
             info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -113,7 +116,7 @@ namespace undicht {
             return info;
         }
 
-        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, const VkFormat& format, VkImageAspectFlags flags) {
+        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, const VkFormat& format, VkImageAspectFlags flags) {
 
             VkImageViewCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -126,9 +129,10 @@ namespace undicht {
             info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
             info.subresourceRange.aspectMask = flags;
             info.subresourceRange.baseMipLevel = 0;
-            info.subresourceRange.levelCount = 1;
+            info.subresourceRange.levelCount = mip_levels;
             info.subresourceRange.baseArrayLayer = 0;
-            info.subresourceRange.layerCount = 1;
+            info.subresourceRange.layerCount = layer_count;
+        
 
             return info;
         }
@@ -144,14 +148,14 @@ namespace undicht {
             return info;
         }
 
-        VkImageSubresourceRange Image::createImageSubresourceRange(VkImageAspectFlags flags) {
+        VkImageSubresourceRange Image::createImageSubresourceRange(VkImageAspectFlags flags, uint32_t mip_levels, uint32_t layer_count) {
 
             VkImageSubresourceRange range{};
 		    range.aspectMask = flags;
 		    range.baseMipLevel = 0;
-		    range.levelCount = 1;
+		    range.levelCount = mip_levels;
 		    range.baseArrayLayer = 0;
-		    range.layerCount = 1;
+		    range.layerCount = layer_count;
 
             return range;
         }
@@ -171,7 +175,7 @@ namespace undicht {
             return barrier;
         }
 
-        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D extent, VkImageAspectFlags flags) {
+        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags) {
 
             VkBufferImageCopy region{};
             region.bufferOffset = 0; // layout of the data in the buffer
@@ -183,11 +187,31 @@ namespace undicht {
             region.imageSubresource.baseArrayLayer = 0;
             region.imageSubresource.layerCount = 1;
 
-            region.imageOffset = {0, 0, 0};
-            region.imageExtent = extent;
+            region.imageOffset = image_offset;
+            region.imageExtent = image_extent;
 
             return region;
         }
+
+        VkImageBlit Image::createImageBlit(int src_width, int src_height, uint32_t src_mip_level, uint32_t dst_mip_level) {
+
+            VkImageBlit blit{};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = {src_width, src_height, 1 };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = src_mip_level;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = {src_width > 1 ? src_width / 2 : 1, src_height > 1 ? src_height / 2 : 1, 1 };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = dst_mip_level;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount = 1;
+
+            return blit;
+        }
+
 
         VkImageAspectFlags Image::chooseImageAspectFlags(const VkFormat& format) {
 
@@ -213,7 +237,7 @@ namespace undicht {
                 return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
             // default for color images
-            return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         }
 
 

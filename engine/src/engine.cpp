@@ -16,13 +16,15 @@ namespace undicht {
          _vk_instance.init();
 
          // opening a window
+         _monitor = _window_api.getMonitor();
          _main_window = graphics::Window(_vk_instance.getInstance(), "Undicht Engine V0.41");
+         _main_window.setFullscreen(&_monitor);
 
          // choosing a gpu
          _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());
 
          // initializing the swap chain for the main window
-         _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_FIFO_KHR);
+         _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_IMMEDIATE_KHR);
 
          // creating a render-pass that can be used to draw to the swap images
          _default_render_pass.addOutputAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
@@ -36,7 +38,7 @@ namespace undicht {
          for(int i = 0; i < _swap_chain.getSwapImageCount(); i++) {
             // init the depth buffer
             _depth_buffers.at(i).init(_gpu.getDevice());
-            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, VK_FORMAT_D32_SFLOAT);
+            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, 1, VK_FORMAT_D32_SFLOAT);
             
             // init the framebuffer
             _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));
@@ -119,7 +121,7 @@ namespace undicht {
         _default_framebuffer.resize(_swap_chain.getSwapImageCount());
         for(int i = 0; i < _swap_chain.getSwapImageCount(); i++) {
             // resize the depth buffer
-            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, VK_FORMAT_D32_SFLOAT);
+            _depth_buffers.at(i).allocate(_gpu, _swap_chain.getExtent().width, _swap_chain.getExtent().height, 1, 1, 1, VK_FORMAT_D32_SFLOAT);
             // reinit the framebuffer
              _default_framebuffer.at(i).cleanUp();
              _default_framebuffer.at(i).setAttachment(0, _swap_chain.getSwapImageView(i));

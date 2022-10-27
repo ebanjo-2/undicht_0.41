@@ -14,7 +14,7 @@ namespace undicht {
 
         bool ImageFile::loadImage(const std::string &file_name, ImageData &data) {
 
-            stbi_set_flip_vertically_on_load(true);
+            stbi_set_flip_vertically_on_load(false);
             unsigned char* tmp = stbi_load(file_name.data(), (int*)&data._width, (int*)&data._height, (int*)&data._nr_channels, STBI_rgb_alpha);
 
             if(!tmp) {
