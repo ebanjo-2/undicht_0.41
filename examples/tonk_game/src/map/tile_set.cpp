@@ -3,144 +3,98 @@
 
 namespace tonk {
 
-    unsigned TileSet::addTile(const std::string& tile_name) {
+    void TileSet::setTile(const Tile& tile) {
 
-        _tile_names.push_back(tile_name);
-        unsigned tile_id = _tile_names.size() - 1;
+        // searching for the tile in case it was set before
+        Tile* tmp = (Tile*) getTile(tile.getName());
 
-        _up_propabilities.resize(tile_id + 1);
-        _down_propabilities.resize(tile_id + 1);
-         _right_propabilities.resize(tile_id + 1);
-        _left_propabilities.resize(tile_id + 1);
-
-        for(std::vector<float>& v : _up_propabilities) v.resize(tile_id + 1, 0.0f);
-        for(std::vector<float>& v : _down_propabilities) v.resize(tile_id + 1, 0.0f);
-        for(std::vector<float>& v : _right_propabilities) v.resize(tile_id + 1, 0.0f);
-        for(std::vector<float>& v : _left_propabilities) v.resize(tile_id + 1, 0.0f);
-
-        return tile_id;
-    }
-
-    void TileSet::addTileProbabilityFeature(const std::string& tile_name, const std::string& neighbour_name, float up, float down, float right, float left) {
-
-
-        addTileProbabilityFeature(getTileId(tile_name), getTileId(neighbour_name), up, down, right, left);
-    }
-
-
-    void TileSet::addTileProbabilityFeature(unsigned tile_id, unsigned neighbour_id, float up, float down, float right, float left) {
-
-        _up_propabilities.at(tile_id).at(neighbour_id) = up;
-        _down_propabilities.at(tile_id).at(neighbour_id) = down;
-        _right_propabilities.at(tile_id).at(neighbour_id) = right;
-        _left_propabilities.at(tile_id).at(neighbour_id) = left;
-
-    }
-
-    void TileSet::calcFinalPropabilities() {
-
-        // connect one sided propabilities
-        for(int i = 0; i < getTileCount(); i++) {
-
-            for(int j = 0; j < getTileCount(); j++) {
-                _up_propabilities.at(i).at(j) = std::max(_up_propabilities.at(i).at(j), _down_propabilities.at(j).at(i));
-                _down_propabilities.at(i).at(j) = std::max(_down_propabilities.at(i).at(j), _up_propabilities.at(j).at(i));
-                _right_propabilities.at(i).at(j) = std::max(_right_propabilities.at(i).at(j), _left_propabilities.at(j).at(i));
-                _left_propabilities.at(i).at(j) = std::max(_left_propabilities.at(i).at(j), _right_propabilities.at(j).at(i));
-            }
-
+        if(tmp) {
+            // saving the unique id
+            uint32_t unique_id = tmp->getUniqueID();
+            *tmp = tile;
+            tmp->setUniqueID(unique_id);
+        } else {
+            _tiles.push_back(tile);
+            _tiles.back().setUniqueID(_tiles.size() - 1);
         }
+        
+    }
 
-        // calculate propabilities for a cell with no neighbours
-        _start_propabilities.resize(_tile_names.size());
-        std::fill(_start_propabilities.begin(), _start_propabilities.end(), 1.0f);
+    void TileSet::markFutureTile(const std::string& name) {
 
-        for(int i = 0; i < getTileCount(); i++) {
+        if(!getTile(name)) {
 
-            for(int j = 0; j < getTileCount(); j++) {
-
-                _start_propabilities.at(i) *= _up_propabilities.at(j).at(i);
-                _start_propabilities.at(i) *= _down_propabilities.at(j).at(i);
-                _start_propabilities.at(i) *= _right_propabilities.at(j).at(i);
-                _start_propabilities.at(i) *= _left_propabilities.at(j).at(i);
-
-            }
-
+            _tiles.emplace_back(Tile());
+            _tiles.back().setName(name);
+            _tiles.back().setUniqueID(_tiles.size() - 1);
         }
 
     }
 
-    unsigned TileSet::getTileId(const std::string& tile_name) const {
+    const Tile* TileSet::getTile(uint32_t unique_tile_id) const {
 
+        if(unique_tile_id < _tiles.size())
+            return &_tiles.at(unique_tile_id);
+        else
+            return nullptr;
+    }
 
-        for(int i = 0; i < _tile_names.size(); i++) {
+    const Tile* TileSet::getTile(const std::string& tile_name) const {
 
-            if(!_tile_names.at(i).compare(tile_name))
-                return i;
-
+        for(const Tile& t : _tiles) {
+            if(!t.getName().compare(tile_name))
+                return &t;
         }
 
-        UND_ERROR << "Tile does not exist: " << tile_name << "\n";
-        return 0;
+        return nullptr;
     }
-    
-    std::string TileSet::getTileName(unsigned tile_id) const {
 
-        return _tile_names.at(tile_id);
+    uint32_t TileSet::getTileID(const std::string& tile_name) const {
+
+        const Tile* t = getTile(tile_name);
+
+        if(t != nullptr)
+            return t->getUniqueID();
+        else
+            return 0;
     }
 
     unsigned TileSet::getTileCount() const {
-        
-        return _tile_names.size();
+
+        return _tiles.size();
     }
 
-    void TileSet::getStartPropabilities(std::vector<float>& propabilities) const {
+    const std::vector<Tile>& TileSet::getTiles() const {
 
-        propabilities = _start_propabilities;
+        return _tiles;
     }
 
-    void TileSet::getUpPropabilities(unsigned tile_id, std::vector<float>& propabilities) const {
 
-        // unknown tile
-        if(tile_id >= getTileCount()) {
-            std::fill(propabilities.begin(), propabilities.end(), 1.0f);
-            return;
+    void TileSet::resolveNeighbourIDs() {
+
+        for(Tile& tile : _tiles) {
+
+            for(Tile& possible_neighbour : _tiles) {
+                
+                if(tile.getUniqueID() == possible_neighbour.getUniqueID())
+                    continue;
+                
+                // the possible neighbour mentioned the tile as a neighbour
+                Tile::Neighbour* neighbour_data = possible_neighbour.getNeighbour(tile.getUniqueID());
+                if(neighbour_data) {
+
+                    // telling the tile about its neighbour (switching the positive and negative borders)
+                    tile.setPossibleNeighbour(possible_neighbour.getUniqueID(), neighbour_data->_xn_propability, TONK_X_POSITIVE);
+                    tile.setPossibleNeighbour(possible_neighbour.getUniqueID(), neighbour_data->_xp_propability, TONK_X_NEGATIVE);
+                    tile.setPossibleNeighbour(possible_neighbour.getUniqueID(), neighbour_data->_yn_propability, TONK_Y_POSITIVE);
+                    tile.setPossibleNeighbour(possible_neighbour.getUniqueID(), neighbour_data->_yp_propability, TONK_Y_NEGATIVE);
+
+                }
+                
+            }
+
         }
 
-        propabilities = _up_propabilities.at(tile_id);
-    }
-
-    void TileSet::getDownPropabilities(unsigned tile_id, std::vector<float>& propabilities) const {
-
-        // unknown tile
-        if(tile_id >= getTileCount()) {
-            std::fill(propabilities.begin(), propabilities.end(), 1.0f);
-            return;
-        }
-
-        propabilities = _down_propabilities.at(tile_id);
-    }
-
-    void TileSet::getRightPropabilities(unsigned tile_id, std::vector<float>& propabilities) const {
-
-        // unknown tile
-        if(tile_id >= getTileCount()) {
-            std::fill(propabilities.begin(), propabilities.end(), 1.0f);
-            return;
-        }
-
-        propabilities = _right_propabilities.at(tile_id);
-    }
-
-    void TileSet::getLeftPropabilities(unsigned tile_id, std::vector<float>& propabilities) const {
-
-        // unknown tile
-        if(tile_id >= getTileCount()) {
-            std::fill(propabilities.begin(), propabilities.end(), 1.0f);
-            return;
-        }
-
-        propabilities = _left_propabilities.at(tile_id);
     }
 
 } // tonk

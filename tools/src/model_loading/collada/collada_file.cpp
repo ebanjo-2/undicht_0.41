@@ -47,24 +47,24 @@ namespace undicht {
 			* @param id: to iterate through the meshes of the file */
 
 			// all geometries stored in the file
-			std::vector<XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
+			std::vector<const XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
 
 			if (geometries.size() <= id) return;
-			XmlElement* geom_element = geometries.at(id);
+			const XmlElement* geom_element = geometries.at(id);
 
 			// loading the mesh data
 			loadGeometry(*geom_element, loadTo_mesh.vertices, loadTo_mesh.vertex_layout);
 
 			// finding the right textures for the model
-			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
+			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
 
-			XmlElement* mesh = geom_element->getElement({ "mesh" });
+			const XmlElement* mesh = geom_element->getElement({ "mesh" });
 			std::string material_id;
 
 			// getting the material name
 			for (const std::string& primitive_type : primitive_types) {
 
-				XmlElement* primitive = mesh->getElement({ primitive_type });
+				const XmlElement* primitive = mesh->getElement({ primitive_type });
 
 				if (primitive) {
 					const XmlTagAttrib* mat_attrib = primitive->getAttribute("material");
@@ -93,7 +93,7 @@ namespace undicht {
 		void ColladaFile::getTexture(ImageData& loadTo_texture, int id) {
 			/** @param id: to iterate through the texture of the file */
 
-			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
+			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
 
 			loadMaterialTextures(materials.at(id), loadTo_texture);
 
@@ -104,26 +104,26 @@ namespace undicht {
 		void ColladaFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes) {
 
 			// all materials stored in the file
-			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
+			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
 
 			// all geometries stored in the file
-			std::vector<XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
+			std::vector<const XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
 
 
-			for (XmlElement* e : geometries) {
+			for (const XmlElement* e : geometries) {
 
 				loadTo_meshes.emplace_back(MeshData());
 
 				loadGeometry(*e, loadTo_meshes.back().vertices, loadTo_meshes.back().vertex_layout);
 
 				// finding the material to the mesh
-				XmlElement* mesh = e->getElement({ "mesh" });
+				const XmlElement* mesh = e->getElement({ "mesh" });
 				std::string material_id;
 
 				// getting the material name
 				for (const std::string& primitive_type : primitive_types) {
 
-					XmlElement* primitive = mesh->getElement({ primitive_type });
+					const XmlElement* primitive = mesh->getElement({ primitive_type });
 
 					if (primitive) {
 						material_id = primitive->getAttribute("material")->m_value;
@@ -147,9 +147,9 @@ namespace undicht {
 		void ColladaFile::loadAllTextures(std::vector<ImageData>& loadTo_textures) {
 
 			// all materials stored in the file
-			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
+			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
 
-			for (XmlElement* material : materials) {
+			for (const XmlElement* material : materials) {
 				loadTo_textures.emplace_back(ImageData());
 				loadMaterialTextures(material, loadTo_textures.back());
 			}
@@ -160,17 +160,17 @@ namespace undicht {
 		///////////////////////////// functions to bring more structure to the loading process /////////////////////////////////////
 
 
-		void ColladaFile::loadGeometry(XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout) {
+		void ColladaFile::loadGeometry(const XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout) {
 			/** loading the vertices from a geometry element */
 
 			// getting vertex data
-			XmlElement* mesh = geometry.getElement({ "mesh" });
+			const XmlElement* mesh = geometry.getElement({ "mesh" });
 			if (!mesh)
 				return;
 
-			XmlElement* position_source = getMeshSource(mesh, "POSITION");
-			XmlElement* uv_source = getMeshSource(mesh, "TEXCOORD");
-			XmlElement* normal_source = getMeshSource(mesh, "NORMAL");
+			const XmlElement* position_source = getMeshSource(mesh, "POSITION");
+			const XmlElement* uv_source = getMeshSource(mesh, "TEXCOORD");
+			const XmlElement* normal_source = getMeshSource(mesh, "NORMAL");
 
 			std::vector<std::vector<float>> attribute_data;
 
@@ -193,7 +193,7 @@ namespace undicht {
 			}
 
 			// getting attribute index data
-			XmlElement* index_source = 0;
+			const XmlElement* index_source = 0;
 			for (const std::string& primitive_type : primitive_types) {
 				index_source = mesh->getElement({ primitive_type, "p" });
 				if (index_source)
@@ -214,7 +214,7 @@ namespace undicht {
 		}
 
 
-		XmlElement* ColladaFile::getMeshSource(XmlElement* mesh, const std::string& source_name) {
+		const XmlElement* ColladaFile::getMeshSource(const XmlElement* mesh, const std::string& source_name) {
 			/** @param source_name: POSITION, NORMAL or TEXCOORD
 			* @return the element containing the actual data (float array) */
 
@@ -223,7 +223,7 @@ namespace undicht {
 
 			bool position_source = !source_name.compare("POSITION");
 
-			XmlElement* input_semantic = 0;
+			const XmlElement* input_semantic = 0;
 
 			if (position_source) {
 
@@ -255,10 +255,10 @@ namespace undicht {
 
 		//////////////////////////////// functions to load textures for a material ////////////////////////////////
 
-		void ColladaFile::loadMaterialTextures(XmlElement* material, ImageData& loadTo_texture) {
+		void ColladaFile::loadMaterialTextures(const XmlElement* material, ImageData& loadTo_texture) {
 			// its a long and tedious process to get the name of the Texture-File ...
 
-			XmlElement* instance_effect = material->getElement({ "instance_effect" });
+			const XmlElement* instance_effect = material->getElement({ "instance_effect" });
 			if (!instance_effect)
 				return;
 
@@ -268,11 +268,11 @@ namespace undicht {
 
 			std::string effect_id = effect_url->m_value;
 			effect_id.erase(1, 1); // removing stupid #
-			XmlElement* effect = getElement({ "COLLADA", "library_effects", "effect id=" + effect_id });
+			const XmlElement* effect = getElement({ "COLLADA", "library_effects", "effect id=" + effect_id });
 			if (!effect)
 				return;
 
-			XmlElement* diffuse_texture = effect->getElement({ "profile_COMMON", "technique", "phong", "diffuse", "texture" });
+			const XmlElement* diffuse_texture = effect->getElement({ "profile_COMMON", "technique", "phong", "diffuse", "texture" });
 			if (!diffuse_texture)
 				return;
 
@@ -280,15 +280,15 @@ namespace undicht {
 			if (!sampler_name)
 				return;
 
-			XmlElement* sampler_2D_source = effect->getElement({ "profile_COMMON", "newparam sid=" + sampler_name->m_value, "sampler2D", "source" });
+			const XmlElement* sampler_2D_source = effect->getElement({ "profile_COMMON", "newparam sid=" + sampler_name->m_value, "sampler2D", "source" });
 			if (!sampler_2D_source)
 				return;
 
-			XmlElement* image_name = effect->getElement({ "profile_COMMON", "newparam sid=" + ('"' + sampler_2D_source->getContent()) + '"', "surface", "init_from" });
+			const XmlElement* image_name = effect->getElement({ "profile_COMMON", "newparam sid=" + ('"' + sampler_2D_source->getContent()) + '"', "surface", "init_from" });
 			if (!image_name)
 				return;
 
-			XmlElement* image_file_name = getElement({ "COLLADA", "library_images", "image id=" + ('"' + image_name->getContent()) + '"', "init_from" });
+			const XmlElement* image_file_name = getElement({ "COLLADA", "library_images", "image id=" + ('"' + image_name->getContent()) + '"', "init_from" });
 			if (!image_file_name)
 				return;
 

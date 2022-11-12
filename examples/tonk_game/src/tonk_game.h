@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "map/map_generator.h"
 #include "map/tile_set.h"
+#include "ui/dev_ui.h"
 
 namespace tonk {
 
@@ -22,6 +23,8 @@ namespace tonk {
         MapGenerator _map_generator;
 
         ImTextureID _imgui_tile_map_handle;
+
+        DevUI _dev_ui;
 
     public:
 
@@ -40,8 +43,6 @@ namespace tonk {
     protected:
         // debug menu
 
-        bool _open_tile_map = false;
-        bool _generate_new_map = true;
         bool _map_complete = false;
 
         void debugMenu();

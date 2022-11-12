@@ -17,6 +17,11 @@ add_executable(tonk_game
 	src/map/tile_set.cpp
 	src/map/tile_set_file.h
 	src/map/tile_set_file.cpp
+	src/map/tile.h
+	src/map/tile.cpp
+	
+	src/ui/dev_ui.h
+	src/ui/dev_ui.cpp
 	
 )
 

@@ -21,6 +21,14 @@ namespace tonk {
 
         void loadTileSet(TileSet& tile_set, TileMap& map);
 
+
+    protected:
+        // private functions for loading tiles
+
+        void loadTileGroup(const undicht::tools::XmlElement* group_data, TileSet& tile_set, TileMap& tile_map) const;
+        void loadTile(const undicht::tools::XmlElement* tile_data, const std::string& group_name, Tile& tile, TileSet& tile_set, TileMap& tile_map) const;
+        void loadTileToTileMap(const undicht::tools::XmlElement* tile_data, TileMap& tile_map, uint32_t tile_id) const;
+
     };
 
 } // tonk

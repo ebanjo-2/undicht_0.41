@@ -95,23 +95,16 @@ namespace tonk {
 
     void TonkGame::debugMenu() {
         
-        ImGui::Begin("Tonk Game");
-        ImGui::Text(("Pos: " + toStr(_map_center.x) + " : " + toStr(_map_center.y)).c_str());
-        if(ImGui::Button("Generate Map")) _generate_new_map = true;
-        if(ImGui::Button("Tile Map")) _open_tile_map = true;
-        if(ImGui::Button("Exit")) stop();
-        ImGui::End();
+        _dev_ui.showMainMenu(_map_center);
+        _dev_ui.showTileMap(_imgui_tile_map_handle, _tile_map.getWidth(), _tile_map.getHeight());
+        _dev_ui.showTileEditor(_tile_set);
 
-        if(_open_tile_map) {
-            ImGui::Begin("Tile Map", &_open_tile_map);
-            ImGui::Image(_imgui_tile_map_handle, {_tile_map.getWidth(), _tile_map.getHeight()});
-            ImGui::End();
-        }
+        if(_dev_ui._should_app_stop)
+            stop();
 
-        if(_generate_new_map) {
+        if(_dev_ui._generate_new_map) {
             _map.clear();
-            _map_generator.placeStartTile(_map, _tile_set);
-            _generate_new_map = false;
+            _dev_ui._generate_new_map = false;
             _map_complete = false;
         }
 

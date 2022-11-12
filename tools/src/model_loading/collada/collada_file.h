@@ -40,15 +40,15 @@ namespace undicht {
 		        // functions to bring more structure to the loading process
 
 				/** loading the vertices from a geometry element */
-		        virtual void loadGeometry(XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout);
+		        virtual void loadGeometry(const XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout);
 
 		        /** @param source_name: POSITION, NORMAL or TEXCOORD
 		        * @return the element containing the actual data (float array) (0 if the mesh does not have a source with that name) */
-		        virtual XmlElement* getMeshSource(XmlElement* mesh, const std::string& source_name);
+		        virtual const XmlElement* getMeshSource(const XmlElement* mesh, const std::string& source_name);
 
 		        // functions to load textures for a material
 
-		        virtual void loadMaterialTextures(XmlElement* material, ImageData& loadTo_texture);
+		        virtual void loadMaterialTextures(const XmlElement* material, ImageData& loadTo_texture);
 
 			public:
 

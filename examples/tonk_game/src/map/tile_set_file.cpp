@@ -21,68 +21,101 @@ namespace tonk {
     void TileSetFile::loadTileSet(TileSet& tile_set, TileMap& tile_map) {
 
         // get the TONKTILESET element
-        XmlElement* tonk_tile_set = getElement({"TONKTILESET"});
+        const XmlElement* tonk_tile_set = getElement({"TONKTILESET"});
 
         // loading all groups
-        std::vector<XmlElement*> tile_groups = tonk_tile_set->getAllElements({"group"});
-        for(XmlElement* group : tile_groups) {
+        std::vector<const XmlElement*> tile_groups = tonk_tile_set->getAllElements({"group"});
+        for(const XmlElement* group : tile_groups) {
 
-            // getting the group name
-            const XmlTagAttrib* group_name = group->getAttribute("name");
+            loadTileGroup(group, tile_set, tile_map);    
+        }
 
-            if(!group_name) {
-                UND_LOG << "failed to load tile group: no name could be found\n";
+        // resolving neighbour ids
+        tile_set.resolveNeighbourIDs();
+
+    }
+
+
+    void TileSetFile::loadTileGroup(const undicht::tools::XmlElement* group_data, TileSet& tile_set, TileMap& tile_map) const {
+        
+        // getting the group name
+        const XmlTagAttrib* group_name = group_data->getAttribute("name");
+
+        if(!group_name) {
+            UND_LOG << "failed to load tile group: no name could be found\n";
+            return;
+        }
+
+        // loading the tiles from this group
+        std::vector<const XmlElement*> tiles = group_data->getAllElements({"tile"});
+        for(const XmlElement* tile : tiles) {
+
+            uint32_t next_tile_id = tile_set.getTileCount();
+
+            // loading the tiles image
+            loadTileToTileMap(tile, tile_map, next_tile_id);
+            
+            Tile new_tile;
+            new_tile.setUniqueID(next_tile_id);
+            new_tile.setTileMapID(next_tile_id);
+            loadTile(tile, group_name->m_value, new_tile, tile_set, tile_map);
+
+            // adding the new tile to the tile set
+            tile_set.setTile(new_tile);
+        }
+
+    }
+
+    void TileSetFile::loadTile(const undicht::tools::XmlElement* tile_data, const std::string& group_name, Tile& tile, TileSet& tile_set, TileMap& tile_map) const {
+
+        // loading the tile name
+        const XmlTagAttrib* name = tile_data->getAttribute("name");
+        if(!name) {
+            UND_LOG << "failed to load Tile: no name found!\n";
+        }
+
+        tile.setName(group_name + "::" + name->m_value);
+
+        // loading the tiles neighbours
+        std::vector<const XmlElement*> features = tile_data->getAllElements({"feature"});
+        for(const XmlElement* feature : features) {
+
+            const XmlTagAttrib* neighbour = feature->getAttribute("neighbour");
+            if(!neighbour) {
+                UND_LOG << "failed to load tile neighbour: \"neighbour\" attribute not specified\n";
                 continue;
             }
 
-            // loading the tiles from this group
-            std::vector<XmlElement*> tiles = group->getAllElements({"tile"});
-            for(XmlElement* tile : tiles) {
-                
-                // loading the tile name
-                const XmlTagAttrib* name = tile->getAttribute("name");
-                if(!name){
-                    UND_LOG << "failed to load tile: no name could be found\n";
-                    continue;
-                }
+            // extracting the propabilities
+            std::string propability_string = feature->getContent();
+            std::vector<float> propabilities;
+            extractFloatArray(propabilities, propability_string, 4);
 
-                unsigned tile_id = tile_set.addTile(group_name->m_value + "::" + name->m_value);
+            // resolve the neighbours unique id
+            tile_set.markFutureTile(neighbour->m_value);
+            uint32_t neighbour_id = tile_set.getTileID(neighbour->m_value);
 
-                // load the tile image to the tile map
-                const XmlTagAttrib* file = tile->getAttribute("file");
-                if(!name) {
-                    UND_LOG << "failed to load tile: no image file was specified \n";
-                    continue;
-                }
-
-                tile_map.setTile(tile_id, getFilePath(m_file_name) + file->m_value.substr( 1, file->m_value.size() - 2));
-
-                // loading the tiles features
-                std::vector<XmlElement*> features = tile->getAllElements({"feature"});
-                for(XmlElement* feature : features) {
-
-                    const XmlTagAttrib* neighbour = feature->getAttribute("neighbour");
-                    if(!neighbour) {
-                        UND_LOG << "failed to load propability feature: no neighbour specified\n";
-                        continue;
-                    }
-
-                    // extracting the propabilities
-                    std::string propability_string = feature->getContent();
-                    std::vector<float> propabilities;
-                    extractFloatArray(propabilities, propability_string, 4);
-
-                    // adding the propability feature to the set
-                    tile_set.addTileProbabilityFeature(group_name->m_value + "::" + name->m_value, neighbour->m_value, propabilities.at(0), propabilities.at(1), propabilities.at(2), propabilities.at(3));
-
-                }
-                
-            }
+            tile.setPossibleNeighbour(neighbour_id, propabilities.at(0), TONK_X_POSITIVE);
+            tile.setPossibleNeighbour(neighbour_id, propabilities.at(1), TONK_X_NEGATIVE);
+            tile.setPossibleNeighbour(neighbour_id, propabilities.at(2), TONK_Y_POSITIVE);
+            tile.setPossibleNeighbour(neighbour_id, propabilities.at(3), TONK_Y_NEGATIVE);
 
         }
 
-        tile_set.calcFinalPropabilities();
-
     }
+
+    void TileSetFile::loadTileToTileMap(const undicht::tools::XmlElement* tile_data, TileMap& tile_map, uint32_t tile_id) const {
+
+        const XmlTagAttrib* image_file = tile_data->getAttribute("file");
+
+        if(!image_file) {
+            UND_LOG << "failed to load tile image: no image file was specified \n";
+            return;
+        }
+
+        std::string file_name = getFilePath(m_file_name) + image_file->m_value.substr(1, image_file->m_value.size() - 2);
+        tile_map.setTile(tile_id, file_name);
+    }
+
 
 } // tonk
