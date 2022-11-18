@@ -24,6 +24,8 @@ namespace tonk {
         uint32_t getTileWidth() const;
         uint32_t getTileHeight() const;
 
+        void calcUVs(uint32_t id, float& u0, float& v0, float& u1, float& v1) const;
+
     };
 
 } // tonk

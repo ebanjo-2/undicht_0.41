@@ -4,6 +4,7 @@
 #include "imgui/vulkan/imgui_api.h"
 #include "glm/glm.hpp"
 #include "map/tile_set.h"
+#include "map/tile_map.h"
 
 namespace tonk {
 
@@ -26,7 +27,9 @@ namespace tonk {
         // tile editor
         uint32_t _tile_selected = 0;
         uint32_t _neighbour_selected = 0;
-        void showTileEditor(TileSet& tile_set);
+        bool _save_tile_set = false;
+        bool _resolve_neighbours = false;
+        void showTileEditor(TileSet& tile_set, const TileMap& tile_map, const ImTextureID& texture);
 
     };
 

@@ -74,4 +74,17 @@ namespace tonk {
         return TILE_HEIGHT;
     }
 
+    void TileMap::calcUVs(uint32_t id, float& u0, float& v0, float& u1, float& v1) const{
+
+        uint32_t num_cols = getWidth() / getTileWidth();
+        uint32_t num_rows = getHeight() / getTileHeight();
+
+        u0 = ((id % num_cols)) / float(num_cols);
+        v0 = ((id / num_cols)) / float(num_rows);
+
+        u1 = u0 + getTileWidth() / float(getWidth());
+        v1 = v0 + getTileHeight() / float(getHeight());
+    }
+
+
 } // tonk

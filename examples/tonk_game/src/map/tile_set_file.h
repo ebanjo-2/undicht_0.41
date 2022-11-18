@@ -16,10 +16,10 @@ namespace tonk {
     public:
 
         TileSetFile(const std::string& file_name);
-
         bool open(const std::string& file_name);
 
         void loadTileSet(TileSet& tile_set, TileMap& map);
+        void savePropabilities(const TileSet& tile_set);
 
 
     protected:

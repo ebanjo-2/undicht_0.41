@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TONKTILESET version="1.0.0">
+  <group name="terrain">
+    <tile name="grass" file="grass_tile_0.png">
+      <feature neighbour="terrain"::"grass">1.0 1.0 1.0 1.0</feature>
+    </tile>
+    <tile name="sand" file="sand_tile_0.png">
+      <feature neighbour="terrain"::"sand">1.0 1.0 1.0 1.0</feature>
+      <feature neighbour="terrain"::"grass">0.1 0.1 0.1 0.1</feature>
+    </tile>
+    <tile name="water" file="water_tile_0.png">
+      <feature neighbour="terrain"::"water">1.0 1.0 1.0 1.0</feature>
+      <feature neighbour="terrain"::"sand">0.1 0.1 0.1 0.1</feature>
+    </tile>
+  </group>
+  <group name="nature">
+    <tile name="tree" file="tree_tile_0.png">
+      <feature neighbour="nature"::"tree">0.3 0.3 0.8 0.8</feature>
+      <feature neighbour="terrain"::"grass">0.1 0.1 0.1 0.1</feature>
+    </tile>
+  </group>
+  <group name="rail">
+    <tile name="stop_up" file="rail_stop_tile_0.png">
+      <feature neighbour="rail"::"stop_up">0.0 0.0 0.01 0.01</feature>
+      <feature neighbour="terrain"::"grass">0.1 0.0 0.01 0.01</feature>
+      <feature neighbour="terrain"::"sand">0.1 0.0 0.01 0.01</feature>
+      <feature neighbour="terrain"::"water">0.1 0.0 0.01 0.01</feature>
+      <feature neighbour="nature"::"tree">0.1 0.0 0.01 0.01</feature>
+    </tile>
+    <tile name="stop_down" file="rail_stop_tile_1.png">
+      <feature neighbour="rail"::"stop_down">0.0 0.0 0.01 0.01</feature>
+      <feature neighbour="rail"::"stop_up">0.001 0.0 0.01 0.01</feature>
+      <feature neighbour="terrain"::"grass">0.0 0.1 0.1 0.01</feature>
+      <feature neighbour="terrain"::"sand">0.0 0.1 0.1 0.01</feature>
+      <feature neighbour="terrain"::"water">0.0 0.1 0.1 0.01</feature>
+      <feature neighbour="nature"::"tree">0.0 0.1 0.1 0.01</feature>
+    </tile>
+    <tile name="vertical" file="rail_tile_0.png">
+      <feature neighbour="rail"::"vertical">1.0 1.0 0.01 0.01</feature>
+      <feature neighbour="terrain"::"grass">0.0 0.0 1.0 1.0</feature>
+      <feature neighbour="terrain"::"sand">0.0 0.0 1.0 1.0</feature>
+      <feature neighbour="rail"::"stop_down">0.0 0.2 0.01 0.01</feature>
+      <feature neighbour="rail"::"stop_up">0.2 0.0 0.01 0.01</feature>
+    </tile>
+    <tile name="horizontal" file="rail_tile_1.png">
+      <feature neighbour="rail"::"horizontal">0.01 0.01 1.0 1.0</feature>
+      <feature neighbour="terrain"::"grass">1.0 1.0 0.0 0.0</feature>
+      <feature neighbour="terrain"::"sand">1.0 1.0 0.0 0.0</feature>
+    </tile>
+    <tile name="corner_ld" file="rail_corner_tile_0.png">
+      <feature neighbour="rail"::"horizontal">0.0 0.0 0.0 1.0</feature>
+      <feature neighbour="rail"::"vertical">0.0 1.0 0.0 0.0</feature>
+      <feature neighbour="rail"::"stop_down">0.01 0.2 0.01 0.0</feature>
+      <feature neighbour="terrain"::"grass">1.0 0.0 1.0 0.0</feature>
+      <feature neighbour="terrain"::"sand">1.0 0.0 1.0 0.0</feature>
+    </tile>
+  </group>
+</TONKTILESET>

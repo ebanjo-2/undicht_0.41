@@ -67,6 +67,17 @@ namespace undicht {
 			return true; // it could have actually worked
 		}
 
+		void XmlFile::write(const std::string& file_name) {
+			// writes the contents stored in the root xml object into the file
+
+			std::ofstream file(file_name, std::ios::trunc);
+
+			std::string file_content = getXmlStringRecursive(-2);
+
+			file.write(file_content.data(), file_content.size());
+
+			file.close();
+		} 
 
 		/////////////////////////////////// reading line by line /////////////////////////////////////
 

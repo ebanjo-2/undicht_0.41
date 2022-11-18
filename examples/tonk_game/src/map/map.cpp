@@ -19,7 +19,7 @@ namespace tonk {
     };
 
     const BufferLayout VERTEX_LAYOUT({UND_VEC2F}); // vec2 doubling as position and uv
-    const BufferLayout INSTANCE_LAYOUT({UND_VEC2F, UND_VEC2F}); // location of tile in world, location of tile in tilemap texture 
+    const BufferLayout INSTANCE_LAYOUT({UND_VEC2F, UND_VEC2F, UND_VEC2F}); // location of tile in world, location of tile in tilemap texture (uv0 + uv1)
 
     void Map::init(const LogicalDevice& device) {
 
@@ -47,32 +47,20 @@ namespace tonk {
         _vertex_buffer.setInstanceData(0, 0, width * height * INSTANCE_LAYOUT.getTotalSize());
     }
 
-    void Map::setTileMap(const TileMap& tile_map) {
-
-        _tile_map_width = tile_map.getWidth();
-        _tile_map_height = tile_map.getHeight();
-
-        _tile_map_cols = tile_map.getWidth() / tile_map.getTileWidth();
-        _tile_map_rows = tile_map.getHeight() / tile_map.getTileHeight();
-
-        _tile_width = tile_map.getTileWidth();
-        _tile_height = tile_map.getTileHeight();
-    }
-
-    void Map::setTile(uint32_t tile_id, uint32_t x, uint32_t y) {
+    void Map::setTile(uint32_t tile_id, uint32_t x, uint32_t y, const TileMap& tile_map) {
 
         _tiles.at(x + y * _width) = tile_id;
         
         // calculating the position of the tile on the tile map
-        float tile_map_x = ((tile_id % _tile_map_cols)) / float(_tile_map_cols);
-        float tile_map_y = ((tile_id / _tile_map_cols)) / float(_tile_map_rows);
+        float u0, v0, u1, v1;
+        tile_map.calcUVs(tile_id, u0, v0, u1, v1);
 
         float per_vertex_data[] = {
             float(x), float(y),
-            tile_map_x, tile_map_y,
+            u0, v0, u1, v1,
         };
 
-        _vertex_buffer.setInstanceData(per_vertex_data, 4 * sizeof(float), (x + y * _width) * 4 * sizeof(float));
+        _vertex_buffer.setInstanceData(per_vertex_data, INSTANCE_LAYOUT.getTotalSize(), (x + y * _width) * INSTANCE_LAYOUT.getTotalSize());
 
     } 
 

@@ -26,71 +26,84 @@ namespace tonk {
 
         if(_open_tile_map) {
             ImGui::Begin("Tile Map", &_open_tile_map);
-            ImGui::Image(texture, {width, height});
+            ImGui::Image(texture, ImVec2((float)width, (float)height));
             ImGui::End();
         }
 
     }
 
-    void DevUI::showTileEditor(TileSet& tile_set) {
+    void DevUI::showTileEditor(TileSet& tile_set, const TileMap& tile_map, const ImTextureID& texture) {
 
         if(!_open_tile_editor)
             return;
 
-        Tile* current_tile = (Tile*)tile_set.getTile(_tile_selected);
-        Tile* current_neighbour_tile = (Tile*)tile_set.getTile(_neighbour_selected);
 
         ImGui::Begin("Tile Editor", &_open_tile_editor);
 
-        // drop-down menu for all tiles
-        if(ImGui::BeginCombo("Tile: ", tile_set.getTile(_tile_selected)->getName().data())) {
+        // button for saving the file
+        if(ImGui::Button("Save"))
+            _save_tile_set = true;
 
-            for(int i = 0; i < tile_set.getTileCount(); i++) 
-                if(ImGui::Selectable(tile_set.getTile(i)->getName().data(), false))
-                    _tile_selected = i;
+        ImGui::SameLine();
+        if(ImGui::Button("(Load) // to be implemented")); // to be implemented
+
+        // drop-down menu for all tiles
+        if(tile_set.getTileCount()) {
+            if(ImGui::BeginCombo("Tile: ", tile_set.getTile(_tile_selected)->getName().data())) {
+
+                for(int i = 0; i < tile_set.getTileCount(); i++) 
+                    if(ImGui::Selectable(tile_set.getTile(i)->getName().data(), false)) {
+                        _tile_selected = i;
+
+                        if(tile_set.getTile(_tile_selected)->getAllNeighbours().size())
+                            _neighbour_selected = tile_set.getTile(_tile_selected)->getAllNeighbours().front()._neigbour_id;
+                        else
+                            _neighbour_selected = -1;
+
+                    }
                 
-            ImGui::EndCombo();
+                ImGui::EndCombo();
+            }
+
+            // displaying the tile image
+            ImVec2 uv0;
+            ImVec2 uv1;
+            tile_map.calcUVs(_tile_selected, uv0.x, uv0.y, uv1.x, uv1.y);
+            ImGui::Image(texture, ImVec2(64.0f, 64.0f), uv0, uv1);
         }
+
+        Tile* current_tile = (Tile*)tile_set.getTile(_tile_selected);
 
         // drop-down menu to choose which neighbour to edit
-        if(ImGui::BeginCombo("Neighbour: ", current_neighbour_tile->getName().data())) {
+        if(_neighbour_selected != (uint32_t)-1) {
 
-            for(int i = 0; i < current_tile->getNeighbourCount(); i++)
-                if(ImGui::Selectable(tile_set.getTile(current_tile->getAllNeighbours()[i]._neigbour_id)->getName().data(), false)) 
-                    _neighbour_selected = current_tile->getAllNeighbours()[i]._neigbour_id;
+            if( ImGui::BeginCombo("Neighbour: ", tile_set.getTile(_neighbour_selected)->getName().data())) {
 
-            ImGui::EndCombo();
+                for(int i = 0; i < current_tile->getNeighbourCount(); i++)
+                    if(ImGui::Selectable(tile_set.getTile(current_tile->getAllNeighbours()[i]._neigbour_id)->getName().data(), false)) 
+                        _neighbour_selected = current_tile->getAllNeighbours()[i]._neigbour_id;
+
+                ImGui::EndCombo();
+
+            }
+
+            // displaying the neighbour image
+            ImVec2 uv0;
+            ImVec2 uv1;
+            tile_map.calcUVs(_neighbour_selected, uv0.x, uv0.y, uv1.x, uv1.y);
+            ImGui::Image(texture, ImVec2(64.0f, 64.0f), uv0, uv1);
+
+            // editing the propability values with sliders
+            ImGui::SliderFloat("propability x positive", &current_tile->getNeighbour(_neighbour_selected)->_xp_propability, 0.0f, 1.0f);
+            ImGui::SliderFloat("propability x negative", &current_tile->getNeighbour(_neighbour_selected)->_xn_propability, 0.0f, 1.0f);
+            ImGui::SliderFloat("propability y positive", &current_tile->getNeighbour(_neighbour_selected)->_yp_propability, 0.0f, 1.0f);
+            ImGui::SliderFloat("propability y negative", &current_tile->getNeighbour(_neighbour_selected)->_yn_propability, 0.0f, 1.0f);
         }
 
-        // editing the propability values
-        std::vector<char> buffer(255, ' ');
-        std::string propability;
+        // button to resolve the neighbour propabilities
+        if(ImGui::Button("resolve neigbours"))
+            _resolve_neighbours = true;
 
-        // pos x
-        propability = toStr(current_tile->getAllNeighbours()[_neighbour_selected]._xp_propability);
-        std::copy(propability.begin(), propability.end(), buffer.begin());
-        if(ImGui::InputText("Pos X: ", buffer.data(), buffer.size())) 
-            current_tile->setPossibleNeighbour(_neighbour_selected, atof(buffer.data()), TONK_X_POSITIVE);
-
-        // neg x
-        propability = toStr(current_tile->getAllNeighbours()[_neighbour_selected]._xn_propability);
-        std::copy(propability.begin(), propability.end(), buffer.begin());
-        if(ImGui::InputText("Neg X: ", buffer.data(), buffer.size())) 
-            current_tile->setPossibleNeighbour(_neighbour_selected, atof(buffer.data()), TONK_X_NEGATIVE);
-
-        // pos y
-        propability = toStr(current_tile->getAllNeighbours()[_neighbour_selected]._yp_propability);
-        std::copy(propability.begin(), propability.end(), buffer.begin());
-        if(ImGui::InputText("Pos Y: ", buffer.data(), buffer.size())) 
-            current_tile->setPossibleNeighbour(_neighbour_selected, atof(buffer.data()), TONK_Y_POSITIVE);
-
-        // neg x
-        propability = toStr(current_tile->getAllNeighbours()[_neighbour_selected]._yn_propability);
-        std::copy(propability.begin(), propability.end(), buffer.begin());
-        if(ImGui::InputText("Neg Y: ", buffer.data(), buffer.size())) 
-            current_tile->setPossibleNeighbour(_neighbour_selected, atof(buffer.data()), TONK_Y_NEGATIVE);
-
-        
         ImGui::End();
     }
 

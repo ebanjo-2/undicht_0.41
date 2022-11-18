@@ -17,15 +17,6 @@ namespace tonk {
         uint32_t _width = 0;
         uint32_t _height = 0;
 
-        uint32_t _tile_map_width = 0;
-        uint32_t _tile_map_height = 0;
-        uint32_t _tile_map_cols = 0;
-        uint32_t _tile_map_rows = 0;
-
-
-        uint32_t _tile_width = 0;
-        uint32_t _tile_height = 0;
-
         std::vector<uint32_t> _tiles; // a copy of the map in cpu accessible ram
 
     public:
@@ -34,8 +25,7 @@ namespace tonk {
         void cleanUp();
 
         void setSize(uint32_t width, uint32_t height);
-        void setTileMap(const TileMap& tile_map);
-        void setTile(uint32_t tile_id, uint32_t x, uint32_t y); // 0,0 is top left
+        void setTile(uint32_t tile_id, uint32_t x, uint32_t y, const TileMap& tile_map); // 0,0 is top left
 
         void clear();
 

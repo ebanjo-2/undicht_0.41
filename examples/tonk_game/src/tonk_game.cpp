@@ -9,6 +9,8 @@ using namespace undicht;
 using namespace vulkan;
 using namespace tools;
 
+const std::string DEFAULT_TILE_SET = UND_ENGINE_SOURCE_DIR + "examples/tonk_game/res/default.tonk";
+
 namespace tonk {
 
     void TonkGame::init() {
@@ -19,15 +21,14 @@ namespace tonk {
         
         // load tile set + tile map
         _tile_map.init(_gpu);
-        TileSetFile tile_set_file(UND_ENGINE_SOURCE_DIR + "examples/tonk_game/res/default.tonk");
+        TileSetFile tile_set_file(DEFAULT_TILE_SET);
         tile_set_file.loadTileSet(_tile_set, _tile_map);
 
         _imgui_tile_map_handle = _renderer.createImGuiTexture(_tile_map.getMap());
 
         // init map
         _map.init(_gpu);
-        _map.setTileMap(_tile_map);
-        _map_generator.setSize(50, 30);
+        _map_generator.setSize(50, 50);
 
     }
 
@@ -97,7 +98,7 @@ namespace tonk {
         
         _dev_ui.showMainMenu(_map_center);
         _dev_ui.showTileMap(_imgui_tile_map_handle, _tile_map.getWidth(), _tile_map.getHeight());
-        _dev_ui.showTileEditor(_tile_set);
+        _dev_ui.showTileEditor(_tile_set, _tile_map, _imgui_tile_map_handle);
 
         if(_dev_ui._should_app_stop)
             stop();
@@ -109,9 +110,19 @@ namespace tonk {
         }
 
         if(!_map_complete) {
-            _map_complete = _map_generator.generate(_map, _tile_set, 1);
+            _map_complete = _map_generator.generate(_map, _tile_set, _tile_map);
         }
 
+        if(_dev_ui._save_tile_set) {
+            TileSetFile file(DEFAULT_TILE_SET);
+            file.savePropabilities(_tile_set);
+            _dev_ui._save_tile_set = false;
+        }
+
+        if(_dev_ui._resolve_neighbours) {
+            _tile_set.resolveNeighbourIDs();
+            _dev_ui._resolve_neighbours = false;
+        }
     }
 
 } // tonk

@@ -35,6 +35,56 @@ namespace tonk {
 
     }
 
+    void TileSetFile::savePropabilities(const TileSet& tile_set) {
+
+        const XmlElement* tonk_tile_set = getElement({"TONKTILESET"});
+
+        if(!tonk_tile_set) {
+            UND_LOG << "failed to save tile propabilities: no tile set was loaded \n";
+            return;
+        }
+
+        // updating the propabilities
+        for(const Tile& tile : tile_set.getTiles()) {
+            
+            std::string tile_name = tile.getName();
+            std::string group_name = tile_name.substr(0, tile_name.find(':'));
+            tile_name.erase(0, group_name.size() + 2);
+
+            // finding the xml element that stores this tiles data
+            const XmlElement* group = tonk_tile_set->getElement({"group name=" + group_name});
+
+            if(!group) {
+                UND_LOG << "failed to store tile " << tile_name << " : group " << group_name << " not found\n";
+                continue;
+            }
+
+            // finding the tile element
+            const XmlElement* tile_element = group->getElement({"tile name=" + tile_name});
+
+            if(!tile_element) {
+                UND_LOG << "failed to store tile " << tile_name << " : tile not found\n";
+                continue;
+            }
+
+            // storing the propability features
+            for(const Tile::Neighbour& neighbour : tile.getAllNeighbours()) {
+                
+                std::string neighbour_name = tile_set.getTile(neighbour._neigbour_id)->getName();
+
+                // finding the element that stores the neighbours propabilities
+                XmlElement* feature = (XmlElement*)tile_element->getElement({"feature neighbour=" + neighbour_name});
+
+                if(!feature) continue; // could be intentional (in the way that only one tile stores the other one as a possible neighbour)
+
+                feature->m_content = toStr(neighbour._xp_propability) + " " + toStr(neighbour._xn_propability) + " " + toStr(neighbour._yp_propability) + " " + toStr(neighbour._yn_propability);
+            }
+
+        }
+
+        // writing the changes to the file
+        write(m_file_name);
+    }
 
     void TileSetFile::loadTileGroup(const undicht::tools::XmlElement* group_data, TileSet& tile_set, TileMap& tile_map) const {
         

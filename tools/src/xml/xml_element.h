@@ -56,6 +56,9 @@ namespace undicht {
 			/// the attribute string should look like this "name attr0=val0 attr1=val1 ..."
 			std::vector<std::string> splitAttributeString(std::string attribute_string, std::string& loadTo_name) const;
 
+			// stores the entire element in a string as it would appear in a xml file (including its child elements)
+			std::string getXmlStringRecursive(int indent = 0) const;
+
 		public:
 			// functions to print the content of the element
 

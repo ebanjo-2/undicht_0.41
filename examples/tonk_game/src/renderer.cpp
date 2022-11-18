@@ -149,10 +149,11 @@ namespace tonk {
         _map_pipeline.setViewport(viewport);
         _map_pipeline.setShaderStages(_map_shader.getShaderModules(), _map_shader.getShaderStages());
         _map_pipeline.addVertexBinding(0, 2 * sizeof(float)); // per vertex data
-        _map_pipeline.addVertexBinding(1, 4 * sizeof(float)); // per instance data
+        _map_pipeline.addVertexBinding(1, 6 * sizeof(float)); // per instance data
         _map_pipeline.addVertexAttribute(0, 0, 0, vulkan::translate(UND_VEC2F)); // vertex pos
         _map_pipeline.addVertexAttribute(1, 1, 0 * sizeof(float), vulkan::translate(UND_VEC2F)); // world pos
-        _map_pipeline.addVertexAttribute(1, 2, 2 * sizeof(float), vulkan::translate(UND_VEC2F)); // world pos
+        _map_pipeline.addVertexAttribute(1, 2, 2 * sizeof(float), vulkan::translate(UND_VEC2F)); // uv0
+        _map_pipeline.addVertexAttribute(1, 3, 4 * sizeof(float), vulkan::translate(UND_VEC2F)); // uv0
         _map_pipeline.setBlending(0, false);
         _map_pipeline.setDepthStencilState(false, false);
         _map_pipeline.setInputAssembly();

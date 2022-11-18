@@ -34,12 +34,11 @@ namespace undicht {
 			* @return false if the string does not contain a '<' */
 			bool removeIndentation(std::string& str);
 
-
-
 		public:
 
 			// loads the root element and all its sub elements
 			virtual bool open(const std::string& file_name);
+			virtual void write(const std::string& file_name); // writes the contents stored in the root xml object into the file
 
 			XmlFile();
 			XmlFile(const std::string& file_name);

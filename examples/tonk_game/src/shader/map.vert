@@ -2,7 +2,8 @@
 
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aWorldPos;
-layout(location = 2) in vec2 aUv;
+layout(location = 2) in vec2 aUv0;
+layout(location = 3) in vec2 aUv1;
 
 layout(location = 0) out vec2 uv;
 
@@ -15,9 +16,10 @@ layout(binding = 1) uniform UniformBufferObject {
 
 void main() {
 
-    vec2 tile_size = vec2(1.0f / 64.0f);
+    //vec2 tile_size = vec2(1.0f / 64.0f);
+    //uv = aUv0 + aPos * tile_size;
 
-    uv = aUv + aPos * tile_size;
+    uv = aUv0 * (1 - aPos) + aUv1 * aPos;
 
     vec2 world_pos = (aPos + aWorldPos);
     vec2 screen_pos = (world_pos - ubo.map_center) * vec2(1.0f, ubo.aspect_ratio) * ubo.zoom_factor;
