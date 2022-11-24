@@ -54,7 +54,9 @@ namespace tonk {
             std::vector<std::pair<uint32_t, float>> additional_propabilities = neighbour->getPossibleNeighbours(i);
 
             if(!propabilities.size() && additional_propabilities.size()) {
+
                 propabilities = additional_propabilities;
+                
             } else if(additional_propabilities.size()) {
                 
                 for(std::pair<uint32_t, float>& prop : propabilities) {
