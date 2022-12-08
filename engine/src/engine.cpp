@@ -18,7 +18,7 @@ namespace undicht {
          // opening a window
          _monitor = _window_api.getMonitor();
          _main_window = graphics::Window(_vk_instance.getInstance(), "Undicht Engine V0.41");
-         _main_window.setFullscreen(&_monitor);
+         // _main_window.setFullscreen(&_monitor);
 
          // choosing a gpu
          _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());

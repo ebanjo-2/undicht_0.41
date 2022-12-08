@@ -3,12 +3,6 @@
 
 namespace cell {
 
-    // operator needed to compare two chunk positions
-    bool operator==(const glm::ivec3 &pos0, const glm::ivec3 &pos1) {
-
-        return (pos0.x == pos1.x) && (pos0.y == pos1.y) && (pos0.z == pos1.z);
-    }
-
     ///////////////////////////////////////// loading chunks into ram /////////////////////////////////////////
 
     const Chunk &World::loadChunk(const glm::ivec3 &chunk_pos, const std::vector<Cell> &cells) {

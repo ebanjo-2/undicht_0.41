@@ -9,6 +9,19 @@ set(WORLD_SOURCES
     src/world/chunk.cpp
     src/world/world.h
     src/world/world.cpp
+ 
+)
+
+set(RENDERER_SOURCES
+		src/renderer/world_renderer.h
+	  src/renderer/world_renderer.cpp
+	  src/renderer/world_buffer.h
+    src/renderer/world_buffer.cpp
+)
+
+set(PLAYER_SOURCES
+		src/player/player.h
+	  src/player/player.cpp
 )
 
 add_executable(cell 
@@ -18,11 +31,13 @@ add_executable(cell
     src/app.cpp
     
     ${WORLD_SOURCES}
+    ${RENDERER_SOURCES}
+    ${PLAYER_SOURCES}
 )
 
 target_link_libraries(cell core graphics tools engine)
 target_include_directories(cell PUBLIC src)
 
 # adding a custom target for building the shaders
-#add_custom_target(tonk_shader COMMAND bash ${PROJECT_SOURCE_DIR}/examples/tonk_game/src/shader/compile.sh)
-#add_dependencies(tonk_game tonk_shader)
+add_custom_target(cell_shader COMMAND bash ${PROJECT_SOURCE_DIR}/examples/cell/src/renderer/shader/compile.sh)
+add_dependencies(cell cell_shader)
