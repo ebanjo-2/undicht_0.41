@@ -50,6 +50,7 @@ namespace undicht {
             void init(const VkDevice& device, VkRenderPass render_pass);
             void cleanUp();
 
+            const VkViewport& getViewport() const;
             const VkPipeline& getPipeline() const;
             const VkPipelineLayout& getPipelineLayout() const;
 

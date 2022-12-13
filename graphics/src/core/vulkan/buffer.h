@@ -36,6 +36,7 @@ namespace undicht {
              * @param cpu_visible should it be directly accessible by the cpu (slow, mainly used for transfer buffers)
             */
             void init(const VkDevice& device, const std::vector<uint32_t>& queue_ids, bool cpu_visible, VkBufferUsageFlags usage);
+            void init(const Buffer& b); // copy the init settings, wont allocate memory
             void cleanUp();
 
             const VkBuffer& getBuffer()const;

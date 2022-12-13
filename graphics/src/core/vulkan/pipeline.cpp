@@ -127,6 +127,11 @@ namespace undicht {
             vkDestroyPipeline(_device_handle, _pipeline, {});
         }
 
+        const VkViewport& Pipeline::getViewport() const {
+
+            return _viewport;
+        }
+
         const VkPipeline& Pipeline::getPipeline() const {
 
             return _pipeline;

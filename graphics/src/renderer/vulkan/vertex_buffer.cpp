@@ -72,8 +72,20 @@ namespace undicht {
 
         void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst) {
             
-            if(dst.getAllocatedSize() < byte_size + offset) dst.allocate(*_device_handle, byte_size + offset);
+            if(dst.getAllocatedSize() < byte_size + offset) {
+                // copying the data from the old dst buffer to the new one
+                Buffer new_dst;
+                new_dst.init(dst);
+                new_dst.allocate(*_device_handle, byte_size + offset);
 
+                if(dst.getAllocatedSize() > 0) {
+                    copyData(dst, 0, dst.getAllocatedSize(), new_dst, 0);
+                }
+                
+                dst.cleanUp();
+                dst = new_dst;
+            }
+                
             if(!byte_size) return;
 
             // storing the data in the transfer buffer
@@ -90,6 +102,17 @@ namespace undicht {
 
         }
 
+        void VertexBuffer::copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst) {
+            // assuming that both buffers have sufficient memory allocated
+
+            VkBufferCopy copy_info = Buffer::createBufferCopy(byte_size, offset_src, offset_dst);
+            _copy_cmd.beginCommandBuffer(true);
+            _copy_cmd.copy(src.getBuffer(), dst.getBuffer(), copy_info);
+            _copy_cmd.endCommandBuffer();
+            _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
+            _device_handle->waitTransferQueueIdle(); // waiting for the transfer to finish (should probably use semaphores or smth.)
+
+        }
 
     } // vulkan
 

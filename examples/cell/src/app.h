@@ -2,7 +2,12 @@
 #define CELL_APP_H
 
 #include "engine.h"
+
+#include <ctime>
+
+#include "renderer/master_renderer.h"
 #include "renderer/world_renderer.h"
+#include "renderer/drawable_world.h"
 #include "player/player.h"
 
 namespace cell {
@@ -12,7 +17,8 @@ namespace cell {
 
         Player _player;
 
-        WorldRenderer _world_renderer;
+        MasterRenderer _master_renderer;
+        DrawableWorld _world;
 
     public:
 
@@ -20,6 +26,7 @@ namespace cell {
         void cleanUp();
 
         void mainLoop();
+        void onWindowResize();
 
     };
 

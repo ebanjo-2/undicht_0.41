@@ -43,6 +43,7 @@ namespace undicht {
             // internal functions
 
             void transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst);
+            void copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst);
 
         };
 

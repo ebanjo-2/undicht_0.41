@@ -13,10 +13,14 @@ set(WORLD_SOURCES
 )
 
 set(RENDERER_SOURCES
+		src/renderer/master_renderer.h
+		src/renderer/master_renderer.cpp
 		src/renderer/world_renderer.h
 	  src/renderer/world_renderer.cpp
 	  src/renderer/world_buffer.h
     src/renderer/world_buffer.cpp
+    src/renderer/drawable_world.h
+    src/renderer/drawable_world.cpp
 )
 
 set(PLAYER_SOURCES

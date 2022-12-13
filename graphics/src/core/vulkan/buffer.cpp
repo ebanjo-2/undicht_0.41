@@ -29,6 +29,12 @@ namespace undicht {
 
         }
 
+        void Buffer::init(const Buffer& b) {
+            // copy the init settings, wont allocate memory
+
+            init(b._device_handle, b._queue_ids, b._cpu_visible, b._usage);
+        }
+
         void Buffer::cleanUp() {
             
             vkFreeMemory(_device_handle, _memory, {});
