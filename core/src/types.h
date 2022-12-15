@@ -67,6 +67,10 @@ namespace undicht {
 #define UND_VEC3I FixedType(Type::INT, 4, 3)
 #define UND_VEC4I FixedType(Type::INT, 4, 4)
 
+#define UND_VEC2UI8 FixedType(Type::UNSIGNED_INT, 1, 2)
+#define UND_VEC3UI8 FixedType(Type::UNSIGNED_INT, 1, 3)
+#define UND_VEC4UI8 FixedType(Type::UNSIGNED_INT, 1, 4)
+
 #define UND_MAT3F FixedType(Type::FLOAT, 4, 9)
 #define UND_MAT4F FixedType(Type::FLOAT, 4, 16)
 

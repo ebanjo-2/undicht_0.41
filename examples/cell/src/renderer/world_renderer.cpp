@@ -4,6 +4,7 @@
 #include "world/cell.h"
 #include "renderer/world_buffer.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "debug.h"
 
 namespace cell {
 

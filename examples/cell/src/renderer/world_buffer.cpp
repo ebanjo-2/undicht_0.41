@@ -68,7 +68,13 @@ namespace cell {
     //////////////////////////////// storing data in the buffer ///////////////////////////////
 
     void WorldBuffer::addChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
-        
+
+        BufferEntry* entry = findBufferEntry(chunk_pos);
+        if(entry != nullptr) {
+            updateChunk(c, chunk_pos);
+            return;
+        }
+
         // filling a buffer with the chunk data
         uint32_t chunk_buffer_size = c.fillBuffer(nullptr);
         std::vector<char> chunk_buffer(chunk_buffer_size);
@@ -90,18 +96,28 @@ namespace cell {
     void WorldBuffer::updateChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
         
         BufferEntry* entry = findBufferEntry(chunk_pos);
-
-        if(!entry) {
+        if(entry == nullptr) {
             addChunk(c, chunk_pos);
             return;
         }
 
-        // to be done
+        // there are definitly better solutions
+        // removing and readding should "update" the chunk
+        freeChunk(c, chunk_pos);
+        addChunk(c, chunk_pos);
 
-        sortBufferEntries();
     }
     
     void WorldBuffer::freeChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
+
+        BufferEntry* entry = findBufferEntry(chunk_pos);
+        if(entry != nullptr) {
+            
+            entry->offset = 0;
+            entry->byte_size = 0;
+        }
+
+        sortBufferEntries();
     }
 
     /////////////////////////////// accessing the vertex buffer ///////////////////////////////

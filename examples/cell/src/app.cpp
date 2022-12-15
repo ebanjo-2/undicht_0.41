@@ -12,7 +12,9 @@ namespace cell {
 
         // setting some cells for testing
         std::vector<Cell> cells = {
-            Cell(0, 0, 0, 1, 1, 1, 0),
+            Cell(0, 0, 0, 10, 1, 10, 0),
+            Cell(1, 1, 1, 2, 2, 2, 0),
+            Cell(5, 1, 1, 6, 3, 2, 0),
         };
         _world.loadChunk(glm::ivec3(0,0,0), cells);
         _world.updateWorldBuffer(glm::ivec3(0,0,0));

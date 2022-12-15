@@ -14,6 +14,8 @@ namespace cell {
       protected:
         // first 3 bytes: position (x, y, z) (from 0 to 255)
         // last bytes (of both uint32s): position of tile on tile map (also identifying the type of cell)
+        // at least that is how it can be accessed in the shader
+        // if you are on a little endian system, the order of the position and uv will be swapped
         uint32_t _pos_0 = 0;
         uint32_t _pos_1 = 0;
 

@@ -1,6 +1,7 @@
 #include "world/chunk.h"
 #include "iostream"
 #include "math/math_tools.h"
+#include "debug.h"
 
 using namespace undicht::tools;
 
@@ -165,6 +166,8 @@ namespace cell {
         if (buffer && _cells.size())
             std::copy(_cells.begin(), _cells.end(), (Cell *)buffer);
 
+        UND_LOG << "Cells in chunk:" << _cells.size() << "\n";
+
         // the size of the chunk data
         return _cells.size() * CELL_LAYOUT.getTotalSize();
     }
@@ -188,7 +191,7 @@ namespace cell {
         _cells.clear();
 
         if(buffer != nullptr)
-            _cells.insert(_cells.begin(), (Cell*)buffer, (Cell*)(buffer + byte_size));
+            _cells.insert(_cells.begin(), (Cell*)buffer, (Cell*)(buffer + byte_size / CELL_LAYOUT.getTotalSize()));
 
         initMiniChunks();
     }
