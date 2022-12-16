@@ -101,7 +101,6 @@ namespace undicht {
         void CommandBuffer::pipelineBarrier(const VkImageMemoryBarrier& barrier, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
 
             vkCmdPipelineBarrier(_cmd_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-
         }
 
         void CommandBuffer::blitImage(const VkImage& image, const VkImageBlit& blit) {

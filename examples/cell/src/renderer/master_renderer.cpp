@@ -69,6 +69,9 @@ namespace cell {
         // reset geometry descriptor cache
         _geometry_descriptor_cache.reset();
 
+        // reset world renderers ubos
+        _world_renderer.resetPerChunkUBOs();
+
         // clearing the image
         VkClearValue color_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
         VkClearValue depth_clear_value{1.0f, 0};

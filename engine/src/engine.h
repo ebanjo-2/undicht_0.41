@@ -44,7 +44,7 @@ namespace undicht {
         * @param open_window opens a main window
         * chooses a physical gpu and creates a logical instance for the engine to use it
         * creates a swap chain to render to */
-        virtual void init();
+        virtual void init(bool vsync = true);
 
         /** can be implemented by a child "application" class */
         virtual void mainLoop(){};

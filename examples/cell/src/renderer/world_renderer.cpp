@@ -4,6 +4,7 @@
 #include "world/cell.h"
 #include "renderer/world_buffer.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "debug.h"
 
 namespace cell {
@@ -14,6 +15,7 @@ namespace cell {
 
     void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
 
+        _device_handle = gpu;
         _render_pass_handle = render_pass;
 
         // Shader
@@ -22,8 +24,9 @@ namespace cell {
         _shader.init(gpu.getDevice());
 
         // Pipeline
-        _descriptor_set_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-        _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        _descriptor_set_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // global data
+        _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // per chunk data
+        _descriptor_set_layout.setBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
         _descriptor_set_layout.init(gpu.getDevice());
 
         _pipeline.setViewport(viewport);
@@ -49,13 +52,14 @@ namespace cell {
         // mat4 proj
         // mat4 view
         // vec4 relative chunk position
-        _uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F})); 
+        _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
 
     }
 
     void WorldRenderer::cleanUp() {
-
-        _uniform_buffer.cleanUp();
+        
+        for(auto& ubo : _per_chunk_uniform_buffer) ubo.cleanUp();
+        _global_uniform_buffer.cleanUp();
         _sampler.cleanUp();
         _pipeline.cleanUp();
         _descriptor_set_layout.cleanUp();
@@ -72,8 +76,8 @@ namespace cell {
 
     void WorldRenderer::loadCamera(PerspectiveCamera3D& camera) {
 
-        _uniform_buffer.setAttribute(0, glm::value_ptr(camera.getCameraProjectionMatrix()), 16 * sizeof(float));
-        _uniform_buffer.setAttribute(1, glm::value_ptr(camera.getViewMatrix()), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(0, glm::value_ptr(camera.getCameraProjectionMatrix()), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(1, glm::value_ptr(camera.getViewMatrix()), 16 * sizeof(float));
 
     }
 
@@ -84,19 +88,36 @@ namespace cell {
         cmd.bindVertexBuffer(world.getBuffer().getVertexBuffer().getBuffer(), 0);
         cmd.bindVertexBuffer(world.getBuffer().getInstanceBuffer().getBuffer(), 1);
 
-        // create a descriptor set pointing to the uniform buffer and the cell texture
-        undicht::vulkan::DescriptorSet& descriptor_set = descriptor_set_cache.accquire();
-        descriptor_set.bindUniformBuffer(0, _uniform_buffer.getBuffer());
-        // descriptor_set.bindImage(1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
-        cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());
-
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
+        createPerChunkUBOs(world.getDrawAreas().size());
         for(const WorldBuffer::BufferEntry& entry : world.getDrawAreas()) {
+
+            // create a descriptor set pointing to the uniform buffers and the cell texture
+            undicht::vulkan::DescriptorSet& descriptor_set = descriptor_set_cache.accquire();
+            descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+            // descriptor_set.bindImage(1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
+
+            // loading the chunk position to the ubo
+            _last_used_chunk_ubo++;
+            UniformBuffer& per_chunk_ubo = _per_chunk_uniform_buffer.at(_last_used_chunk_ubo);
+            per_chunk_ubo.setAttribute(0, glm::value_ptr(entry._chunk_pos), 3 * sizeof(int32_t));
+
+            // binding the ubo to the shader
+            descriptor_set.bindUniformBuffer(1, per_chunk_ubo.getBuffer());
+            cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());
+
+            // draw command
             cmd.draw(36, false, entry.byte_size / cell_byte_size, 0, entry.offset / cell_byte_size);
         }
 
     }
+
+    void WorldRenderer::resetPerChunkUBOs() {
+
+        _last_used_chunk_ubo = -1;
+    }
+
 
     const undicht::vulkan::DescriptorSetLayout& WorldRenderer::getDescriptorSetLayout() const {
 
@@ -122,5 +143,24 @@ namespace cell {
         }
 
     }
+
+    void WorldRenderer::createPerChunkUBOs(uint32_t num) {
+
+        uint32_t old_ubo_count = _per_chunk_uniform_buffer.size();
+
+        if(num < (old_ubo_count - _last_used_chunk_ubo))
+            return; // no need to create new ubos
+
+        // creating new ubos
+        _per_chunk_uniform_buffer.resize(_last_used_chunk_ubo + num + 1);
+        
+        for(int i = old_ubo_count; i < _per_chunk_uniform_buffer.size();i ++) {
+            // layout of the per chunk ubo:
+            // ivec3 to store the chunk position
+            _per_chunk_uniform_buffer.at(i).init(_device_handle, BufferLayout({UND_VEC3I})); 
+        }
+        
+    }
+
 
 } // namespace cell

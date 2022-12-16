@@ -64,6 +64,8 @@ namespace undicht {
                 return;
             }
 
+            _used_mem_size = byte_size + offset;
+
             void* mem_handle;
             vkMapMemory(_device_handle, _memory, offset, byte_size, {}, &mem_handle);
             if(mem_handle)
@@ -111,6 +113,18 @@ namespace undicht {
             return _allocated_mem_size;
         }
 
+
+        void Buffer::setUsedSize(uint32_t byte_size) {
+            // when the data is copyied into the buffer via a command buffer
+            // the size of the data stored in the buffer has to be manually set
+
+            _used_mem_size = byte_size;
+        }
+
+        uint32_t Buffer::getUsedSize() const {
+
+            return _used_mem_size;
+        }
 
         ///////////////////////////////// creating buffer related structs /////////////////////////////////
 

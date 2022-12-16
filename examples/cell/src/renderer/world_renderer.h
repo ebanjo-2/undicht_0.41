@@ -22,6 +22,7 @@ namespace cell {
       protected:
 
         // handles to other objects
+        undicht::vulkan::LogicalDevice _device_handle;
         undicht::vulkan::RenderPass _render_pass_handle;
 
         // Shader
@@ -33,7 +34,9 @@ namespace cell {
 
         // renderer
         undicht::vulkan::Sampler _sampler;
-        undicht::vulkan::UniformBuffer _uniform_buffer;
+        undicht::vulkan::UniformBuffer _global_uniform_buffer; // contains data like the camera matrices, player position, ...
+        std::vector<undicht::vulkan::UniformBuffer> _per_chunk_uniform_buffer;
+        int _last_used_chunk_ubo = -1;
 
       public:
 
@@ -44,6 +47,7 @@ namespace cell {
 
         void loadCamera(undicht::tools::PerspectiveCamera3D& camera);
         void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::DescriptorSetCache& descriptor_set_cache);
+        void resetPerChunkUBOs(); // should be called with every frame
 
         const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;
 
@@ -52,6 +56,8 @@ namespace cell {
 
         void static setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout, undicht::vulkan::Pipeline& pipeline);
 
+        // creates the given number of (unused) per chunk ubos 
+        void createPerChunkUBOs(uint32_t num);
     };
 
 } // namespace cell

@@ -13,9 +13,9 @@ namespace undicht {
             // initializing the internal buffers
             std::vector<uint32_t> queue_ids = {device.getGraphicsQueueFamily(), device.getTransferQueueFamily()};
 
-            _vertex_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-            _index_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-            _instance_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+            _vertex_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+            _index_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+            _instance_buffer.init(device.getDevice(), queue_ids, false, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
             _transfer_buffer.init(device.getDevice(), {device.getTransferQueueFamily()}, true, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
             // initializing the copy command buffer
@@ -78,8 +78,8 @@ namespace undicht {
                 new_dst.init(dst);
                 new_dst.allocate(*_device_handle, byte_size + offset);
 
-                if(dst.getAllocatedSize() > 0) {
-                    copyData(dst, 0, dst.getAllocatedSize(), new_dst, 0);
+                if(dst.getUsedSize() > 0) {
+                    copyData(dst, 0, dst.getUsedSize(), new_dst, 0);
                 }
                 
                 dst.cleanUp();
@@ -99,7 +99,8 @@ namespace undicht {
             _copy_cmd.endCommandBuffer();
             _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
             _device_handle->waitTransferQueueIdle(); // waiting for the transfer to finish (should probably use semaphores or smth.)
-
+            
+            dst.setUsedSize(std::max(dst.getUsedSize(), byte_size + offset));
         }
 
         void VertexBuffer::copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst) {

@@ -1,7 +1,11 @@
 #include "world/world.h"
 #include "algorithm"
+#include "debug.h"
+#include "glm/gtx/string_cast.hpp"
 
 namespace cell {
+
+    using namespace undicht;
 
     ///////////////////////////////////////// loading chunks into ram /////////////////////////////////////////
 
@@ -19,6 +23,8 @@ namespace cell {
             c->initFromData(cell_buffer, byte_size);
             return *c;
         }
+
+        UND_LOG << "loading new chunk at: " << glm::to_string(chunk_pos) << "\n";
 
         _loaded_chunks.emplace_back(Chunk());
         _loaded_chunks.back().initFromData(cell_buffer, byte_size);
@@ -93,17 +99,17 @@ namespace cell {
         if(world_pos.x >= 0)
             chunk_pos.x = (world_pos.x / 255) * 255;
         else
-            chunk_pos.x = (world_pos.x / 255) * 255 - 255;
+            chunk_pos.x = ((world_pos.x + 1) / 255) * 255 - 255;
 
         if(world_pos.y >= 0)
             chunk_pos.y = (world_pos.y / 255) * 255;
         else
-            chunk_pos.y = (world_pos.y / 255) * 255 - 255;
+            chunk_pos.y = ((world_pos.y + 1) / 255) * 255 - 255;
 
         if(world_pos.z >= 0)
             chunk_pos.z = (world_pos.z / 255) * 255;
         else
-            chunk_pos.z = (world_pos.z / 255) * 255 - 255;
+            chunk_pos.z = ((world_pos.z + 1) / 255) * 255 - 255;
 
         return chunk_pos;
     }

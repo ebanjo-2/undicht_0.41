@@ -23,7 +23,7 @@ namespace cell {
         /// @brief move the player
         /// @param delta_t time since last call in milliseconds
 
-        float step = delta_t / 1000;
+        float step = delta_t * 0.02;
 
         // keyboard input
         if (input_window.isKeyPressed(GLFW_KEY_W))

@@ -23,6 +23,7 @@ namespace undicht {
             bool _cpu_visible;
             uint32_t _mem_type_index; // assigned by the device
             uint32_t _allocated_mem_size = 0;
+            uint32_t _used_mem_size = 0;
 
             std::vector<uint32_t> _queue_ids;
 
@@ -49,6 +50,10 @@ namespace undicht {
             void allocate(const LogicalDevice& device, uint32_t byte_size);
 
             uint32_t getAllocatedSize() const;
+            // when the data is copyied into the buffer via a command buffer
+            // the size of the data stored in the buffer has to be manually set
+            void setUsedSize(uint32_t byte_size); 
+            uint32_t getUsedSize() const;
 
         protected:
             // creating buffer related structs

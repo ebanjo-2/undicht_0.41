@@ -12,18 +12,23 @@ layout(location = 4) in uvec4 pos1;
 layout(location = 0) out vec2 uv;
 layout(location = 1) out vec3 normal;
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
 	mat4 view;
-} ubo;
+} global;
+
+layout(binding = 1) uniform ChunkUBO {
+	ivec3 pos;
+} chunk;
 
 void main() {
 
 	uv = aUv;
 	normal = (aNormal + 1) / 2;
 
-	//output the position of each vertex
-	gl_Position = ubo.proj * ubo.view * vec4((1-aPos) * pos0.xyz + aPos * pos1.xyz, 1.0f);
+	// output the position of each vertex
+	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
+	gl_Position = global.proj * global.view * vec4(vertex_pos + chunk.pos, 1.0f);
 	
 	// positive y is up, change my mind
 	gl_Position.y = -gl_Position.y;

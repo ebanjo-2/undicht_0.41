@@ -6,7 +6,7 @@ namespace undicht {
     Engine::Engine() : _monitor(_window_api.getMonitor(0)) {
     }
 
-    void Engine::init() {
+    void Engine::init(bool vsync) {
         /** @brief initializes core engine objects
          * @param open_window opens a main window
          * @param choose_gpu chooses a physical gpu and creates a logical instance for the engine to use it*/
@@ -23,7 +23,10 @@ namespace undicht {
         _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());
 
         // initializing the swap chain for the main window
-        _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_IMMEDIATE_KHR);
+        if(vsync)
+            _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_FIFO_RELAXED_KHR); // should be better than VK_PRESENT_MODE_FIFO_KHR
+        else
+            _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_IMMEDIATE_KHR);
 
         // creating a render-pass that can be used to draw to the swap images
         _default_render_pass.addOutputAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);

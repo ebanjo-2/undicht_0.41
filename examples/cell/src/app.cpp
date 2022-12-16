@@ -1,10 +1,11 @@
 #include "app.h"
+#include "debug.h"
 
 namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init();
+        undicht::Engine::init(false);
 
         _master_renderer.init(_gpu, _swap_chain.getExtent(), _default_render_pass);
         _world.init(_gpu);
@@ -12,13 +13,19 @@ namespace cell {
 
         // setting some cells for testing
         std::vector<Cell> cells = {
-            Cell(0, 0, 0, 10, 1, 10, 0),
-            Cell(1, 1, 1, 2, 2, 2, 0),
-            Cell(5, 1, 1, 6, 3, 2, 0),
+            Cell(0, 0, 0, 255, 1, 255, 0),
+            Cell(50, 1, 50, 100, 21, 70, 0),
+            Cell(65, 21, 50, 85, 50, 70, 0),
         };
-        _world.loadChunk(glm::ivec3(0,0,0), cells);
-        _world.updateWorldBuffer(glm::ivec3(0,0,0));
 
+        _world.loadChunk(glm::ivec3(0,0,0), cells);
+        _world.loadChunk(glm::ivec3(255,0,0), cells);
+        _world.loadChunk(glm::ivec3(-255,0,0), cells);
+        _world.updateWorldBuffer(glm::ivec3(0,0,0));
+        _world.updateWorldBuffer(glm::ivec3(255,0,0));
+        _world.updateWorldBuffer(glm::ivec3(-255,0,0));
+
+        UND_LOG << "initialized the world\n";
     }
 
     void App::cleanUp() {
