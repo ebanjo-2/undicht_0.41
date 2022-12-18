@@ -109,6 +109,15 @@ namespace undicht {
             return m_fullscreen;
         }
 
+        void Window::setCursorEnabled(bool enabled) {
+
+            if(enabled)
+                glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            else
+                glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        }
+
         void Window::update() {
 
             glfwPollEvents();
@@ -134,6 +143,8 @@ namespace undicht {
             glfwWaitEvents();
         }
 
+        ////////////////////////////////////////// events /////////////////////////////////////
+
         bool Window::shouldClose() const{
 
             return glfwWindowShouldClose(m_window);
@@ -149,9 +160,27 @@ namespace undicht {
             return glfwGetWindowAttrib(m_window, GLFW_ICONIFIED);
         }
 
+        ///////////////////////////////////// user input /////////////////////////////////////
+
+        bool Window::isKeyPressed(int key_id) const {
+
+            return glfwGetKey(m_window, key_id);
+        }
+
+        void Window::getCursorPos(double& x, double& y) const {
+
+            glfwGetCursorPos(m_window, &x, &y);
+        }
+
+
         const VkSurfaceKHR& Window::getSurface() const {
 
             return m_surface;
+        }
+
+        const GLFWwindow* Window::getWindow() const {
+
+            return m_window;
         }
 
 

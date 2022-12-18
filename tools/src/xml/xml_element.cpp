@@ -1,6 +1,7 @@
 #include "xml_element.h"
 #include <iostream>
 #include <algorithm>
+#include "sstream"
 
 
 namespace undicht {
@@ -80,9 +81,9 @@ namespace undicht {
 			return m_content; // this one is easy
 		}
 
-		const XmlTagAttrib* XmlElement::getAttribute(const std::string& attr_name) {
+		const XmlTagAttrib* XmlElement::getAttribute(const std::string& attr_name) const{
 
-			for (XmlTagAttrib& attr : m_tag_attributes) {
+			for (const XmlTagAttrib& attr : m_tag_attributes) {
 
 				if (!attr.m_name.compare(attr_name)) {
 
@@ -94,7 +95,7 @@ namespace undicht {
 			return 0;
 		}
 
-		XmlElement* XmlElement::getElement(const std::vector<std::string>& attribute_strings, int attrib_num) {
+		const XmlElement* XmlElement::getElement(const std::vector<std::string>& attribute_strings, int attrib_num) const {
 			/** searches the elements children for the first one which has the attributes stored in the attribute string at attrib_num
 			* if multiple attribute strings are provided, its children in return will be checked
 			* @param attrib_num: needed so that the function can be used recursivly (what attribute string to use)
@@ -105,7 +106,7 @@ namespace undicht {
 			std::vector<std::string> attributes = splitAttributeString(attribute_strings.at(attrib_num), elem_name);
 
 			// searching for a child element
-			for (XmlElement& elem : m_child_elements) {
+			for (const XmlElement& elem : m_child_elements) {
 
 				if (elem.hasAttributes(attributes) && (!elem.getName().compare(elem_name))) {
 					// found the element matching the current attributes
@@ -126,17 +127,17 @@ namespace undicht {
 			return 0;
 		}
 
-		std::vector<XmlElement*> XmlElement::getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num) {
+		std::vector<const XmlElement*> XmlElement::getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num) const {
 			/** @return all xml elements that have all the requested tag attributes */
 
 			// splitting the attributes
 			std::string elem_name;
 			std::vector<std::string> attributes = splitAttributeString(attribute_strings.at(attrib_num), elem_name);
 
-			std::vector<XmlElement*> elements;
+			std::vector<const XmlElement*> elements;
 
 			// searching for child elements
-			for (XmlElement& elem : m_child_elements) {
+			for (const XmlElement& elem : m_child_elements) {
 
 				if (elem.hasAttributes(attributes) && (!elem.getName().compare(elem_name))) {
 					// found an element matching the current attributes
@@ -148,7 +149,7 @@ namespace undicht {
 					else {
 						// the search continues
 
-						std::vector<XmlElement*> new_elements = elem.getAllElements(attribute_strings, attrib_num + 1);
+						std::vector<const XmlElement*> new_elements = elem.getAllElements(attribute_strings, attrib_num + 1);
 						elements.insert(elements.end(), new_elements.begin(), new_elements.end());
 					}
 
@@ -193,6 +194,45 @@ namespace undicht {
 			return attributes;
 		}
 
+		std::string XmlElement::getXmlStringRecursive(int indent) const {
+			// stores the entire element in a string as it would appear in a xml file (including its child elements)
+
+			std::stringstream s;
+			
+			// this elements indentation
+			std::string ind(std::max(indent, 0), ' ');
+
+			// adding the element start
+			s << ind << "<" << m_tag_name;
+
+			// adding the attributes
+			for(const XmlTagAttrib& attr : m_tag_attributes) 
+				s << " " << attr.m_name << "=" << attr.m_value;
+			
+			s << ">";
+
+			// adding the elements content (Exclusive) OR the child elements
+			// i think it is possible for elements to have only one of the two (????)
+			if(m_child_elements.size()) {
+				
+				s << "\n";
+
+				for(const XmlElement& e : m_child_elements)
+					s << e.getXmlStringRecursive(indent + 2) << "\n";
+
+				// adding the end element
+				if(indent >= 0) // if its not the root element (<?xml>)
+					s << ind << "</" << m_tag_name << ">";
+
+			} else {
+				
+				s << m_content << "</" << m_tag_name << ">";
+			}
+
+
+
+			return s.str();
+		}
 
 		////////////////////////////////////////// functions to print the content of the element ////////////////////////////////////////
 
@@ -252,7 +292,7 @@ namespace undicht {
 
 		void XmlElement::setData(const std::string& line) {
 			/** extracts data from the line which can be read from a xml file
-			* @param a line containing the start tag and possibly the content of a xml element
+			* @param line: a line containing the start tag and possibly the content of a xml element
 			* start_tag: the start tag as it can be found in an xml file
 			* @example <texture width="256" height="256"> */
 
@@ -277,13 +317,13 @@ namespace undicht {
 					break;
 				}
 
-				m_tag_attributes.emplace_back(XmlTagAttrib(line.substr(attr_start, attr_length)));
+				if(attr_start < tag_end)
+					m_tag_attributes.emplace_back(XmlTagAttrib(line.substr(attr_start, attr_length)));
 
 			}
 
 			// content
 			m_content = line.substr(tag_end + 1, line.find('<', tag_end + 1) - tag_end - 1);
-
 		}
 
 	} // tools

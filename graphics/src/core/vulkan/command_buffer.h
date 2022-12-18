@@ -16,7 +16,7 @@ namespace undicht {
         public:
 
             void init(const VkDevice& device, const VkCommandPool& command_pool);
-            // void cleanUp(); // the VkCommandBuffer gets destroyed once the command pool get destroyed
+            void cleanUp();
 
             const VkCommandBuffer& getCommandBuffer() const;
 
@@ -26,20 +26,27 @@ namespace undicht {
             void endCommandBuffer();
 
             // graphics commands
-            void beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value = {0.0f, 0.0f, 0.0f, 1.0f});
+            void beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values);
             void endRenderPass();
             void bindGraphicsPipeline(const VkPipeline& pipeline);
-            void draw(uint32_t vertex_count, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);
-
+            void bindVertexBuffer(const VkBuffer& buffer, uint32_t binding);
+            void bindIndexBuffer(const VkBuffer& buffer);
+            void bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout);
+            void draw(uint32_t vertex_count, bool draw_indexed = false, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);
+            
             // other commands
-            void copyBuffer(const VkBuffer& src, VkBuffer& dst, const VkBufferCopy& copy_info);
+            void copy(const VkBuffer& src, const VkBuffer& dst, const VkBufferCopy& copy_region);
+            void copy(const VkBuffer& src, const VkImage& dst, VkImageLayout layout, const VkBufferImageCopy& copy_region);
+            void pipelineBarrier(const VkImageMemoryBarrier& barrier, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage);
+            void blitImage(const VkImage& image, const VkImageBlit& blit);
 
         protected:
             // creating command buffer related structs
 
             VkCommandBufferAllocateInfo static createCommandBufferAllocateInfo(const VkCommandPool& command_pool, uint32_t count = 1);
             VkCommandBufferBeginInfo static createCommandBufferBeginInfo(bool single_use);
-            VkRenderPassBeginInfo static createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value);
+            VkRenderPassBeginInfo static createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values);
+            
         };
 
     } // vulkan

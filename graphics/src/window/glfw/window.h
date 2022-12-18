@@ -44,6 +44,8 @@ namespace undicht {
             void setWindowed(uint32_t &width, uint32_t &height); // undo fullscreen
             bool isFullscreen() const;
 
+            void setCursorEnabled(bool enabled);
+
             void update();
             void waitForEvent();
 
@@ -52,7 +54,12 @@ namespace undicht {
             bool hasResized() const;
             bool isMinimized() const;
 
+            // user input
+            bool isKeyPressed(int key_id) const;
+            void getCursorPos(double& x, double& y) const;
+
             const VkSurfaceKHR& getSurface() const;
+            const GLFWwindow* getWindow() const;
 
         };
 

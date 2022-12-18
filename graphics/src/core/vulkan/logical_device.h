@@ -36,6 +36,8 @@ namespace undicht {
 
             void cleanUp();
 
+            uint32_t getMemoryTypeIndex(VkMemoryType mem_type) const;
+
             const VkDevice& getDevice() const;
             const VkPhysicalDevice& getPhysicalDevice() const;
 
@@ -43,16 +45,22 @@ namespace undicht {
             uint32_t getPresentQueueFamily() const;
             uint32_t getTransferQueueFamily() const;
 
+            const VkQueue& getGraphicsQueue() const;
+            const VkQueue& getPresentQueue() const;
+            const VkQueue& getTransferQueue() const;
+
             const VkCommandPool& getGraphicsCmdPool() const;
             const VkCommandPool& getTransferCmdPool() const;
 
-            void submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {});
-            void submitOnTransferQueue(const VkCommandBuffer& cmd);
+            void submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {}) const;
+            void submitOnTransferQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {}) const;
 
             void presentOnPresentQueue(const VkSwapchainKHR& swap_chain, uint32_t image_index, const std::vector<VkSemaphore>& wait_on = {});
 
             uint32_t findMemory(VkMemoryType mem_type) const;
 
+            void waitGraphicsQueueIdle() const;
+            void waitTransferQueueIdle() const;
             void waitForProcessesToFinish() const;
 
         protected:

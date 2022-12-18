@@ -7,3 +7,6 @@
 [submodule "tools/extern/stb"]
 	path = tools/extern/stb
 	url = https://github.com/ebanjo-2/stb.git
+[submodule "graphics/extern/imgui"]
+	path = graphics/extern/imgui
+	url = https://github.com/ocornut/imgui.git

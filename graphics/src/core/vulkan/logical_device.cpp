@@ -1,6 +1,6 @@
 #include "logical_device.h"
-#include "set"
 #include "debug.h"
+#include "set"
 
 namespace undicht {
 
@@ -36,6 +36,28 @@ namespace undicht {
 
         }
 
+        uint32_t LogicalDevice::getMemoryTypeIndex(VkMemoryType mem_type) const {
+            
+            // getting the physical devices memory properties
+            VkPhysicalDeviceMemoryProperties properties;
+            vkGetPhysicalDeviceMemoryProperties(_physical_device, &properties);
+
+            // searching for the right memory
+            for(int i = 0; i < properties.memoryTypeCount; i++) {
+
+                if(!(mem_type.heapIndex & (1 << i)))
+                    continue; // heapIndex is used as a bitfield which specifies the types that can be used
+
+                if((properties.memoryTypes[i].propertyFlags & mem_type.propertyFlags) == mem_type.propertyFlags)
+                    return i;
+
+            }
+
+            UND_ERROR << "failed to find the right type of vram\n";
+            return 0;
+        }
+
+
         const VkDevice& LogicalDevice::getDevice() const {
 
             return _device;
@@ -61,6 +83,21 @@ namespace undicht {
             return _transfer_queue_id;
         }
 
+        const VkQueue& LogicalDevice::getGraphicsQueue() const {
+            
+            return _graphics_queue;
+        }
+
+        const VkQueue& LogicalDevice::getPresentQueue() const {
+
+            return _present_queue;
+        }
+
+        const VkQueue& LogicalDevice::getTransferQueue() const {
+
+            return _transfer_queue;
+        }
+
         const VkCommandPool& LogicalDevice::getGraphicsCmdPool() const {
 
             return _graphics_cmds;
@@ -71,49 +108,40 @@ namespace undicht {
             return _transfer_cmds;
         }
 
-        void LogicalDevice::submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) {
+        void LogicalDevice::submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) const {
 
             VkSubmitInfo info = createSubmitInfo(cmd, wait_on, wait_stages, signal_sem);
             vkQueueSubmit(_graphics_queue, 1, &info, signal_fen);
 
         }
 
-        void LogicalDevice::submitOnTransferQueue(const VkCommandBuffer& cmd){
+        void LogicalDevice::submitOnTransferQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) const {
+
+            VkSubmitInfo info = createSubmitInfo(cmd, wait_on, wait_stages, signal_sem);
+            vkQueueSubmit(_transfer_queue, 1, &info, signal_fen);
 
         }
 
-        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, uint32_t image_index, const std::vector<VkSemaphore>& wait_on) {
+        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, const uint32_t& image_index, const std::vector<VkSemaphore>& wait_on) {
 
             VkPresentInfoKHR info = createPresentInfo(swap_chain, image_index, wait_on);
             vkQueuePresentKHR(_present_queue, &info);
 
         }
 
-        uint32_t LogicalDevice::findMemory(VkMemoryType mem_type) const {
+        void LogicalDevice::waitGraphicsQueueIdle() const {
+            
+            vkQueueWaitIdle(_graphics_queue);
+        }
 
-            // getting the physical devices memory properties
-            VkPhysicalDeviceMemoryProperties properties;
-            vkGetPhysicalDeviceMemoryProperties(_physical_device, &properties);
-
-            // searching for the right memory
-            for(int i = 0; i < properties.memoryTypeCount; i++) {
-
-                if(!((1 << i) & mem_type.heapIndex))
-                    continue; // heapIndex is used as a bitfield which specifies the types that can be used
-
-                if(properties.memoryTypes[i].propertyFlags == mem_type.propertyFlags)
-                    return i;
-
-            }
-
-            UND_ERROR << "failed to find the right type of vram\n";
-            return 0;
+        void LogicalDevice::waitTransferQueueIdle() const {
+            
+            vkQueueWaitIdle(_transfer_queue);
         }
 
         void LogicalDevice::waitForProcessesToFinish() const {
 
             vkDeviceWaitIdle(_device);
-
         }
 
         ////////////////////////////// finding the correct queue families //////////////////////////////
@@ -184,6 +212,7 @@ namespace undicht {
             // specifying the features the device is going to use
             VkPhysicalDeviceFeatures features{};
             features.samplerAnisotropy = VK_TRUE;
+            features.fillModeNonSolid = VK_TRUE;
 
             // creating the logical device
             VkDeviceCreateInfo info = createDeviceCreateInfo(queue_create_infos, extensions, features);

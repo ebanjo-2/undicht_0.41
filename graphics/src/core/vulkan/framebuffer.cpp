@@ -19,6 +19,7 @@ namespace undicht {
         void Framebuffer::init(const VkDevice& device, const RenderPass& render_pass, VkExtent2D extent) {
 
             _device_handle = device;
+            _extent = extent;
 
             if(render_pass.getAttachmentCount() != _attachments.size()) {
                 UND_ERROR << "failed to create framebuffer: added attachments dont match the ones specified by the render_pass\n";
@@ -40,6 +41,12 @@ namespace undicht {
 
             return _framebuffer;
         }
+
+        const VkExtent2D& Framebuffer::getExtent() const {
+
+            return _extent;
+        }
+
 
         /////////////////////////////// creating framebuffer related structs ///////////////////////////////
 

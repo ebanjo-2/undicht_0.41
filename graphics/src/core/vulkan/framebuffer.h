@@ -18,6 +18,8 @@ namespace undicht {
             VkFramebuffer _framebuffer;
             std::vector<VkImageView> _attachments;
 
+            VkExtent2D _extent;
+
         public:
 
             /** attachments should be added before the framebuffer is initialized
@@ -28,6 +30,7 @@ namespace undicht {
             void cleanUp();
 
             const VkFramebuffer& getFramebuffer() const;
+            const VkExtent2D& getExtent() const;
 
         protected:
             // creating framebuffer related structs

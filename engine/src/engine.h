@@ -2,6 +2,7 @@
 #define UNDICHT_ENGINE_H
 
 #include "vector"
+#include "chrono"
 
 #include "window/glfw/window_api.h"
 #include "window/glfw/monitor.h"
@@ -26,9 +27,14 @@ namespace undicht {
         vulkan::LogicalDevice _gpu;
         vulkan::SwapChain _swap_chain;
         vulkan::RenderPass _default_render_pass;
+        
+        std::vector<vulkan::Image> _depth_buffers;
         std::vector<vulkan::Framebuffer> _default_framebuffer; // one for each image of the swap chain
 
         bool _should_stop = false;
+
+        std::chrono::high_resolution_clock::time_point _this_frame_time;
+        std::chrono::high_resolution_clock::time_point _last_frame_time;
 
     public:
 
@@ -38,7 +44,7 @@ namespace undicht {
         * @param open_window opens a main window
         * chooses a physical gpu and creates a logical instance for the engine to use it
         * creates a swap chain to render to */
-        virtual void init();
+        virtual void init(bool vsync = true);
 
         /** can be implemented by a child "application" class */
         virtual void mainLoop(){};
@@ -55,6 +61,9 @@ namespace undicht {
 
         /** clean up the core engine objects */
         virtual void cleanUp();
+
+        /** time in milliseconds since last frame started */
+        double getDeltaT() const;
 
     protected:
         // default event handling

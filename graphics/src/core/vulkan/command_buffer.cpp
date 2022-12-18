@@ -12,9 +12,11 @@ namespace undicht {
 
         }
 
-        /*void CommandBuffer::cleanUp() {
+        void CommandBuffer::cleanUp() {
+
             // the command buffer gets destroyed with the command pool
-        }*/
+
+        }
 
         const VkCommandBuffer& CommandBuffer::getCommandBuffer() const {
 
@@ -39,11 +41,9 @@ namespace undicht {
 
         }
 
-        ////////////////////////////////////////// graphics commands //////////////////////////////////////
+        void CommandBuffer::beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values) {
 
-        void CommandBuffer::beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value) {
-
-            VkRenderPassBeginInfo info = createRenderPassBeginInfo(render_pass, frame_buffer, extent, clear_value);
+            VkRenderPassBeginInfo info = createRenderPassBeginInfo(render_pass, frame_buffer, extent, clear_values);
             vkCmdBeginRenderPass(_cmd_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 
         }
@@ -58,17 +58,57 @@ namespace undicht {
             vkCmdBindPipeline(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
         }
 
-        void CommandBuffer::draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
+        void CommandBuffer::bindVertexBuffer(const VkBuffer& buffer, uint32_t binding) {
 
-            vkCmdDraw(_cmd_buffer, vertex_count, instance_count, first_vertex, first_instance);
+            static VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers(_cmd_buffer, binding, 1, &buffer, &offset);
         }
 
-        /////////////////////////////////// other gpu commands ////////////////////////////////////////////////
+        void CommandBuffer::bindIndexBuffer(const VkBuffer& buffer) {
 
-        void CommandBuffer::copyBuffer(const VkBuffer& src, VkBuffer& dst, const VkBufferCopy& copy_info) {
-
-            vkCmdCopyBuffer(_cmd_buffer, src, dst, 1, &copy_info);
+            vkCmdBindIndexBuffer(_cmd_buffer, buffer, 0, VK_INDEX_TYPE_UINT32);
         }
+
+        void CommandBuffer::bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout) {
+
+            vkCmdBindDescriptorSets(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &set, 0, nullptr);
+        }
+
+        void CommandBuffer::draw(uint32_t vertex_count, bool draw_indexed, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
+            
+            if(draw_indexed)
+                vkCmdDrawIndexed(_cmd_buffer, vertex_count, instance_count, first_vertex, 0, first_instance);
+            else 
+                vkCmdDraw(_cmd_buffer, vertex_count, instance_count, first_vertex, first_instance);
+
+        }
+
+        void CommandBuffer::copy(const VkBuffer& src, const VkBuffer& dst, const VkBufferCopy& copy_region) {
+            // copy data between buffers on gpu owned memory
+            // make sure the dst buffer has enough memory allocated
+
+            vkCmdCopyBuffer(_cmd_buffer, src, dst, 1, &copy_region);
+        }
+
+        void CommandBuffer::copy(const VkBuffer& src, const VkImage& dst, VkImageLayout layout, const VkBufferImageCopy& copy_region) {
+            // copy data between a buffer and an images memory
+            // make sure the image has enough memory allocated
+
+            vkCmdCopyBufferToImage(_cmd_buffer, src, dst, layout, 1, &copy_region);
+        }
+
+
+        void CommandBuffer::pipelineBarrier(const VkImageMemoryBarrier& barrier, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
+
+            vkCmdPipelineBarrier(_cmd_buffer, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        }
+
+        void CommandBuffer::blitImage(const VkImage& image, const VkImageBlit& blit) {
+
+            vkCmdBlitImage(_cmd_buffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+        
+        }
+
 
         /////////////////////////////// creating command buffer related structs ///////////////////////////////
 
@@ -97,7 +137,7 @@ namespace undicht {
             return info;
         }
 
-        VkRenderPassBeginInfo CommandBuffer::createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const VkClearValue& clear_value) {
+        VkRenderPassBeginInfo CommandBuffer::createRenderPassBeginInfo(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values) {
 
             VkRenderPassBeginInfo info{};
             info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -107,8 +147,8 @@ namespace undicht {
             info.renderArea.offset.y = 0;
             info.renderArea.extent = extent;
             info.framebuffer = frame_buffer;
-            info.clearValueCount = 1;
-            info.pClearValues = &clear_value;
+            info.clearValueCount = clear_values.size();
+            info.pClearValues = clear_values.data();
 
             return info;
         }

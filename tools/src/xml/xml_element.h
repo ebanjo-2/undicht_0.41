@@ -41,20 +41,23 @@ namespace undicht {
 			/// @return the content stored between the start and end tag of the element (excluding child elements)
 			const std::string& getContent() const;
 
-			const XmlTagAttrib* getAttribute(const std::string& attrib_name);
+			const XmlTagAttrib* getAttribute(const std::string& attrib_name) const;
 
 
 			/** searches the elements children for the first one which has the attributes stored in the attribute string at attrib_num
 			* if multiple attribute strings are provided, its children in return will be checked
 			* @param attrib_num: needed so that the function can be used recursivly (what attribute string to use)
 			* @return 0 if the element could not be found */
-			XmlElement* getElement(const std::vector<std::string>& attribute_strings, int attrib_num = 0);
+			const XmlElement* getElement(const std::vector<std::string>& attribute_strings, int attrib_num = 0) const;
 
 			/** @return all xml elements that have all the requested tag attributes */
-			std::vector<XmlElement*> getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num = 0);
+			std::vector<const XmlElement*> getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num = 0) const;
 
 			/// the attribute string should look like this "name attr0=val0 attr1=val1 ..."
 			std::vector<std::string> splitAttributeString(std::string attribute_string, std::string& loadTo_name) const;
+
+			// stores the entire element in a string as it would appear in a xml file (including its child elements)
+			std::string getXmlStringRecursive(int indent = 0) const;
 
 		public:
 			// functions to print the content of the element

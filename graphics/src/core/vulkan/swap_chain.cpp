@@ -51,7 +51,8 @@ namespace undicht {
 
             // creating the swap chain
             VkSwapchainCreateInfoKHR info = createSwapchainCreateInfo(surface, _swap_image_count,_surface_format, _present_mode, _extent, _queue_families, capabilities.currentTransform);
-            vkCreateSwapchainKHR(_device_handle, &info, {}, &_swap_chain);
+            if(vkCreateSwapchainKHR(_device_handle, &info, {}, &_swap_chain) != VK_SUCCESS)
+                UND_ERROR << "failed to recreate swap chain\n";
 
             // retrieving the swap images
             unsigned swap_image_count;
