@@ -12,6 +12,7 @@
 #include "renderer/vulkan/descriptor_set_cache.h"
 #include "renderer/vulkan/uniform_buffer.h"
 #include "3D/camera/perspective_camera_3d.h"
+#include "materials/material_atlas.h"
 
 #include "renderer/world_buffer.h"
 
@@ -30,6 +31,7 @@ namespace cell {
 
         // Pipeline
         undicht::vulkan::DescriptorSetLayout _descriptor_set_layout;
+        undicht::vulkan::DescriptorSetCache _descriptor_cache;
         undicht::vulkan::Pipeline _pipeline;
 
         // renderer
@@ -46,8 +48,8 @@ namespace cell {
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
         void loadCamera(undicht::tools::PerspectiveCamera3D& camera);
-        void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::DescriptorSetCache& descriptor_set_cache);
-        void resetPerChunkUBOs(); // should be called with every frame
+        void draw(const WorldBuffer& world, const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd);
+        void beginFrame();
 
         const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;
 

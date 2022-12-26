@@ -42,8 +42,11 @@ namespace undicht {
             const VkImageView& getSwapImageView(int id) const;
             int getSwapImageCount() const;
 
-            // request image from the swapchain
-            // the semaphore and fence are signaled once the image is acquired
+
+            /// @brief request image from the swapchain
+            /// @param signal_sem (optional) gets signaled once the image is ready
+            /// @param signal_fen (optional) gets signaled once the image is ready
+            /// @return the id of the newly acquired image, -1 if no image could be acquired (swapchain needs to be recreated)
             uint32_t acquireNextSwapImage(VkSemaphore signal_sem = VK_NULL_HANDLE, VkFence signal_fen = VK_NULL_HANDLE);
 
         protected:

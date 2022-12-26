@@ -2,30 +2,37 @@
 set(WORLD_SOURCES
     src/world/cell.h
     src/world/cell.cpp
-    
     src/world/mini_chunk.h
     src/world/mini_chunk.cpp
     src/world/chunk.h
     src/world/chunk.cpp
     src/world/world.h
     src/world/world.cpp
- 
 )
 
 set(RENDERER_SOURCES
-		src/renderer/master_renderer.h
-		src/renderer/master_renderer.cpp
-		src/renderer/world_renderer.h
-	  src/renderer/world_renderer.cpp
-	  src/renderer/world_buffer.h
+    src/renderer/master_renderer.h
+	src/renderer/master_renderer.cpp
+	src/renderer/world_renderer.h
+	src/renderer/world_renderer.cpp
+	src/renderer/world_buffer.h
     src/renderer/world_buffer.cpp
     src/renderer/drawable_world.h
     src/renderer/drawable_world.cpp
+    src/renderer/final_renderer.h
+    src/renderer/final_renderer.cpp
+)
+
+set(MATERIALS_SOURCES
+    src/materials/material.h
+    src/materials/material.cpp
+    src/materials/material_atlas.h
+    src/materials/material_atlas.cpp
 )
 
 set(PLAYER_SOURCES
-		src/player/player.h
-	  src/player/player.cpp
+	src/player/player.h
+	src/player/player.cpp
 )
 
 add_executable(cell 
@@ -36,6 +43,7 @@ add_executable(cell
     
     ${WORLD_SOURCES}
     ${RENDERER_SOURCES}
+    ${MATERIALS_SOURCES}
     ${PLAYER_SOURCES}
 )
 

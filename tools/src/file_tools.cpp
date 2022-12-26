@@ -26,9 +26,12 @@ namespace undicht {
         bool hasFileType(std::string file_name, std::string type) {
             /**@brief checks if the file_name has the type (with type being the files ending, like ".obj" or ".jpg" */
 
-            int start_of_ending = file_name.find('.', 0); // finding the file - ending
+            size_t beginning_of_the_end = file_name.rfind('.'); // finding the file - ending
 
-            return !file_name.compare(start_of_ending, type.length(), type);
+            if(beginning_of_the_end == std::string::npos)
+                return false; // no file type found
+            else
+                return !file_name.compare(beginning_of_the_end, type.length(), type);
         }
 
 

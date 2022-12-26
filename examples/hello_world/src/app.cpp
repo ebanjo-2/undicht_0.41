@@ -3,14 +3,16 @@
 #include "file_tools.h"
 #include "core/vulkan/formats.h"
 #include "array"
+#include "model_loading/obj/obj_file.h"
 
 using namespace undicht;
+using namespace tools;
 
 void HelloWorldApp::init() {
 
     UND_LOG << "Init HelloWorldApp\n";
 
-    undicht::Engine::init();
+    undicht::Engine::init(false, true);
 
     // init the shader
     _shader.addVertexModule(_gpu.getDevice(), UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.vert.spv");
@@ -50,7 +52,8 @@ void HelloWorldApp::init() {
     _uniform_buffer.init(_gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
 
     // init the scene
-    loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza_collada/sponza.dae", _model);
+    // loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza_collada/sponza.dae", _model);
+    loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model);
 
     _camera.setViewRange(1.0f, 10000.0f);
     _camera.setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
@@ -158,21 +161,26 @@ void HelloWorldApp::onWindowResize() {
 
 void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadTo) {
 
-    if(undicht::tools::hasFileType(file_name, ".dae")) {
-        UND_ERROR << "failed to load model: incorrect file type\n";
-        return;
-    }
-
     // loading the data from the file
     std::vector<undicht::tools::MeshData> meshes;
     std::vector<undicht::tools::ImageData> textures;
 
-    undicht::tools::ColladaFile file(file_name);
+    if(hasFileType(file_name, ".dae")) {
+        undicht::tools::ColladaFile file(file_name);
+        file.loadAllMeshes(meshes);
+        file.loadAllTextures(textures);
+    } else if (hasFileType(file_name, ".obj")) {
+        undicht::tools::OBJFile file(file_name);
+        file.loadAllMeshes(meshes);
+        file.loadAllTextures(textures);
+    } else {
+        UND_ERROR << "failed to load model:" << file_name << " : incorrect file type\n";
+        return;
+    }
+
     UND_LOG << "loading model file: " << file_name << "\n";
-    file.loadAllMeshes(meshes);
-    UND_LOG << "loaded " << meshes.size() << " meshes\n";
-    file.loadAllTextures(textures);
     UND_LOG << "loaded " << textures.size() << " textures\n";
+    UND_LOG << "loaded " << meshes.size() << " meshes\n";
 
     // loading the textures
     for(undicht::tools::ImageData& data : textures) {

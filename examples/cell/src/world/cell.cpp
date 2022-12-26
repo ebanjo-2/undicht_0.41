@@ -100,7 +100,11 @@ namespace cell {
 
     void Cell::setID(uint32_t id) {
         // storing the id as the uv in the last bytes of pos_0 and pos_1
-        setUV(((id & 0x0000FF00) >> 8), (id & 0x000000FF));
+        #ifdef LITTLE_ENDIAN
+            setUV((id & 0x000000FF), ((id & 0x0000FF00) >> 8));
+        #else
+            setUV(((id & 0x0000FF00) >> 8), (id & 0x000000FF));
+        #endif
     }
 
     ///////////////////////////////////////////// operator to print out cell data /////////////////////////////////////////

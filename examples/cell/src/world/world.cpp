@@ -24,8 +24,6 @@ namespace cell {
             return *c;
         }
 
-        UND_LOG << "loading new chunk at: " << glm::to_string(chunk_pos) << "\n";
-
         _loaded_chunks.emplace_back(Chunk());
         _loaded_chunks.back().initFromData(cell_buffer, byte_size);
         _chunk_positions.push_back(chunk_pos);

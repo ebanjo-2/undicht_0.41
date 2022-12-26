@@ -29,6 +29,8 @@ namespace cell {
         _descriptor_set_layout.setBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
         _descriptor_set_layout.init(gpu.getDevice());
 
+        _descriptor_cache.init(gpu, _descriptor_set_layout);
+
         _pipeline.setViewport(viewport);
         _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
         _pipeline.setBlending(0, false);
@@ -43,25 +45,30 @@ namespace cell {
         _pipeline.init(gpu.getDevice(), render_pass.getRenderPass());
 
         // renderer
-        _sampler.setMinFilter(VK_FILTER_LINEAR);
-        _sampler.setMaxFilter(VK_FILTER_LINEAR);
+        _sampler.setMinFilter(VK_FILTER_NEAREST);
+        _sampler.setMaxFilter(VK_FILTER_NEAREST);
         _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
         _sampler.init(gpu.getDevice());
 
         // uniform buffer layout:
         // mat4 proj
         // mat4 view
-        // vec4 relative chunk position
-        _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
+        // vec2 tile map unit (size of one tile in normalized device coords)
+        _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC2F}));
+
+
 
     }
 
     void WorldRenderer::cleanUp() {
         
-        for(auto& ubo : _per_chunk_uniform_buffer) ubo.cleanUp();
+        for(auto& ubo : _per_chunk_uniform_buffer) 
+            ubo.cleanUp();
+
         _global_uniform_buffer.cleanUp();
         _sampler.cleanUp();
         _pipeline.cleanUp();
+        _descriptor_cache.cleanUp();
         _descriptor_set_layout.cleanUp();
         _shader.cleanUp();
 
@@ -81,12 +88,18 @@ namespace cell {
 
     }
 
-    void WorldRenderer::draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::DescriptorSetCache& descriptor_set_cache) {
+    void WorldRenderer::draw(const WorldBuffer& world, const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd) {
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
 
         cmd.bindVertexBuffer(world.getBuffer().getVertexBuffer().getBuffer(), 0);
         cmd.bindVertexBuffer(world.getBuffer().getInstanceBuffer().getBuffer(), 1);
+
+        // storing the material tile maps dimensions in the global ubo
+        float tile_map_unit[2];
+        tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
+        tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
+        _global_uniform_buffer.setAttribute(2, tile_map_unit, 2 *sizeof(float));
 
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
@@ -94,9 +107,9 @@ namespace cell {
         for(const WorldBuffer::BufferEntry& entry : world.getDrawAreas()) {
 
             // create a descriptor set pointing to the uniform buffers and the cell texture
-            undicht::vulkan::DescriptorSet& descriptor_set = descriptor_set_cache.accquire();
+            undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
             descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
-            // descriptor_set.bindImage(1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
+            descriptor_set.bindImage(2, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
 
             // loading the chunk position to the ubo
             _last_used_chunk_ubo++;
@@ -113,9 +126,10 @@ namespace cell {
 
     }
 
-    void WorldRenderer::resetPerChunkUBOs() {
+    void WorldRenderer::beginFrame() {
 
         _last_used_chunk_ubo = -1;
+        _descriptor_cache.reset();
     }
 
 

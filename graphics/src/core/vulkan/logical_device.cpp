@@ -122,7 +122,7 @@ namespace undicht {
 
         }
 
-        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, const uint32_t& image_index, const std::vector<VkSemaphore>& wait_on) {
+        void LogicalDevice::presentOnPresentQueue(const VkSwapchainKHR& swap_chain, uint32_t image_index, const std::vector<VkSemaphore>& wait_on) {
 
             VkPresentInfoKHR info = createPresentInfo(swap_chain, image_index, wait_on);
             vkQueuePresentKHR(_present_queue, &info);
@@ -163,6 +163,7 @@ namespace undicht {
                 if(queue_families.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT)
                     return i;
 
+            UND_ERROR << "failed to find a graphics queue\n";
             return -1;
         }
 
@@ -178,20 +179,31 @@ namespace undicht {
 
             }
 
+            UND_ERROR << "failed to find a present queue\n";
             return -1;
         }
 
         int LogicalDevice::findTransferQueue(const std::vector<VkQueueFamilyProperties>& queue_families) {
 
-            for(int i = 0; i < queue_families.size(); i++) {
-                // the transfer queue should be different to the graphics queue
-                if (queue_families.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                    continue;
-                if (queue_families.at(i).queueFlags & VK_QUEUE_TRANSFER_BIT)
-                    return i;
-            }
+            int fall_back = -1;
 
-            return -1;
+            for(int i = 0; i < queue_families.size(); i++) {
+
+                if (queue_families.at(i).queueFlags & VK_QUEUE_TRANSFER_BIT) {
+
+                    // the transfer queue should be different to the graphics queue
+                    if (queue_families.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                        fall_back = i;
+                        continue;
+                    }
+
+                }
+
+                return i;
+            }
+            
+            UND_ERROR << "failed to find a unique transfer queue\n";
+            return fall_back;
         }
 
         //////////////////////////////// initializing the logical device ////////////////////////////////

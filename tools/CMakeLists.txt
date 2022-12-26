@@ -27,6 +27,10 @@ add_library("tools"
 	src/model_loading/model_loader.cpp
 	src/model_loading/collada/collada_file.h
 	src/model_loading/collada/collada_file.cpp
+	src/model_loading/obj/obj_file.h
+	src/model_loading/obj/obj_file.cpp
+	src/model_loading/obj/mtl_file.h
+	src/model_loading/obj/mtl_file.cpp
 	
 	src/file_tools.h
 	src/file_tools.cpp

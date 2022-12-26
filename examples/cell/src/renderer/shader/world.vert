@@ -15,6 +15,7 @@ layout(location = 1) out vec3 normal;
 layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
 	mat4 view;
+	vec2 tile_map_unit;
 } global;
 
 layout(binding = 1) uniform ChunkUBO {
@@ -23,7 +24,10 @@ layout(binding = 1) uniform ChunkUBO {
 
 void main() {
 
-	uv = aUv;
+
+
+	uv = (vec2(pos0.w, pos1.w) + aUv) * global.tile_map_unit;
+	// uv = aUv; // display full tile map on every cell
 	normal = (aNormal + 1) / 2;
 
 	// output the position of each vertex

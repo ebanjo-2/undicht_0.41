@@ -6,7 +6,7 @@ namespace undicht {
     Engine::Engine() : _monitor(_window_api.getMonitor(0)) {
     }
 
-    void Engine::init(bool vsync) {
+    void Engine::init(bool vsync, bool full_screen) {
         /** @brief initializes core engine objects
          * @param open_window opens a main window
          * @param choose_gpu chooses a physical gpu and creates a logical instance for the engine to use it*/
@@ -17,7 +17,9 @@ namespace undicht {
         // opening a window
         _monitor = _window_api.getMonitor();
         _main_window = graphics::Window(_vk_instance.getInstance(), "Undicht Engine V0.41");
-        // _main_window.setFullscreen(&_monitor);
+
+        if(full_screen)
+            _main_window.setFullscreen(&_monitor);
 
         // choosing a gpu
         _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());

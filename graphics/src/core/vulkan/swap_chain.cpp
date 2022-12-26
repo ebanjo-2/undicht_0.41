@@ -93,9 +93,18 @@ namespace undicht {
         }
 
         uint32_t SwapChain::acquireNextSwapImage(VkSemaphore signal_sem, VkFence signal_fen) {
+            /// @brief request image from the swapchain
+            /// @param signal_sem (optional) gets signaled once the image is ready
+            /// @param signal_fen (optional) gets signaled once the image is ready
+            /// @return the id of the newly acquired image, -1 if no image could be acquired (swapchain needs to be recreated)
 
             uint32_t next_image;
-            vkAcquireNextImageKHR(_device_handle, _swap_chain, UINT64_MAX, signal_sem, signal_fen, &next_image);
+            VkResult result = vkAcquireNextImageKHR(_device_handle, _swap_chain, UINT32_MAX, signal_sem, signal_fen, &next_image);
+
+            if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+                UND_LOG << "swapchain is out of date \n";
+                return -1;
+            } 
 
             return next_image;
         }
