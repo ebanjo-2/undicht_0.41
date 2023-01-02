@@ -12,6 +12,8 @@ namespace undicht {
             VkShaderStageFlagBits shader_stage;
             if(type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
                 shader_stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+            else if(type == VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
+                shader_stage = VK_SHADER_STAGE_FRAGMENT_BIT;
             else if(type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
                 shader_stage = VK_SHADER_STAGE_ALL_GRAPHICS;
 

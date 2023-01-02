@@ -53,6 +53,11 @@ namespace undicht {
             vkCmdEndRenderPass(_cmd_buffer);
         }
 
+        void CommandBuffer::nextSubPass(const VkSubpassContents& subpass_contents) {
+
+            vkCmdNextSubpass(_cmd_buffer, subpass_contents);
+        }
+
         void CommandBuffer::bindGraphicsPipeline(const VkPipeline& pipeline) {
 
             vkCmdBindPipeline(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);

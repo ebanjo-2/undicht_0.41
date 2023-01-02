@@ -28,6 +28,7 @@ namespace undicht {
             // graphics commands
             void beginRenderPass(const VkRenderPass& render_pass, const VkFramebuffer& frame_buffer, VkExtent2D extent, const std::vector<VkClearValue>& clear_values);
             void endRenderPass();
+            void nextSubPass(const VkSubpassContents& subpass_contents);
             void bindGraphicsPipeline(const VkPipeline& pipeline);
             void bindVertexBuffer(const VkBuffer& buffer, uint32_t binding);
             void bindIndexBuffer(const VkBuffer& buffer);

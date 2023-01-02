@@ -3,6 +3,7 @@
 
 #include "vector"
 #include "vulkan/vulkan.h"
+#include "buffer_layout.h"
 
 namespace undicht {
 
@@ -47,12 +48,15 @@ namespace undicht {
             void setShaderInput(const VkDescriptorSetLayout& layout);
             void setDepthStencilState(bool enable_depth_test, bool write_depth_values = true);
 
-            void init(const VkDevice& device, VkRenderPass render_pass);
+            void init(const VkDevice& device, VkRenderPass render_pass, uint32_t subpass = 0);
             void cleanUp();
 
             const VkViewport& getViewport() const;
             const VkPipeline& getPipeline() const;
             const VkPipelineLayout& getPipelineLayout() const;
+
+            // a function that allows to set the entire layout of a vertex binding
+            void setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout);
 
         protected:
             // creating pipeline related structs

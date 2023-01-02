@@ -31,8 +31,8 @@ namespace undicht {
             _swap_chain.init(_gpu, _main_window.getSurface(), VK_PRESENT_MODE_IMMEDIATE_KHR);
 
         // creating a render-pass that can be used to draw to the swap images
-        _default_render_pass.addOutputAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-        _default_render_pass.addOutputAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        _default_render_pass.addAttachment(_swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        _default_render_pass.addAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         _default_render_pass.addSubPass({0, 1}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
         _default_render_pass.init(_gpu.getDevice());
 

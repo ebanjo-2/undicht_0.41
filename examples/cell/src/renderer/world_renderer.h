@@ -30,6 +30,7 @@ namespace cell {
         undicht::vulkan::Shader _shader;
 
         // Pipeline
+        uint32_t _subpass = 0;
         undicht::vulkan::DescriptorSetLayout _descriptor_set_layout;
         undicht::vulkan::DescriptorSetCache _descriptor_cache;
         undicht::vulkan::Pipeline _pipeline;
@@ -42,7 +43,7 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
+        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
         void cleanUp();
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
@@ -56,7 +57,6 @@ namespace cell {
       protected:
         // private renderer functions 
 
-        void static setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout, undicht::vulkan::Pipeline& pipeline);
 
         // creates the given number of (unused) per chunk ubos 
         void createPerChunkUBOs(uint32_t num);

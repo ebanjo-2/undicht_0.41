@@ -8,6 +8,7 @@
 #include "core/vulkan/renderpass.h"
 
 #include "renderer/world_renderer.h"
+#include "renderer/final_renderer.h"
 #include "renderer/vulkan/texture.h"
 
 #include "3D/camera/perspective_camera_3d.h"
@@ -30,14 +31,17 @@ namespace cell {
         // used by all stages
         std::vector<undicht::vulkan::Framebuffer> _frame_buffers;
         std::vector<undicht::vulkan::Image> _depth_buffers;
+        std::vector<undicht::vulkan::Image> _geom_buffers;
         undicht::vulkan::RenderPass _render_pass; // contains sub passes for each of the stages
         undicht::vulkan::CommandBuffer _draw_cmd;
+        undicht::vulkan::Fence _render_finished_fence;
+        undicht::vulkan::Semaphore _render_finished_semaphore;
 
         // geometry stage
         WorldRenderer _world_renderer;
-        undicht::vulkan::Fence _geometry_stage_finished_fence;
-        undicht::vulkan::Semaphore _geometry_stage_finished_semaphore;
 
+        // final stage
+        FinalRenderer _final_renderer;
 
       public:
 
@@ -53,7 +57,9 @@ namespace cell {
 
         void beginGeometryStage();
         void drawWorld(const WorldBuffer& world, const MaterialAtlas& materials);
-        void endGeometryStage();
+
+        void beginFinalStage();
+        void drawFinal(const MaterialAtlas& materials);
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
       
@@ -62,9 +68,6 @@ namespace cell {
 
         void initGlobalObjects(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
         void cleanUpGlobalObjects();
-
-        void initGeometryStage(const undicht::vulkan::LogicalDevice& device);
-        void cleanUpGeometryStage();
 
     };
 

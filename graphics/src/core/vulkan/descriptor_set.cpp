@@ -33,6 +33,17 @@ namespace undicht {
             update();
         }
 
+        void DescriptorSet::bindInputAttachment(uint32_t binding, const VkImageView& image_view) {
+            
+            VkDescriptorImageInfo image_info = createDescriptorImageInfo(image_view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_NULL_HANDLE);
+            
+            VkDescriptorType type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+            _pending_writes.push_back(createWriteDescriptorSet(binding, type, _descriptor_set, nullptr, &image_info));
+
+            update();
+        }
+
+
         const VkDescriptorSet& DescriptorSet::getDescriptorSet() const {
             
             return _descriptor_set;

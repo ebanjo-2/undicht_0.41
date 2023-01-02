@@ -231,13 +231,13 @@ namespace undicht {
             FixedType translated_type = translate(format);
 
             if(translated_type.m_type == Type::DEPTH_BUFFER)
-                return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
             if(translated_type.m_type == Type::DEPTH_STENCIL_BUFFER)
-                return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+                return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
             // default for color images
-            return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
         }
 
 

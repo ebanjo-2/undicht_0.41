@@ -13,10 +13,12 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
+    void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
 
         _device_handle = gpu;
         _render_pass_handle = render_pass;
+        _subpass = subpass;
+
 
         // Shader
         _shader.addVertexModule(gpu.getDevice(), getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.vert.spv");
@@ -39,10 +41,10 @@ namespace cell {
         _pipeline.setRasterizationState(true, false, false);
         _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
 
-        setVertexBinding(0, 0, CUBE_VERTEX_LAYOUT, _pipeline); // per vertex data
-        setVertexBinding(1, CUBE_VERTEX_LAYOUT.m_types.size(), CELL_LAYOUT, _pipeline); // per cell data
+        _pipeline.setVertexBinding(0, 0, CUBE_VERTEX_LAYOUT); // per vertex data
+        _pipeline.setVertexBinding(1, CUBE_VERTEX_LAYOUT.m_types.size(), CELL_LAYOUT); // per cell data
 
-        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass());
+        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass(), subpass);
 
         // renderer
         _sampler.setMinFilter(VK_FILTER_NEAREST);
@@ -78,7 +80,7 @@ namespace cell {
 
         _pipeline.cleanUp();
         _pipeline.setViewport(viewport);
-        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass());
+        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass(), _subpass);
     }
 
     void WorldRenderer::loadCamera(PerspectiveCamera3D& camera) {
@@ -99,7 +101,7 @@ namespace cell {
         float tile_map_unit[2];
         tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
         tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
-        _global_uniform_buffer.setAttribute(2, tile_map_unit, 2 *sizeof(float));
+        _global_uniform_buffer.setAttribute(2, tile_map_unit, 2 * sizeof(float));
 
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
@@ -141,22 +143,6 @@ namespace cell {
 
     ///////////////////////////////// private renderer functions /////////////////////////////////
 
-    void WorldRenderer::setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout, undicht::vulkan::Pipeline& pipeline) {
-
-        uint32_t total_size = layout.getTotalSize();
-        pipeline.addVertexBinding(id, total_size);
-
-        uint32_t current_offset = 0;
-        uint32_t attribute_id = location_offset;
-        for(const undicht::FixedType& t : layout.m_types) {
-
-            pipeline.addVertexAttribute(id, attribute_id, current_offset, vulkan::translate(t)); // position
-
-            current_offset += t.getSize();
-            attribute_id += 1;
-        }
-
-    }
 
     void WorldRenderer::createPerChunkUBOs(uint32_t num) {
 

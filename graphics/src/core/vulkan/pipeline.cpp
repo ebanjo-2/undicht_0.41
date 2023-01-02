@@ -1,5 +1,6 @@
 #include "pipeline.h"
 #include "debug.h"
+#include "core/vulkan/formats.h"
 
 namespace undicht {
 
@@ -83,7 +84,7 @@ namespace undicht {
         }
 
 
-        void Pipeline::init(const VkDevice& device, VkRenderPass render_pass) {
+        void Pipeline::init(const VkDevice& device, VkRenderPass render_pass, uint32_t subpass) {
 
             _device_handle = device;
 
@@ -112,7 +113,7 @@ namespace undicht {
             info.pDepthStencilState = &_depth_stencil_state;
             info.layout = _layout;
             info.renderPass = render_pass;
-            info.subpass = 0;
+            info.subpass = subpass;
             info.basePipelineHandle = VK_NULL_HANDLE;
             info.layout = _layout;
 
@@ -142,6 +143,22 @@ namespace undicht {
             return _layout;
         }
 
+            // a function that allows to set the entire layout of a vertex binding
+        void Pipeline::setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout) {
+
+            uint32_t total_size = layout.getTotalSize();
+            addVertexBinding(id, total_size);
+
+            uint32_t current_offset = 0;
+            uint32_t attribute_id = location_offset;
+            for(const undicht::FixedType& t : layout.m_types) {
+
+                addVertexAttribute(id, attribute_id, current_offset, vulkan::translate(t)); // position
+
+                current_offset += t.getSize();
+                attribute_id += 1;
+            }
+        }
 
         /////////////////////////////////// creating pipeline related structs ///////////////////////////////////
 

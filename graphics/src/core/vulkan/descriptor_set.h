@@ -27,7 +27,8 @@ namespace undicht {
 
             void bindUniformBuffer(uint32_t binding, const Buffer& buffer);
             void bindImage(uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler);
-            
+            void bindInputAttachment(uint32_t binding, const VkImageView& image_view);
+
             const VkDescriptorSet& getDescriptorSet() const;
 
         protected:

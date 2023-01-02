@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(true, false);
+        undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -73,9 +73,13 @@ namespace cell {
         // drawing a new frame
         if(_master_renderer.beginFrame(_swap_chain)) {
             _master_renderer.loadPlayerCamera(_player);
+
             _master_renderer.beginGeometryStage();
             _master_renderer.drawWorld(_world.getWorldBuffer(), _materials);
-            _master_renderer.endGeometryStage();
+
+            _master_renderer.beginFinalStage();
+            _master_renderer.drawFinal(_materials);
+
             _master_renderer.endFrame(_swap_chain);
         } else {
             // skipping a frame, recreating the swap chain
@@ -85,6 +89,9 @@ namespace cell {
     }
 
     void App::onWindowResize() {
+
+        // adjusting the cameras aspect ratio
+        _player.setAspectRatio(float(_main_window.getWidth()) / _main_window.getHeight());
 
         // will recreate the swap chain
         undicht::Engine::onWindowResize();
