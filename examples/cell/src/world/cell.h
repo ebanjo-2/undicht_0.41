@@ -8,6 +8,12 @@
 namespace cell {
 
     const extern undicht::BufferLayout CELL_LAYOUT;
+    const extern uint8_t CELL_FACE_YP; // + y (00000001)
+    const extern uint8_t CELL_FACE_YN; // - y (00000010)
+    const extern uint8_t CELL_FACE_XP; // + x (00000100)
+    const extern uint8_t CELL_FACE_XN; // - x (00001000)
+    const extern uint8_t CELL_FACE_ZP; // + z (00010000)
+    const extern uint8_t CELL_FACE_ZN; // - z (00100000)
 
     class Cell {
 

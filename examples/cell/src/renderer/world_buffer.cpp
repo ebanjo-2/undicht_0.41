@@ -1,57 +1,58 @@
 #include "world_buffer.h"
 #include "vector"
 #include "algorithm"
+#include "world/cell.h"
 
 namespace cell {
 
     using namespace undicht;
 
     // cube vertices
-    const BufferLayout CUBE_VERTEX_LAYOUT({UND_VEC3F, UND_VEC2F, UND_VEC3F});
+    const BufferLayout CUBE_VERTEX_LAYOUT({UND_VEC3UI8, UND_UINT8});
 
-    // position, uv,    normal
-    const std::vector<float> cube_vertices = {
-        0,0,0,   0,0,   -1,0,0, // x = 0
-        0,0,1,   1,0,   -1,0,0,
-        0,1,1,   1,1,   -1,0,0,
-        0,0,0,   0,0,   -1,0,0,
-        0,1,1,   1,1,   -1,0,0,
-        0,1,0,   0,1,   -1,0,0,
+    // position, FACE
+    const std::vector<uint8_t> cube_vertices = {
+        0,0,0,  CELL_FACE_XN, // x = 0
+        0,0,1,  CELL_FACE_XN,
+        0,1,1,  CELL_FACE_XN,
+        0,0,0,  CELL_FACE_XN,
+        0,1,1,  CELL_FACE_XN,
+        0,1,0,  CELL_FACE_XN,
 
-        1,0,0,   0,0,   1,0,0, // x = 1
-        1,1,0,   0,1,   1,0,0,
-        1,1,1,   1,1,   1,0,0,
-        1,0,0,   0,0,   1,0,0,
-        1,1,1,   1,1,   1,0,0,
-        1,0,1,   1,0,   1,0,0,
+        1,0,0,  CELL_FACE_XP, // x = 1
+        1,1,0,  CELL_FACE_XP,
+        1,1,1,  CELL_FACE_XP,
+        1,0,0,  CELL_FACE_XP,
+        1,1,1,  CELL_FACE_XP,
+        1,0,1,  CELL_FACE_XP,
         
-        0,0,0,   0,0,   0,-1,0, // y = 0
-        1,0,1,   1,1,   0,-1,0,
-        0,0,1,   0,1,   0,-1,0,
-        0,0,0,   0,0,   0,-1,0,
-        1,0,0,   1,0,   0,-1,0,
-        1,0,1,   1,1,   0,-1,0,
+        0,0,0,  CELL_FACE_YN, // y = 0
+        1,0,1,  CELL_FACE_YN,
+        0,0,1,  CELL_FACE_YN,
+        0,0,0,  CELL_FACE_YN,
+        1,0,0,  CELL_FACE_YN,
+        1,0,1,  CELL_FACE_YN,
 
-        0,1,0,   0,0,   0,1,0, // y = 1
-        0,1,1,   0,1,   0,1,0,
-        1,1,1,   1,1,   0,1,0,
-        0,1,0,   0,0,   0,1,0,
-        1,1,1,   1,1,   0,1,0,
-        1,1,0,   1,0,   0,1,0,
+        0,1,0,  CELL_FACE_YP, // y = 1
+        0,1,1,  CELL_FACE_YP,
+        1,1,1,  CELL_FACE_YP,
+        0,1,0,  CELL_FACE_YP,
+        1,1,1,  CELL_FACE_YP,
+        1,1,0,  CELL_FACE_YP,
 
-        0,0,0,   0,0,   0,0,-1, // z = 0
-        0,1,0,   0,1,   0,0,-1,
-        1,1,0,   1,1,   0,0,-1,
-        0,0,0,   0,0,   0,0,-1,
-        1,1,0,   1,1,   0,0,-1,
-        1,0,0,   1,0,   0,0,-1,
+        0,0,0,  CELL_FACE_ZN, // z = 0
+        0,1,0,  CELL_FACE_ZN,
+        1,1,0,  CELL_FACE_ZN,
+        0,0,0,  CELL_FACE_ZN,
+        1,1,0,  CELL_FACE_ZN,
+        1,0,0,  CELL_FACE_ZN,
 
-        0,0,1,   0,0,   0,0,1, // z = 1
-        1,1,1,   1,1,   0,0,1,
-        0,1,1,   0,1,   0,0,1,
-        0,0,1,   0,0,   0,0,1,
-        1,0,1,   1,0,   0,0,1,
-        1,1,1,   1,1,   0,0,1,
+        0,0,1,  CELL_FACE_ZP, // z = 1
+        1,1,1,  CELL_FACE_ZP,
+        0,1,1,  CELL_FACE_ZP,
+        0,0,1,  CELL_FACE_ZP,
+        1,0,1,  CELL_FACE_ZP,
+        1,1,1,  CELL_FACE_ZP,
     };
         
     void WorldBuffer::init(const undicht::vulkan::LogicalDevice& device) {

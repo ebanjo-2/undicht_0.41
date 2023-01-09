@@ -41,7 +41,7 @@ namespace cell {
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
         void loadCamera(undicht::tools::PerspectiveCamera3D& camera);
-        void draw(const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::Image& color_input, const undicht::vulkan::Image& depth_input);
+        void draw(const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::Image& color_input, const undicht::vulkan::Image& depth_input, const undicht::vulkan::Image& light_input);
         void beginFrame();
 
     };

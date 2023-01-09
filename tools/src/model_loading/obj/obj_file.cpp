@@ -52,28 +52,51 @@ namespace undicht {
             return _mtl_file.getMaterials().size();
         }
 
-		void OBJFile::getMesh(MeshData& loadTo_mesh, unsigned int id) {
+		void OBJFile::getMesh(MeshData& loadTo_mesh, unsigned int id, bool load_positions, bool load_uvs, bool load_normals) {
 		    /** loads the vertices of the mesh
 		    * @param id: to iterate through the meshes of the file */
+
+            std::vector<MeshData> all_meshes;
+            loadAllMeshes(all_meshes, load_positions, load_uvs, load_normals);
+
+            if(all_meshes.size() > id) {
+                loadTo_mesh = all_meshes.at(id);
+            } else {
+                UND_ERROR << "failed to load mesh " << id << " from file " << _file_name << " : mesh doesnt exist\n";
+            }
+
         }
 
 		void OBJFile::getTexture(ImageData& loadTo_texture, int id) {
 		    /** @param id: to iterate through the texture of the file */
 
+            std::vector<ImageData> all_textures;
+
+            loadAllTextures(all_textures);
+
+            if(all_textures.size() > id) {
+                loadTo_texture = all_textures.at(id);
+            } else {
+                UND_ERROR << "failed to load texture " << id << " for obj file: " << _file_name << " : texture doesnt exist\n";
+            }
+
         }
 
 		////////////////////////////////////////// functions to load all meshes / textures ///////////////////////////////////////////
 
-		void OBJFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes) {
-
+		void OBJFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes, bool load_positions, bool load_uvs, bool load_normals) {
+            
+            load_positions = load_positions && _positions.size();
+            load_uvs = load_uvs && _tex_coords.size();
+            load_normals = load_normals && _normals.size();
     
             for(const Object& o: _objects) {
 
                 MeshData data;
 
-                if(_positions.size()) data.vertex_layout.m_types.push_back(UND_VEC3F);
-                if(_tex_coords.size()) data.vertex_layout.m_types.push_back(UND_VEC2F);
-                if(_normals.size()) data.vertex_layout.m_types.push_back(UND_VEC3F);
+                if(load_positions) data.vertex_layout.m_types.push_back(UND_VEC3F);
+                if(load_uvs) data.vertex_layout.m_types.push_back(UND_VEC2F);
+                if(load_normals) data.vertex_layout.m_types.push_back(UND_VEC3F);
 
                 for(const Group& g : o._groups) { // should only be one, might be 0?
 
@@ -83,22 +106,34 @@ namespace undicht {
 
                         for(int vertex = 0; vertex < 3; vertex++) {
                             
-                            if(f._vertex_ids.size()) {
+                            if(f._vertex_ids.size() && load_positions) {
                                 data.vertices.push_back(_positions.at(f._vertex_ids.at(vertex) - 1).x);
                                 data.vertices.push_back(_positions.at(f._vertex_ids.at(vertex) - 1).y);
                                 data.vertices.push_back(_positions.at(f._vertex_ids.at(vertex) - 1).z);
+                            } else if (load_positions) {
+                                data.vertices.push_back(0.0f);
+                                data.vertices.push_back(0.0f);
+                                data.vertices.push_back(0.0f);
                             }
 
-                            if(f._tex_coord_ids.size()) {
+                            if(f._tex_coord_ids.size() && load_uvs) {
                                 data.vertices.push_back(_tex_coords.at(f._tex_coord_ids.at(vertex) - 1).u);
                                 data.vertices.push_back(_tex_coords.at(f._tex_coord_ids.at(vertex) - 1).v);
+                            } else if (load_uvs) {
+                                data.vertices.push_back(0.0f);
+                                data.vertices.push_back(0.0f);
                             }
 
-                            if(f._normal_ids.size()) {
+                            if(f._normal_ids.size() && load_normals) {
                                 data.vertices.push_back(_normals.at(f._normal_ids.at(vertex) - 1).x);
                                 data.vertices.push_back(_normals.at(f._normal_ids.at(vertex) - 1).y);
                                 data.vertices.push_back(_normals.at(f._normal_ids.at(vertex) - 1).z);
+                            } else if (load_normals) {
+                                data.vertices.push_back(0.0f);
+                                data.vertices.push_back(0.0f);
+                                data.vertices.push_back(0.0f);
                             }
+
                             
                         }
 

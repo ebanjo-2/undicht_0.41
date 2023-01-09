@@ -17,6 +17,9 @@ namespace undicht {
                 // types with 1 component
                 {UND_FLOAT32, VK_FORMAT_R32_SFLOAT},
                 {UND_FLOAT64, VK_FORMAT_R64_SFLOAT},
+                {UND_UINT8, VK_FORMAT_R8_UINT},
+                {UND_UINT16, VK_FORMAT_R16_UINT},
+                {UND_UINT32, VK_FORMAT_R32_UINT},
                 {UND_INT8, VK_FORMAT_R8_SINT},
                 {UND_INT16, VK_FORMAT_R16_SINT},
                 {UND_INT32, VK_FORMAT_R32_SINT},
@@ -57,8 +60,8 @@ namespace undicht {
 
                 // depth buffer formats
                 {UND_DEPTH32F, VK_FORMAT_D32_SFLOAT},
-                {UND_DEPTH32f_STENCIL8, VK_FORMAT_D32_SFLOAT_S8_UINT},
-                {UND_DEPTH24_STENCIL8, VK_FORMAT_D24_UNORM_S8_UINT},
+                {UND_DEPTH32F_STENCIL8, VK_FORMAT_D32_SFLOAT_S8_UINT},
+                {UND_DEPTH24F_STENCIL8, VK_FORMAT_D24_UNORM_S8_UINT},
         };
 
         VkFormat translate(const FixedType& type) {
@@ -69,7 +72,21 @@ namespace undicht {
                     return p.second;
             }
 
-            UND_ERROR << "failed to translate format\n";
+            // printing an error message
+            std::string type_str;
+            switch (type.m_type) {
+                case Type::UNDEFINED : type_str = "UNDEFINED";break;
+                case Type::INT : type_str = "INT";break;
+                case Type::UNSIGNED_INT : type_str = "UNSIGNED_INT";break;
+                case Type::FLOAT : type_str = "FLOAT";break;
+                case Type::COLOR_BGRA : type_str = "COLOR_BGRA";break;
+                case Type::COLOR_RGBA : type_str = "COLOR_RGBA";break;
+                case Type::DEPTH_BUFFER : type_str = "DEPTH_BUFFER";break;
+                case Type::DEPTH_STENCIL_BUFFER : type_str = "DEPTH_STENCIL_BUFFER";break;
+            }
+
+            UND_ERROR << "failed to translate format: " << type.m_num_components << " component(s) of type " << type_str << ", size of components: " << type.m_size << "\n";
+
             return VK_FORMAT_UNDEFINED;
         }
 
@@ -81,7 +98,7 @@ namespace undicht {
                     return p.first;
             }
 
-            UND_ERROR << "failed to translate format\n";
+            UND_ERROR << "failed to translate format: " << format << "\n";
             return UND_UNDEFINED_TYPE;
         }
 

@@ -83,8 +83,8 @@ namespace undicht {
 #define UND_B8G8R8A8 FixedType(Type::COLOR_BGRA, 1, 4)
 
 #define UND_DEPTH32F undicht::FixedType(Type::DEPTH_BUFFER, 4, 1)
-#define UND_DEPTH32f_STENCIL8 undicht::FixedType(Type::DEPTH_STENCIL_BUFFER, 5, 1)
-#define UND_DEPTH24_STENCIL8 undicht::FixedType(Type::DEPTH_STENCIL_BUFFER, 4, 1)
+#define UND_DEPTH32F_STENCIL8 undicht::FixedType(Type::DEPTH_STENCIL_BUFFER, 5, 1)
+#define UND_DEPTH24F_STENCIL8 undicht::FixedType(Type::DEPTH_STENCIL_BUFFER, 4, 1)
 
 } // namespace undicht
 

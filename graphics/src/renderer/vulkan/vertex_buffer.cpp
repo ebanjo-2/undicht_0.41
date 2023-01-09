@@ -72,7 +72,8 @@ namespace undicht {
 
         void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst) {
             
-            if(dst.getAllocatedSize() < byte_size + offset) {
+            // allocating memory + copying the old data if necessary
+            if(dst.getUsedSize() < byte_size + offset) {
                 // copying the data from the old dst buffer to the new one
                 Buffer new_dst;
                 new_dst.init(dst);
@@ -85,11 +86,12 @@ namespace undicht {
                 dst.cleanUp();
                 dst = new_dst;
             }
-                
+            
+            // transfering the data
             if(!byte_size) return;
 
             // storing the data in the transfer buffer
-            if(_transfer_buffer.getAllocatedSize() < byte_size) _transfer_buffer.allocate(*_device_handle, byte_size);
+            if(_transfer_buffer.getUsedSize() < byte_size) _transfer_buffer.allocate(*_device_handle, byte_size);
             _transfer_buffer.setData(byte_size, 0, data);
 
             // using a command buffer to copy the data to the dst buffer

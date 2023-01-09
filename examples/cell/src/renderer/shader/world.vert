@@ -1,16 +1,15 @@
 #version 450
 
 // per vertex data
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aUv;
-layout(location = 2) in vec3 aNormal;
+layout(location = 0) in uvec3 aPos;
+layout(location = 1) in uint aFaceID;
 
 // per cell data
-layout(location = 3) in uvec4 pos0;
-layout(location = 4) in uvec4 pos1;
+layout(location = 2) in uvec4 pos0;
+layout(location = 3) in uvec4 pos1;
 
-layout(location = 0) out vec2 uv;
-layout(location = 1) out vec3 normal;
+layout(location = 0) out flat uint face_id;
+layout(location = 1) out flat uvec2 material;
 
 layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
@@ -24,11 +23,8 @@ layout(binding = 1) uniform ChunkUBO {
 
 void main() {
 
-
-
-	uv = (vec2(pos0.w, pos1.w) + aUv) * global.tile_map_unit;
-	// uv = aUv; // display full tile map on every cell
-	normal = (aNormal + 1) / 2;
+	face_id = aFaceID;
+	material = uvec2(pos0.w, pos1.w);
 
 	// output the position of each vertex
 	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
@@ -36,5 +32,4 @@ void main() {
 	
 	// positive y is up, change my mind
 	gl_Position.y = -gl_Position.y;
-	
 }

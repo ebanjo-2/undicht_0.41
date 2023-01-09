@@ -10,6 +10,11 @@ set(WORLD_SOURCES
     src/world/world.cpp
 )
 
+set(ENTITY_SOURCES
+    src/entities/light_buffer.h
+    src/entities/light_buffer.cpp
+)
+
 set(RENDERER_SOURCES
     src/renderer/master_renderer.h
 	src/renderer/master_renderer.cpp
@@ -21,6 +26,8 @@ set(RENDERER_SOURCES
     src/renderer/drawable_world.cpp
     src/renderer/final_renderer.h
     src/renderer/final_renderer.cpp
+    src/renderer/light_renderer.h
+    src/renderer/light_renderer.cpp
 )
 
 set(MATERIALS_SOURCES
@@ -42,6 +49,7 @@ add_executable(cell
     src/app.cpp
     
     ${WORLD_SOURCES}
+    ${ENTITY_SOURCES}
     ${RENDERER_SOURCES}
     ${MATERIALS_SOURCES}
     ${PLAYER_SOURCES}

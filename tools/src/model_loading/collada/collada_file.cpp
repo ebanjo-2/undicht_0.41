@@ -42,7 +42,7 @@ namespace undicht {
 		}
 
 
-		void ColladaFile::getMesh(MeshData& loadTo_mesh, unsigned int id) {
+		void ColladaFile::getMesh(MeshData& loadTo_mesh, unsigned int id, bool load_positions, bool load_uvs, bool load_normals) {
 			/** loads the vertices of the mesh
 			* @param id: to iterate through the meshes of the file */
 
@@ -53,7 +53,7 @@ namespace undicht {
 			const XmlElement* geom_element = geometries.at(id);
 
 			// loading the mesh data
-			loadGeometry(*geom_element, loadTo_mesh.vertices, loadTo_mesh.vertex_layout);
+			loadGeometry(*geom_element, loadTo_mesh.vertices, loadTo_mesh.vertex_layout, load_positions, load_uvs, load_normals);
 
 			// finding the right textures for the model
 			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
@@ -101,7 +101,7 @@ namespace undicht {
 
 		////////////////////////////////////////// functions to load all meshes / textures ///////////////////////////////////////////
 
-		void ColladaFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes) {
+		void ColladaFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes, bool load_positions, bool load_uvs, bool load_normals) {
 
 			// all materials stored in the file
 			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
@@ -114,7 +114,7 @@ namespace undicht {
 
 				loadTo_meshes.emplace_back(MeshData());
 
-				loadGeometry(*e, loadTo_meshes.back().vertices, loadTo_meshes.back().vertex_layout);
+				loadGeometry(*e, loadTo_meshes.back().vertices, loadTo_meshes.back().vertex_layout, load_positions, load_uvs, load_normals);
 
 				// finding the material to the mesh
 				const XmlElement* mesh = e->getElement({ "mesh" });
@@ -160,7 +160,7 @@ namespace undicht {
 		///////////////////////////// functions to bring more structure to the loading process /////////////////////////////////////
 
 
-		void ColladaFile::loadGeometry(const XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout) {
+		void ColladaFile::loadGeometry(const XmlElement& geometry, std::vector<float>& vertices, BufferLayout& vertex_layout, bool load_positions, bool load_uvs, bool load_normals) {
 			/** loading the vertices from a geometry element */
 
 			// getting vertex data
@@ -174,19 +174,19 @@ namespace undicht {
 
 			std::vector<std::vector<float>> attribute_data;
 
-			if (position_source) {
+			if (position_source && load_positions) {
 				attribute_data.emplace_back(std::vector<float>());
 				extractFloatArray(attribute_data.back(), position_source->getContent(), -1);
 				vertex_layout.m_types.push_back(UND_VEC3F);
 			}
 
-			if (uv_source) {
+			if (uv_source && load_uvs) {
 				attribute_data.emplace_back(std::vector<float>());
 				extractFloatArray(attribute_data.back(), uv_source->getContent(), -1);
 				vertex_layout.m_types.push_back(UND_VEC2F);
 			}
 
-			if (normal_source) {
+			if (normal_source && load_normals) {
 				attribute_data.emplace_back(std::vector<float>());
 				extractFloatArray(attribute_data.back(), normal_source->getContent(), -1);
 				vertex_layout.m_types.push_back(UND_VEC3F);

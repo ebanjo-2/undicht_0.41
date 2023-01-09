@@ -22,9 +22,11 @@ namespace cell {
 
         _tile_map.setExtent(TILE_MAP_WIDTH, TILE_MAP_HEIGHT);
         _tile_map.setFormat(translate(TILE_MAP_FORMAT));
+        _tile_map.setMipMaps(false);
         _tile_map.init(device);
 
         _materials.resize(TILE_MAP_COLS * TILE_MAP_ROWS);
+
     }
 
     void MaterialAtlas::cleanUp() {

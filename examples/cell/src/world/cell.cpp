@@ -5,6 +5,12 @@ namespace cell {
     using namespace undicht;
     const BufferLayout CELL_LAYOUT = BufferLayout({UND_VEC4UI8, UND_VEC4UI8});
 
+    const uint8_t CELL_FACE_YP = 0x01; // + y (00000001)
+    const uint8_t CELL_FACE_YN = 0x02; // - y (00000010)
+    const uint8_t CELL_FACE_XP = 0x04; // + x (00000100)
+    const uint8_t CELL_FACE_XN = 0x08; // - x (00001000)
+    const uint8_t CELL_FACE_ZP = 0x10; // + z (00010000)
+    const uint8_t CELL_FACE_ZN = 0x20; // - z (00100000)
 
     Cell::Cell(uint32_t x0, uint32_t y0, uint32_t z0, uint32_t x1, uint32_t y1, uint32_t z1, uint32_t id) {
 

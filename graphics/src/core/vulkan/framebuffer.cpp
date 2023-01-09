@@ -33,6 +33,9 @@ namespace undicht {
 
         void Framebuffer::cleanUp() {
 
+            if(_device_handle == VK_NULL_HANDLE)
+                return;
+
             vkDestroyFramebuffer(_device_handle, _framebuffer, {});
 
         }

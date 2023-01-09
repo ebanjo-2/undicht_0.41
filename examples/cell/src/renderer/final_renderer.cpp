@@ -1,6 +1,9 @@
 #include "final_renderer.h"
 #include "buffer_layout.h"
 #include "file_tools.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace cell {
 
@@ -39,6 +42,7 @@ namespace cell {
         _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // material atlas
         _descriptor_set_layout.setBinding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // depth texture input
         _descriptor_set_layout.setBinding(3, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // color texture input
+        _descriptor_set_layout.setBinding(4, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // light map input
         _descriptor_set_layout.init(device.getDevice());
 
         _descriptor_cache.init(device, _descriptor_set_layout);
@@ -61,7 +65,8 @@ namespace cell {
         _sampler.init(device.getDevice());
 
         // global uniform buffer
-        _global_uniform_buffer.init(device, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC2F}));
+        // view, proj, inverse view, inverse projection, tile size
+        _global_uniform_buffer.init(device, BufferLayout({UND_MAT4F, UND_MAT4F, UND_MAT4F, UND_MAT4F, UND_VEC2F}));
     }
 
     void FinalRenderer::cleanUp() {
@@ -84,12 +89,19 @@ namespace cell {
 
     void FinalRenderer::loadCamera(undicht::tools::PerspectiveCamera3D& camera) {
 
-        _global_uniform_buffer.setAttribute(0, glm::value_ptr(camera.getCameraProjectionMatrix()), 16 * sizeof(float));
-        _global_uniform_buffer.setAttribute(1, glm::value_ptr(camera.getViewMatrix()), 16 * sizeof(float));
+        const glm::mat4& view = camera.getViewMatrix();
+        const glm::mat4& proj = camera.getCameraProjectionMatrix();
 
+        glm::mat4 inv_view = glm::inverse(view);
+        glm::mat4 inv_proj = glm::inverse(proj);
+
+        _global_uniform_buffer.setAttribute(0, glm::value_ptr(view), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(1, glm::value_ptr(proj), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(2, glm::value_ptr(inv_view), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(3, glm::value_ptr(inv_proj), 16 * sizeof(float));
     }
 
-    void FinalRenderer::draw(const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::Image& color_input, const undicht::vulkan::Image& depth_input) {
+    void FinalRenderer::draw(const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::Image& color_input, const undicht::vulkan::Image& depth_input, const undicht::vulkan::Image& light_input) {
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
         cmd.bindVertexBuffer(_screen_quad.getVertexBuffer().getBuffer(), 0);
@@ -98,7 +110,7 @@ namespace cell {
         float tile_map_unit[2];
         tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
         tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
-        _global_uniform_buffer.setAttribute(2, tile_map_unit, 2 * sizeof(float));
+        _global_uniform_buffer.setAttribute(4, tile_map_unit, 2 * sizeof(float));
 
         // create a descriptor set pointing to the uniform buffers and the material atlas texture
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
@@ -106,6 +118,7 @@ namespace cell {
         descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
         descriptor_set.bindInputAttachment(2, depth_input.getImageView());
         descriptor_set.bindInputAttachment(3, color_input.getImageView());
+        descriptor_set.bindInputAttachment(4, light_input.getImageView());
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());

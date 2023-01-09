@@ -58,8 +58,6 @@ namespace cell {
         // vec2 tile map unit (size of one tile in normalized device coords)
         _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC2F}));
 
-
-
     }
 
     void WorldRenderer::cleanUp() {
