@@ -2,6 +2,7 @@
 #include "command_buffer.h"
 #include "debug.h"
 #include <cstring>
+#include "set"
 
 namespace undicht {
 
@@ -17,8 +18,11 @@ namespace undicht {
 
             _device_handle = device;
             _usage = usage;
-            _queue_ids = queue_ids;
             _cpu_visible = cpu_visible;
+
+            // making sure that all queue ids are unique
+            std::set<uint32_t> unique_queue_ids(queue_ids.begin(), queue_ids.end());
+            _queue_ids.insert(_queue_ids.begin(), unique_queue_ids.begin(), unique_queue_ids.end());
 
             if(cpu_visible) {
                 _mem_properties |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;

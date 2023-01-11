@@ -96,10 +96,13 @@ add_library(graphics
     ${GRAPHICS_CORE_SOURCES}
     ${GRAPHICS_RENDERER_SOURCES}
     ${GRAPHICS_USER_INTERFACE_SOURCES}
-		${GRAPHICS_IMGUI_SOURCES}
+	${GRAPHICS_IMGUI_SOURCES}
 )
 
 target_include_directories(graphics PUBLIC src)
+
+# setting the shader compile script path
+set(SHADER_COMPILE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/shader/compile.sh CACHE GLOBAL "SHADER_COMPILE_SCRIPT") 
 
 
 # linking undicht core
@@ -127,5 +130,6 @@ target_include_directories(graphics PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(graphics ${Vulkan_LIBRARIES})
 
 # adding a custom target for building the engines shaders
-add_custom_target(shader COMMAND bash ${PROJECT_SOURCE_DIR}/graphics/src/shader/compile.sh)
+# add_custom_target(shader COMMAND bash ${PROJECT_SOURCE_DIR}/graphics/src/shader/compile.sh)
+add_custom_target(shader COMMAND bash ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/graphics/src/shader")
 add_dependencies(graphics shader)

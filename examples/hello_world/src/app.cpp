@@ -12,7 +12,7 @@ void HelloWorldApp::init() {
 
     UND_LOG << "Init HelloWorldApp\n";
 
-    undicht::Engine::init(false, true);
+    undicht::Engine::init(false, false);
 
     // init the shader
     _shader.addVertexModule(_gpu.getDevice(), UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.vert.spv");

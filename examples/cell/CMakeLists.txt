@@ -58,6 +58,7 @@ add_executable(cell
 target_link_libraries(cell core graphics tools engine)
 target_include_directories(cell PUBLIC src)
 
+
 # adding a custom target for building the shaders
-add_custom_target(cell_shader COMMAND bash ${PROJECT_SOURCE_DIR}/examples/cell/src/renderer/shader/compile.sh)
+add_custom_target(cell_shader COMMAND bash ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/examples/cell/src/renderer/shader")
 add_dependencies(cell cell_shader)

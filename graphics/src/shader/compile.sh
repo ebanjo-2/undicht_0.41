@@ -1,9 +1,12 @@
-base_dir=$(dirname "${0}")
+base_dir="${1}" # pass in the directory as the first parameter
+
 
 vert_source_files=`ls $base_dir/*.vert`
 frag_source_files=`ls $base_dir/*.frag`
 
 glsl_source_files="$vert_source_files $frag_source_files"
+
+mkdir -p $base_dir/bin
 
 for glsl in $glsl_source_files
 do
