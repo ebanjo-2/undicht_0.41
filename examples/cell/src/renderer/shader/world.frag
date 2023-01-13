@@ -6,9 +6,10 @@ layout(location = 0) in flat uint face_id;
 layout(location = 1) in flat uvec2 material;
 
 layout(binding = 0) uniform GlobalUBO {
-	mat4 proj;
 	mat4 view;
-	vec2 tile_map_unit;
+	mat4 proj;
+	mat4 inv_view;
+	mat4 inv_proj;
 } global;
 
 

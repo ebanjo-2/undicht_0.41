@@ -35,6 +35,7 @@ namespace undicht {
             const VkImage& getImage() const;
             const VkImageView& getImageView() const;
             const VkExtent3D& getExtent() const;
+            const VkFormat& getFormat() const;
 
             void allocate(const LogicalDevice& device, uint32_t width, uint32_t height, uint32_t depth, uint32_t layers, uint32_t mip_levels, VkFormat format);
 

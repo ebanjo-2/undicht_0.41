@@ -9,13 +9,17 @@ layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
 	mat4 inv_view;
 	mat4 inv_proj;
-	vec2 tile_map_unit;
 } global;
 
-layout (binding = 1) uniform sampler2D tile_map;
-layout (input_attachment_index = 0, set = 0, binding = 2) uniform subpassInput input_depth;
-layout (input_attachment_index = 1, set = 0, binding = 3) uniform usubpassInput input_color;
-layout (input_attachment_index = 2, set = 0, binding = 4) uniform subpassInput input_light;
+layout(binding = 1) uniform LocalUBO {
+	vec2 tile_map_unit;
+} local;
+
+
+layout (binding = 2) uniform sampler2D tile_map;
+layout (input_attachment_index = 0, set = 0, binding = 3) uniform subpassInput input_depth;
+layout (input_attachment_index = 1, set = 0, binding = 4) uniform usubpassInput input_color;
+layout (input_attachment_index = 2, set = 0, binding = 5) uniform subpassInput input_light;
 
 vec3 getWorldPosition(float depth, vec2 screen_pos, mat4 inv_view, mat4 inv_proj);
 vec2 getTexUV(vec3 pos, uint face, uvec2 material, vec2 uv_size);
@@ -35,7 +39,7 @@ void main() {
 	vec3 world_pos = getWorldPosition(depth, uv, global.inv_view, global.inv_proj);
 
 	// calculating the uv on the tile map
-	vec2 tile_map_uv = getTexUV(world_pos, face_id, material, global.tile_map_unit);
+	vec2 tile_map_uv = getTexUV(world_pos, face_id, material, local.tile_map_unit);
 
 	out_color = texture(tile_map, tile_map_uv) + light;
 	//out_color = vec4(world_pos, 1.0f) / 16;

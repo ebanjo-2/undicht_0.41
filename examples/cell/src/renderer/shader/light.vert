@@ -8,13 +8,12 @@ layout(location = 1) in vec3 aColor;
 layout(location = 2) in vec3 aLightPos;
 layout(location = 3) in float aIntensity;
 
-
 layout(binding = 0) uniform GlobalUBO {
-	mat4 proj;
 	mat4 view;
+	mat4 proj;
+	mat4 inv_view;
+	mat4 inv_proj;
 } global;
-
-
 
 void main() {
 

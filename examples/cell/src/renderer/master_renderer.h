@@ -11,6 +11,7 @@
 #include "renderer/light_renderer.h"
 #include "renderer/final_renderer.h"
 #include "renderer/vulkan/texture.h"
+#include "renderer/vulkan/render_target.h"
 
 #include "entities/light_buffer.h"
 
@@ -32,14 +33,11 @@ namespace cell {
         uint32_t _swap_image_id = -1;
 
         // used by all stages
-        std::vector<undicht::vulkan::Framebuffer> _frame_buffers;
-        std::vector<undicht::vulkan::Image> _depth_buffers;
-        std::vector<undicht::vulkan::Image> _light_buffers;
-        std::vector<undicht::vulkan::Image> _geom_buffers;
-        undicht::vulkan::RenderPass _render_pass; // contains sub passes for each of the stages
+        undicht::vulkan::RenderTarget _main_render_target;
         undicht::vulkan::CommandBuffer _draw_cmd;
         undicht::vulkan::Fence _render_finished_fence;
         undicht::vulkan::Semaphore _render_finished_semaphore;
+        undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
         // geometry stage
         WorldRenderer _world_renderer;
@@ -76,10 +74,12 @@ namespace cell {
       protected:
         // private functions
 
-        void initGlobalObjects(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
+        void initMainRenderTarget(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
+
+        /*void initGlobalObjects(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
         void initFrameBuffers(undicht::vulkan::SwapChain& swap_chain);
         void resizeFrameBuffers(undicht::vulkan::SwapChain& swap_chain);
-        void cleanUpGlobalObjects();
+        void cleanUpGlobalObjects();*/
 
 
     };

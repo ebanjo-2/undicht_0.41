@@ -12,9 +12,10 @@ layout(location = 0) out flat uint face_id;
 layout(location = 1) out flat uvec2 material;
 
 layout(binding = 0) uniform GlobalUBO {
-	mat4 proj;
 	mat4 view;
-	vec2 tile_map_unit;
+	mat4 proj;
+	mat4 inv_view;
+	mat4 inv_proj;
 } global;
 
 layout(binding = 1) uniform ChunkUBO {

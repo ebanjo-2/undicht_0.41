@@ -14,37 +14,17 @@ namespace cell {
     using namespace vulkan;
 
     void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
-
-        _device_handle = gpu;
-        _render_pass_handle = render_pass;
-        _subpass = subpass;
-
-
-        // Shader
-        _shader.addVertexModule(gpu.getDevice(), getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.vert.spv");
-        _shader.addFragmentModule(gpu.getDevice(), getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.frag.spv");
-        _shader.init(gpu.getDevice());
-
-        // Pipeline
-        _descriptor_set_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // global data
-        _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // per chunk data
-        _descriptor_set_layout.setBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-        _descriptor_set_layout.init(gpu.getDevice());
-
-        _descriptor_cache.init(gpu, _descriptor_set_layout);
-
-        _pipeline.setViewport(viewport);
-        _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
-        _pipeline.setBlending(0, false);
-        _pipeline.setDepthStencilState(true, true);
-        _pipeline.setInputAssembly();
-        _pipeline.setRasterizationState(true, false, false);
-        _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
-
-        _pipeline.setVertexBinding(0, 0, CUBE_VERTEX_LAYOUT); // per vertex data
-        _pipeline.setVertexBinding(1, CUBE_VERTEX_LAYOUT.m_types.size(), CELL_LAYOUT); // per cell data
-
-        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass(), subpass);
+        
+        // setting up the renderer
+        setDeviceHandle(gpu);
+        setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.frag.spv");
+        setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER});
+        setVertexInputLayout(CUBE_VERTEX_LAYOUT, CELL_LAYOUT);
+        setDepthStencilTest(true, true);
+        setRasterizer(true);
+        setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        setBlending(0, false);
+        Renderer::init(viewport, render_pass, subpass);
 
         // renderer
         _sampler.setMinFilter(VK_FILTER_NEAREST);
@@ -52,11 +32,11 @@ namespace cell {
         _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
         _sampler.init(gpu.getDevice());
 
-        // uniform buffer layout:
+        /*// uniform buffer layout:
         // mat4 proj
         // mat4 view
         // vec2 tile map unit (size of one tile in normalized device coords)
-        _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC2F}));
+        _global_uniform_buffer.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC2F}));*/
 
     }
 
@@ -65,41 +45,24 @@ namespace cell {
         for(auto& ubo : _per_chunk_uniform_buffer) 
             ubo.cleanUp();
 
-        _global_uniform_buffer.cleanUp();
+        // _global_uniform_buffer.cleanUp();
         _sampler.cleanUp();
-        _pipeline.cleanUp();
-        _descriptor_cache.cleanUp();
-        _descriptor_set_layout.cleanUp();
-        _shader.cleanUp();
 
+        Renderer::cleanUp();
     }
 
     void WorldRenderer::onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
 
-        _pipeline.cleanUp();
-        _pipeline.setViewport(viewport);
-        _pipeline.init(gpu.getDevice(), render_pass.getRenderPass(), _subpass);
+        Renderer::resizeViewport(viewport);
     }
 
-    void WorldRenderer::loadCamera(PerspectiveCamera3D& camera) {
 
-        _global_uniform_buffer.setAttribute(0, glm::value_ptr(camera.getCameraProjectionMatrix()), 16 * sizeof(float));
-        _global_uniform_buffer.setAttribute(1, glm::value_ptr(camera.getViewMatrix()), 16 * sizeof(float));
-
-    }
-
-    void WorldRenderer::draw(const WorldBuffer& world, const MaterialAtlas& materials, undicht::vulkan::CommandBuffer& cmd) {
+    void WorldRenderer::draw(const WorldBuffer& world, const MaterialAtlas& materials, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd) {
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
 
         cmd.bindVertexBuffer(world.getBuffer().getVertexBuffer().getBuffer(), 0);
         cmd.bindVertexBuffer(world.getBuffer().getInstanceBuffer().getBuffer(), 1);
-
-        // storing the material tile maps dimensions in the global ubo
-        float tile_map_unit[2];
-        tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
-        tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
-        _global_uniform_buffer.setAttribute(2, tile_map_unit, 2 * sizeof(float));
 
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
@@ -108,7 +71,7 @@ namespace cell {
 
             // create a descriptor set pointing to the uniform buffers and the cell texture
             undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
-            descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+            descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
             descriptor_set.bindImage(2, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
 
             // loading the chunk position to the ubo

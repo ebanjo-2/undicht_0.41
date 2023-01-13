@@ -67,7 +67,6 @@ set(GRAPHICS_WINDOW_SOURCES
 )
 
 set(GRAPHICS_RENDERER_SOURCES
-
 		src/renderer/vulkan/vertex_buffer.h
 	  src/renderer/vulkan/vertex_buffer.cpp
 	  
@@ -79,6 +78,12 @@ set(GRAPHICS_RENDERER_SOURCES
 	  
 	  src/renderer/vulkan/descriptor_set_cache.h
 	  src/renderer/vulkan/descriptor_set_cache.cpp
+	  
+	  src/renderer/vulkan/renderer.h
+	  src/renderer/vulkan/renderer.cpp
+	  
+	  src/renderer/vulkan/render_target.h
+	  src/renderer/vulkan/render_target.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES
@@ -102,7 +107,7 @@ add_library(graphics
 target_include_directories(graphics PUBLIC src)
 
 # setting the shader compile script path
-set(SHADER_COMPILE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/shader/compile.sh CACHE GLOBAL "SHADER_COMPILE_SCRIPT") 
+set(SHADER_COMPILE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/shader/compile.sh CACHE STRING "SHADER_COMPILE_SCRIPT") 
 
 
 # linking undicht core

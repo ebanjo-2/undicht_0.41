@@ -11,32 +11,19 @@
 #include "core/vulkan/descriptor_set.h"
 #include "renderer/vulkan/descriptor_set_cache.h"
 #include "renderer/vulkan/uniform_buffer.h"
+#include "renderer/vulkan/renderer.h"
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
 #include "entities/light_buffer.h"
 
 namespace cell {
 
-    class LightRenderer {
+    class LightRenderer : public undicht::vulkan::Renderer {
 
       protected:
 
-        // handles to other objects
-        undicht::vulkan::LogicalDevice _device_handle;
-        undicht::vulkan::RenderPass _render_pass_handle;
-
-        // Shader
-        undicht::vulkan::Shader _shader;
-
-        // Pipeline
-        uint32_t _subpass = 0;
-        undicht::vulkan::DescriptorSetLayout _descriptor_set_layout;
-        undicht::vulkan::DescriptorSetCache _descriptor_cache;
-        undicht::vulkan::Pipeline _pipeline;
-
         // renderer
         undicht::vulkan::Sampler _sampler;
-        undicht::vulkan::UniformBuffer _global_uniform_buffer; // contains data like the camera matrices, player position, ...
 
       public:
 
@@ -45,8 +32,7 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void loadCamera(undicht::tools::PerspectiveCamera3D& camera);
-        void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
+        void draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd);
         void beginFrame();
 
         const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;

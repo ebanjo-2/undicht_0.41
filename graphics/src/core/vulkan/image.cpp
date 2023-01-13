@@ -55,6 +55,11 @@ namespace undicht {
             return _extent;
         }
 
+        const VkFormat& Image::getFormat() const {
+
+            return _format;
+        }
+
         void Image::allocate(const LogicalDevice& device, uint32_t width, uint32_t height, uint32_t depth, uint32_t layers, uint32_t mip_levels, VkFormat format) {
             
             _format = format;

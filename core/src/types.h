@@ -56,12 +56,17 @@ namespace undicht {
 #define UND_UINT32 FixedType(Type::UNSIGNED_INT, 4)
 #define UND_UINT64 FixedType(Type::UNSIGNED_INT, 8)
 
+#define UND_FLOAT16 FixedType(Type::FLOAT, 2) // 16 bit float
 #define UND_FLOAT32 FixedType(Type::FLOAT, 4) // float
 #define UND_FLOAT64 FixedType(Type::FLOAT, 8) // double
 
 #define UND_VEC2F FixedType(Type::FLOAT, 4, 2)
 #define UND_VEC3F FixedType(Type::FLOAT, 4, 3)
 #define UND_VEC4F FixedType(Type::FLOAT, 4, 4)
+
+#define UND_VEC2F16 FixedType(Type::FLOAT, 2, 2)
+#define UND_VEC3F16 FixedType(Type::FLOAT, 2, 3)
+#define UND_VEC4F16 FixedType(Type::FLOAT, 2, 4)
 
 #define UND_VEC2I FixedType(Type::INT, 4, 2)
 #define UND_VEC3I FixedType(Type::INT, 4, 3)

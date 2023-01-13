@@ -15,6 +15,7 @@ namespace undicht {
                 {UND_UNDEFINED_TYPE, VK_FORMAT_UNDEFINED},
 
                 // types with 1 component
+                {UND_FLOAT16, VK_FORMAT_R16_SFLOAT},
                 {UND_FLOAT32, VK_FORMAT_R32_SFLOAT},
                 {UND_FLOAT64, VK_FORMAT_R64_SFLOAT},
                 {UND_UINT8, VK_FORMAT_R8_UINT},
@@ -28,6 +29,7 @@ namespace undicht {
 
                 // types with 2 components
                 {UND_VEC2F, VK_FORMAT_R32G32_SFLOAT},
+                {UND_VEC2F16, VK_FORMAT_R16G16_SFLOAT},
                 {UND_VEC2UI8, VK_FORMAT_R8G8_UINT},
                 {FixedType(Type::FLOAT, 8, 2), VK_FORMAT_R64G64_SFLOAT},
                 {FixedType(Type::INT, 1, 2), VK_FORMAT_R8G8_SINT},
@@ -38,6 +40,7 @@ namespace undicht {
 
                 // types with 3 components
                 {UND_VEC3F, VK_FORMAT_R32G32B32_SFLOAT},
+                {UND_VEC3F16, VK_FORMAT_R16G16B16_SFLOAT},
                 {UND_VEC3UI8, VK_FORMAT_R8G8B8_UINT},
                 {FixedType(Type::FLOAT, 8, 3), VK_FORMAT_R64G64B64_SFLOAT},
                 {FixedType(Type::INT, 1, 3), VK_FORMAT_R8G8B8_SINT},
@@ -49,6 +52,7 @@ namespace undicht {
 
                 // types with 4 components
                 {UND_VEC4F, VK_FORMAT_R32G32B32A32_SFLOAT},
+                {UND_VEC4F16, VK_FORMAT_R16G16B16A16_SFLOAT},
                 {UND_VEC4UI8, VK_FORMAT_R8G8B8A8_UINT},
                 {FixedType(Type::FLOAT, 8, 4),VK_FORMAT_R64G64B64A64_SFLOAT},
                 {FixedType(Type::INT, 1, 4), VK_FORMAT_R8G8B8A8_SINT},
