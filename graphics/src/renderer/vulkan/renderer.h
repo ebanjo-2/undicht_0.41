@@ -42,11 +42,11 @@ namespace undicht {
             virtual void setShaders(const std::string& vertex_shader, const std::string& fragment_shader);
             virtual void setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types);
             virtual void setVertexInputLayout(const undicht::BufferLayout& vertex_layout, const undicht::BufferLayout& instance_layout = {});
-            virtual void setDepthStencilTest(bool enable_depth_test = true, bool write_depth_values = true);
+            virtual void setDepthStencilTest(bool enable_depth_test = true, bool write_depth_values = true, VkCompareOp compare_op = VK_COMPARE_OP_LESS);
             virtual void setRasterizer(bool enable_culling, bool cull_ccw_faces = false, bool wire_frame = false);
             virtual void setInputAssembly(VkPrimitiveTopology topology);
 
-            virtual void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
+            virtual void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendFactor src_color_factor = {}, VkBlendFactor dst_color_factor = {}, VkBlendOp alpha_blend_op = {}, VkBlendFactor src_alpha_factor = {}, VkBlendFactor dst_alpha_factor = {});
 
             // init / cleanUp
             virtual void init(VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t sub_pass = 0);

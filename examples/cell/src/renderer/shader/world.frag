@@ -1,9 +1,14 @@
 #version 450
 
-layout(location = 0) out uvec4 out_color;
+layout(location = 0) out vec4 out_position;
+layout(location = 1) out vec4 out_normal;
+layout(location = 2) out vec4 out_color_specular;
 
 layout(location = 0) in flat uint face_id;
 layout(location = 1) in flat uvec2 material;
+layout(location = 2) in vec3 pos_rel_cam;
+layout(location = 3) in vec3 normal_rel_cam;
+layout(location = 4) in vec2 cell_uv;
 
 layout(binding = 0) uniform GlobalUBO {
 	mat4 view;
@@ -12,24 +17,22 @@ layout(binding = 0) uniform GlobalUBO {
 	mat4 inv_proj;
 } global;
 
+layout(binding = 1) uniform LocalUBO {
+	vec2 tile_map_unit;
+} local;
 
-layout(binding = 2) uniform sampler2D tile_map;
+layout(binding = 2) uniform ChunkUBO {
+	ivec3 pos;
+} chunk;
+
+layout(binding = 3) uniform sampler2D tile_map;
 
 void main() {
 
-	out_color = uvec4(material, face_id, 0);
+	vec2 uv = (material + fract(cell_uv)) * local.tile_map_unit;
 
-	/*// out_color = texture(tile_map, uv);
-	if((face_id & 0x01) != 0)
-		out_color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	else if((face_id & 0x02) != 0)
-		out_color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	else if((face_id & 0x04) != 0)
-		out_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-	else if((face_id & 0x08) != 0)
-		out_color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
-	else if((face_id & 0x10) != 0)
-		out_color = vec4(1.0f, 0.0f, 1.0f, 1.0f);
-	else // if((face_id & 0x20) != 0)
-		out_color = vec4(1.0f, 0.0f, 1.0f, 1.0f);*/
+	out_position = vec4(pos_rel_cam, 1.0f);
+	out_normal = vec4(normal_rel_cam, 1.0f);
+	out_color_specular = texture(tile_map, uv);
+
 }

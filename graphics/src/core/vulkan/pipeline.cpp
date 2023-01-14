@@ -65,12 +65,12 @@ namespace undicht {
 
         }*/
 
-        void Pipeline::setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op, VkBlendOp alpha_blend_op) {
+        void Pipeline::setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op, VkBlendFactor src_color_factor, VkBlendFactor dst_color_factor, VkBlendOp alpha_blend_op, VkBlendFactor src_alpha_factor, VkBlendFactor dst_alpha_factor) {
             // the blend state for every attachment needs to be set in the order the attachments are in (yes, laziness)
 
             if(attachment >= _blend_attachments.size()) _blend_attachments.resize(attachment + 1);
 
-            _blend_attachments.at(attachment) = createPipelineColorBlendAttachmentState(enable_blending, color_blend_op, alpha_blend_op);
+            _blend_attachments.at(attachment) = createPipelineColorBlendAttachmentState(enable_blending, color_blend_op, src_color_factor, dst_color_factor, alpha_blend_op, src_alpha_factor, dst_alpha_factor);
         }
 
         void Pipeline::setShaderInput(const VkDescriptorSetLayout& layout) {
@@ -78,9 +78,9 @@ namespace undicht {
             _descriptor_set_layout = layout;
         }
 
-        void Pipeline::setDepthStencilState(bool enable_depth_test, bool write_depth_values) {
+        void Pipeline::setDepthStencilState(bool enable_depth_test, bool write_depth_values, VkCompareOp compare_op) {
 
-            _depth_stencil_state = createPipelineDepthStencilStateCreateInfo(enable_depth_test, write_depth_values);
+            _depth_stencil_state = createPipelineDepthStencilStateCreateInfo(enable_depth_test, write_depth_values, compare_op);
         }
 
 
@@ -263,7 +263,7 @@ namespace undicht {
             return info;
         }
 
-        VkPipelineColorBlendAttachmentState Pipeline::createPipelineColorBlendAttachmentState(bool enable_blending, VkBlendOp color_blend_op, VkBlendOp alpha_blend_op) {
+        VkPipelineColorBlendAttachmentState Pipeline::createPipelineColorBlendAttachmentState(bool enable_blending, VkBlendOp color_blend_op, VkBlendFactor src_color_factor, VkBlendFactor dst_color_factor, VkBlendOp alpha_blend_op, VkBlendFactor src_alpha_factor, VkBlendFactor dst_alpha_factor) {
             // info about how to blend into an attachment
 
             VkPipelineColorBlendAttachmentState blend_state{};
@@ -271,6 +271,10 @@ namespace undicht {
             blend_state.blendEnable = enable_blending;
             blend_state.colorBlendOp = color_blend_op;
             blend_state.alphaBlendOp = alpha_blend_op;
+            blend_state.srcColorBlendFactor = src_color_factor;
+            blend_state.dstColorBlendFactor = dst_color_factor;
+            blend_state.srcAlphaBlendFactor = src_alpha_factor;
+            blend_state.dstAlphaBlendFactor = dst_alpha_factor;
 
             return blend_state;
         }
@@ -289,13 +293,13 @@ namespace undicht {
             return color_blending;
         }
 
-        VkPipelineDepthStencilStateCreateInfo Pipeline::createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values) {
+        VkPipelineDepthStencilStateCreateInfo Pipeline::createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values, VkCompareOp compare_op) {
             
             VkPipelineDepthStencilStateCreateInfo depth_stencil{};
             depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
             depth_stencil.depthTestEnable = depth_test;
             depth_stencil.depthWriteEnable = write_depth_values;
-            depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+            depth_stencil.depthCompareOp = compare_op;
             depth_stencil.depthBoundsTestEnable = VK_FALSE;
             depth_stencil.stencilTestEnable = VK_FALSE;
 

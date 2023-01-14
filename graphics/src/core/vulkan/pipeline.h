@@ -44,9 +44,9 @@ namespace undicht {
             void setViewport(const VkExtent2D& extent);
             void setRasterizationState(bool enable_culling, bool cull_ccw_faces = false, bool wire_frame = false);
             // void setMultisampleState(uint32_t samples);
-            void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
+            void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendFactor src_color_factor = {}, VkBlendFactor dst_color_factor = {}, VkBlendOp alpha_blend_op = {}, VkBlendFactor src_alpha_factor = {}, VkBlendFactor dst_alpha_factor = {});
             void setShaderInput(const VkDescriptorSetLayout& layout);
-            void setDepthStencilState(bool enable_depth_test, bool write_depth_values = true);
+            void setDepthStencilState(bool enable_depth_test, bool write_depth_values = true, VkCompareOp compare_op = VK_COMPARE_OP_LESS);
 
             void init(const VkDevice& device, VkRenderPass render_pass, uint32_t subpass = 0);
             void cleanUp();
@@ -68,9 +68,9 @@ namespace undicht {
             VkPipelineInputAssemblyStateCreateInfo static createPipelineInputAssembleStateCreateInfo(VkPrimitiveTopology topology);
             VkPipelineRasterizationStateCreateInfo static createPipelineRasterizationStateCreateInfo(VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL, bool enable_culling = false, VkFrontFace front_face = VK_FRONT_FACE_CLOCKWISE);
             VkPipelineMultisampleStateCreateInfo static createPipelineMultisampleStateCreateInfo();
-            VkPipelineColorBlendAttachmentState static createPipelineColorBlendAttachmentState(bool enable_blending = false, VkBlendOp color_blend_op = {}, VkBlendOp alpha_blend_op = {});
+            VkPipelineColorBlendAttachmentState static createPipelineColorBlendAttachmentState(bool enable_blending, VkBlendOp color_blend_op, VkBlendFactor src_color_factor, VkBlendFactor dst_color_factor, VkBlendOp alpha_blend_op, VkBlendFactor src_alpha_factor, VkBlendFactor dst_alpha_factor);
             VkPipelineColorBlendStateCreateInfo static createPipelineColorBlendStateCreateInfo(const std::vector<VkPipelineColorBlendAttachmentState>& blend_attachments);
-            VkPipelineDepthStencilStateCreateInfo static createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values);
+            VkPipelineDepthStencilStateCreateInfo static createPipelineDepthStencilStateCreateInfo(bool depth_test, bool write_depth_values, VkCompareOp compare_op);
             VkViewport static createViewport(const VkExtent2D& extent);
             VkRect2D static createScissor(const VkExtent2D& extent);
             VkPipelineViewportStateCreateInfo static createPipelineViewportStateCreateInfo(const VkViewport& viewport, const VkRect2D& scissor);

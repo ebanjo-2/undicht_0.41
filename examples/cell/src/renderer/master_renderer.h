@@ -33,19 +33,15 @@ namespace cell {
         uint32_t _swap_image_id = -1;
 
         // used by all stages
-        undicht::vulkan::RenderTarget _main_render_target;
         undicht::vulkan::CommandBuffer _draw_cmd;
         undicht::vulkan::Fence _render_finished_fence;
         undicht::vulkan::Semaphore _render_finished_semaphore;
         undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
-        // geometry stage
+        // main stage
+        undicht::vulkan::RenderTarget _main_render_target;
         WorldRenderer _world_renderer;
-
-        // lighting stage
         LightRenderer _light_renderer;
-
-        // final stage
         FinalRenderer _final_renderer;
 
       public:
@@ -67,7 +63,7 @@ namespace cell {
         void drawLights(const LightBuffer& lights);
 
         void beginFinalStage();
-        void drawFinal(const MaterialAtlas& materials);
+        void drawFinal(const MaterialAtlas& materials, float exposure = 1.0f, float gamma = 2.2f);
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
       

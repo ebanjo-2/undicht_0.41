@@ -13,12 +13,17 @@ namespace cell {
         // setting up the renderer
         setDeviceHandle(gpu);
         setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/light.frag.spv");
-        setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
+        setDescriptorSetLayout({
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // global uniform buffer
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // position texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // normal texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // color + specular input
+        });
         setVertexInputLayout(LIGHT_VERTEX_LAYOUT, LIGHT_LAYOUT);
-        setDepthStencilTest(true, false);
-        setRasterizer(true);
+        setDepthStencilTest(true, false, VK_COMPARE_OP_GREATER);
+        setRasterizer(true, true);
         setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        setBlending(0, false);
+        setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); // hdr buffer, just add the light intensities
         Renderer::init(viewport, render_pass, subpass);
 
         // Renderer
@@ -41,7 +46,7 @@ namespace cell {
     }
 
 
-    void LightRenderer::draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd){
+    void LightRenderer::draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView position, VkImageView normal, VkImageView color_specular){
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
 
@@ -50,6 +55,9 @@ namespace cell {
 
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
         descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
+        descriptor_set.bindInputAttachment(1, position);
+        descriptor_set.bindInputAttachment(2, normal);
+        descriptor_set.bindInputAttachment(3, color_specular);
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());

@@ -13,7 +13,7 @@ namespace undicht {
     namespace vulkan {
 
         class RenderTarget {
-            /// @brief class that combines a renderpass, a framebuffer and its attachments
+            /// @brief a class that combines a renderpass, a framebuffer and its attachments
           protected:
             // internal struct
 

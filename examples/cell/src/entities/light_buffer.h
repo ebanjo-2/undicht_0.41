@@ -15,7 +15,7 @@ namespace cell {
     struct PointLight {
         glm::vec3 _pos;
         glm::vec3 _color;
-        float _intensity;
+        float _brightness;
     };
 
     class LightBuffer {

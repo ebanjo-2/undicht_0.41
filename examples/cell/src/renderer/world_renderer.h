@@ -25,7 +25,7 @@ namespace cell {
 
         // renderer
         undicht::vulkan::Sampler _sampler;
-        //undicht::vulkan::UniformBuffer _global_uniform_buffer; // contains data like the camera matrices, player position, ...
+        undicht::vulkan::UniformBuffer _local_uniform_buffer;
         std::vector<undicht::vulkan::UniformBuffer> _per_chunk_uniform_buffer;
         int _last_used_chunk_ubo = -1;
 

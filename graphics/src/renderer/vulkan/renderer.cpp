@@ -40,9 +40,9 @@ namespace undicht {
 
         }
 
-        void Renderer::setDepthStencilTest(bool enable_depth_test, bool write_depth_values) {
+        void Renderer::setDepthStencilTest(bool enable_depth_test, bool write_depth_values, VkCompareOp compare_op) {
             
-            _pipeline.setDepthStencilState(enable_depth_test, write_depth_values);
+            _pipeline.setDepthStencilState(enable_depth_test, write_depth_values, compare_op);
         }
 
         void Renderer::setRasterizer(bool enable_culling, bool cull_ccw_faces, bool wire_frame) {
@@ -55,9 +55,9 @@ namespace undicht {
             _pipeline.setInputAssembly(topology);
         }
 
-        void Renderer::setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op, VkBlendOp alpha_blend_op) {
+        void Renderer::setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op, VkBlendFactor src_color_factor, VkBlendFactor dst_color_factor, VkBlendOp alpha_blend_op, VkBlendFactor src_alpha_factor, VkBlendFactor dst_alpha_factor) {
             // set the blending for output at binding #attachment
-            _pipeline.setBlending(attachment, enable_blending, color_blend_op, alpha_blend_op);
+            _pipeline.setBlending(attachment, enable_blending, color_blend_op, src_color_factor, dst_color_factor, alpha_blend_op, src_alpha_factor, dst_alpha_factor);
         }
 
         //////////////////////////////////////////// init / cleanUp //////////////////////////////////////////////

@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(true, false);
+        undicht::Engine::init(false, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -38,8 +38,8 @@ namespace cell {
 
         PointLight first_light;
         first_light._color = glm::vec3(1.0f, 1.0f, 1.0f);
-        first_light._pos = glm::vec3(5.0f, 20.0f, 50.0f);
-        first_light._intensity = 5.0f;
+        first_light._pos = glm::vec3(5.0f, 5.0f, 50.0f);
+        first_light._brightness = 10.0f;
         _lights.addPointLight(first_light);
 
     }
@@ -89,7 +89,7 @@ namespace cell {
             _master_renderer.drawLights(_lights);
 
             _master_renderer.beginFinalStage();
-            _master_renderer.drawFinal(_materials);
+            _master_renderer.drawFinal(_materials, 0.1f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

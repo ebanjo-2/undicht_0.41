@@ -12,6 +12,9 @@ namespace cell {
 
     const undicht::BufferLayout LIGHT_VERTEX_LAYOUT({UND_VEC3F}); // per vertex data
     const undicht::BufferLayout LIGHT_LAYOUT({UND_VEC3F, UND_VEC3F, UND_FLOAT32}); // per instance data
+    // light pos
+    // light color
+    // light brightness
 
     void LightBuffer::init(const undicht::vulkan::LogicalDevice& device) {
 
@@ -47,7 +50,7 @@ namespace cell {
 
         _point_light_buffer.setInstanceData(glm::value_ptr(light._color), 3 * sizeof(float), 7 * sizeof(float) * id + 0);
         _point_light_buffer.setInstanceData(glm::value_ptr(light._pos), 3 * sizeof(float), 7 * sizeof(float) * id + 3 * sizeof(float));
-        _point_light_buffer.setInstanceData(&light._intensity, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
+        _point_light_buffer.setInstanceData(&light._brightness, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
         _lights_in_use.at(id) = true;
 
         return id;
@@ -62,7 +65,7 @@ namespace cell {
 
         _point_light_buffer.setInstanceData(glm::value_ptr(light._color), 3 * sizeof(float), 7 * sizeof(float) * id + 0);
         _point_light_buffer.setInstanceData(glm::value_ptr(light._pos), 3 * sizeof(float), 7 * sizeof(float) * id + 3 * sizeof(float));
-        _point_light_buffer.setInstanceData(&light._intensity, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
+        _point_light_buffer.setInstanceData(&light._brightness, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
         _lights_in_use.at(id) = true;
     }
 
