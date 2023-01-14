@@ -32,7 +32,7 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView position, VkImageView normal, VkImageView color_specular);
+        void draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView depth, VkImageView material, VkImageView normal);
         void beginFrame();
 
         const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;

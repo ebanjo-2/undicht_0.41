@@ -17,6 +17,8 @@ layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
 	mat4 inv_view;
 	mat4 inv_proj;
+	vec2 viewport;
+	vec2 inv_viewport;
 } global;
 
 void main() {
@@ -29,4 +31,5 @@ void main() {
 	
 	// positive y is up, change my mind
 	gl_Position.y = -gl_Position.y;
+
 }

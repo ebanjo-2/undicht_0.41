@@ -28,9 +28,8 @@ namespace cell {
         setDepthStencilTest(true, true);
         setRasterizer(true);
         setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        setBlending(0, false); // position output
+        setBlending(0, false); // material output
         setBlending(1, false); // normal output
-        setBlending(2, false); // color + specular output
 
         Renderer::init(viewport, render_pass, subpass);
 

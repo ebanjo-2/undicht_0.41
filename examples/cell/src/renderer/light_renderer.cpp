@@ -46,7 +46,7 @@ namespace cell {
     }
 
 
-    void LightRenderer::draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView position, VkImageView normal, VkImageView color_specular){
+    void LightRenderer::draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView depth, VkImageView material, VkImageView normal){
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
 
@@ -55,9 +55,9 @@ namespace cell {
 
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
         descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
-        descriptor_set.bindInputAttachment(1, position);
-        descriptor_set.bindInputAttachment(2, normal);
-        descriptor_set.bindInputAttachment(3, color_specular);
+        descriptor_set.bindInputAttachment(1, depth);
+        descriptor_set.bindInputAttachment(2, material);
+        descriptor_set.bindInputAttachment(3, normal);
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());

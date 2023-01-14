@@ -26,6 +26,8 @@ namespace cell {
             UND_MAT4F, // proj
             UND_MAT4F, // inverse view
             UND_MAT4F, // inverse projection
+            UND_VEC2F, // viewport size
+            UND_VEC2F, // inverse viewport size
         }));
 
         initMainRenderTarget(device, swap_chain);
@@ -68,17 +70,15 @@ namespace cell {
         undicht::vulkan::Framebuffer& frame_buffer = _main_render_target.getFramebuffer(_swap_image_id);
         VkClearValue visible_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
         VkClearValue depth_clear_value{1.0f, 0};
-        VkClearValue position_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+        VkClearValue material_clear_value{0, 0, 0, 0};
         VkClearValue normal_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
-        VkClearValue color_specular_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
         VkClearValue light_clear_value{0.1f, 0.1f, 0.1f, 0.0f};
 
         std::vector<VkClearValue> clear_values = {
             visible_clear_value, 
-            depth_clear_value, 
-            position_clear_value, 
+            depth_clear_value,
+            material_clear_value, 
             normal_clear_value, 
-            color_specular_clear_value, 
             light_clear_value,
         };
 
@@ -136,10 +136,10 @@ namespace cell {
 
     void MasterRenderer::drawLights(const LightBuffer& lights) {
 
-        const VkImageView& position = _main_render_target.getAttachment(_swap_image_id, 2);
+        const VkImageView& depth = _main_render_target.getAttachment(_swap_image_id, 1);
+        const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& normal = _main_render_target.getAttachment(_swap_image_id, 3);
-        const VkImageView& color_specular = _main_render_target.getAttachment(_swap_image_id, 4);
-        _light_renderer.draw(lights, _global_uniform_buffer, _draw_cmd, position, normal, color_specular);
+        _light_renderer.draw(lights, _global_uniform_buffer, _draw_cmd, depth, material, normal);
     }
 
     void MasterRenderer::beginFinalStage() {
@@ -150,15 +150,19 @@ namespace cell {
 
     void MasterRenderer::drawFinal(const MaterialAtlas& materials, float exposure, float gamma) {
 
-        const VkImageView& color_specular = _main_render_target.getAttachment(_swap_image_id, 4);
-        const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 5);
+        const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
+        const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 4);
 
-        _final_renderer.draw(_global_uniform_buffer, _draw_cmd, exposure, gamma, color_specular, light);
+        _final_renderer.draw(_global_uniform_buffer, materials, _draw_cmd, exposure, gamma, material, light);
     }
 
     void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {
         
         _viewport = {(uint32_t)swap_chain.getExtent().width, (uint32_t)swap_chain.getExtent().height};
+
+        float inv_viewport[] = {1.0f / _viewport.width, 1.0f / _viewport.height};
+        _global_uniform_buffer.setAttribute(4, &_viewport, sizeof(_viewport));
+        _global_uniform_buffer.setAttribute(5, inv_viewport, 2 * sizeof(float));
 
         _main_render_target.resize(_viewport, &swap_chain);
 
@@ -173,29 +177,27 @@ namespace cell {
         // using https://learnopengl.com/Advanced-Lighting/Deferred-Shading as a reference for setting up the geometry buffer
 
         const VkFormat DEPTH_BUFFER_FORMAT = translate(UND_DEPTH32F);
-        const VkFormat POSITION_BUFFER_FORMAT = translate(UND_VEC4F16); // position relative to the camera
+        const VkFormat MATERIAL_BUFFER_FORMAT = translate(UND_R8G8B8A8); // material + cell_uv
         const VkFormat NORMAL_BUFFER_FORMAT = translate(UND_VEC4F16); // normal
-        const VkFormat COLOR_SPECULAR_BUFFER_FORMAT = translate(UND_R8G8B8A8); // albedo color + specular
         const VkFormat LIGHT_BUFFER_FORMAT = translate(UND_VEC4F16); // using 2 byte floats to store a higher range (hdr) 
 
         _main_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
         _main_render_target.addVisibleAttachment(swap_chain, true, true); // 0
         _main_render_target.addAttachment(DEPTH_BUFFER_FORMAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL); // 1
-        _main_render_target.addAttachment(POSITION_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
+        _main_render_target.addAttachment(MATERIAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
         _main_render_target.addAttachment(NORMAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
-        _main_render_target.addAttachment(COLOR_SPECULAR_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 4
-        _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 5
+        _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 4
 
         // geometry subpass
         _main_render_target.addSubPass(
-            {1, 2, 3, 4},
-            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
+            {1, 2, 3},
+            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
         );
         // lighting subpass
         _main_render_target.addSubPass(
-            {1, 5}, // uses the depth buffer as an "output", but doesnt write to it
-            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {2, 3, 4},
+            {4}, // uses the depth buffer as an "output", but doesnt write to it
+            {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
+            {1, 2, 3},
             {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // lighting subpass waits for the geometry subpass at the fragment shader stage
@@ -211,7 +213,7 @@ namespace cell {
         _main_render_target.addSubPass(
             {0}, // outputs only to the visible attachment
             {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {4, 5}, // combines light and color 
+            {2, 4},
             {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // final subpass waits for the lighting subpass at the fragment shader stage

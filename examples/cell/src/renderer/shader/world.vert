@@ -9,7 +9,7 @@ layout(location = 2) in uvec4 pos0;
 layout(location = 3) in uvec4 pos1;
 
 layout(location = 0) out flat uint face_id;
-layout(location = 1) out flat uvec2 material;
+layout(location = 1) out flat vec2 material;
 layout(location = 2) out vec3 pos_rel_cam;
 layout(location = 3) out vec3 normal_rel_cam;
 layout(location = 4) out vec2 cell_uv;
@@ -19,6 +19,8 @@ layout(binding = 0) uniform GlobalUBO {
 	mat4 proj;
 	mat4 inv_view;
 	mat4 inv_proj;
+	vec2 viewport;
+	vec2 inv_viewport;
 } global;
 
 layout(binding = 1) uniform LocalUBO {
@@ -35,7 +37,7 @@ vec3 calcCellNormal(uint face);
 void main() {
 
 	face_id = aFaceID;
-	material = uvec2(pos0.w, pos1.w);
+	material = vec2(pos0.w, pos1.w) / 255.0f;
 
 	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
 	vec4 world_pos = vec4(vertex_pos + chunk.pos, 1.0f);

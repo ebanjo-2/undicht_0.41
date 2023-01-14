@@ -36,8 +36,10 @@ namespace cell {
         setDescriptorSetLayout({
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // global uniform buffer
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // local uniform buffer
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // position texture input
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // color + specular texture input
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, // tile map
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // depth texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // material texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // normal texture input
         });
         setVertexInputLayout(SCREEN_QUAD_VERTEX_LAYOUT);
         setDepthStencilTest(false, false);
@@ -73,7 +75,7 @@ namespace cell {
         Renderer::resizeViewport(viewport);
     }
 
-    void FinalRenderer::draw(const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView color_specular, VkImageView light) {
+    void FinalRenderer::draw(const undicht::vulkan::UniformBuffer& global_ubo, const MaterialAtlas& atlas, undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView material, VkImageView light) {
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
         cmd.bindVertexBuffer(_screen_quad.getVertexBuffer().getBuffer(), 0);
@@ -90,8 +92,9 @@ namespace cell {
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
         descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
         descriptor_set.bindUniformBuffer(1, _ubo.getBuffer());
-        descriptor_set.bindInputAttachment(2, color_specular);
-        descriptor_set.bindInputAttachment(3, light);
+        descriptor_set.bindImage(2, atlas.getTileMap().getImage().getImageView(), atlas.getTileMap().getLayout(), _sampler.getSampler());
+        descriptor_set.bindInputAttachment(3, material);
+        descriptor_set.bindInputAttachment(4, light);
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());
