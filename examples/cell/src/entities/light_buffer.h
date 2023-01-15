@@ -6,17 +6,11 @@
 #include <vector>
 #include "buffer_layout.h"
 
+#include "entities/lights/point_light.h"
+
 namespace cell {
 
     const extern undicht::BufferLayout LIGHT_VERTEX_LAYOUT; // per vertex data
-    const extern undicht::BufferLayout LIGHT_LAYOUT; // per instance data
-
-    // Light structs
-    struct PointLight {
-        glm::vec3 _pos;
-        glm::vec3 _color;
-        float _brightness;
-    };
 
     class LightBuffer {
     

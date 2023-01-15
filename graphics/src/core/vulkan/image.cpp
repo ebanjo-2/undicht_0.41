@@ -123,10 +123,14 @@ namespace undicht {
 
         VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, const VkFormat& format, VkImageAspectFlags flags) {
 
+            VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_2D;
+
+            if(layer_count > 1) view_type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+
             VkImageViewCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             info.image = image;
-            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.viewType = view_type;
             info.format = format;
             info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -138,7 +142,6 @@ namespace undicht {
             info.subresourceRange.baseArrayLayer = 0;
             info.subresourceRange.layerCount = layer_count;
         
-
             return info;
         }
 
@@ -180,7 +183,7 @@ namespace undicht {
             return barrier;
         }
 
-        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags) {
+        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer) {
 
             VkBufferImageCopy region{};
             region.bufferOffset = 0; // layout of the data in the buffer
@@ -189,7 +192,7 @@ namespace undicht {
 
             region.imageSubresource.aspectMask = flags;
             region.imageSubresource.mipLevel = 0;
-            region.imageSubresource.baseArrayLayer = 0;
+            region.imageSubresource.baseArrayLayer = layer;
             region.imageSubresource.layerCount = 1;
 
             region.imageOffset = image_offset;

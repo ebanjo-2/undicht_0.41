@@ -60,10 +60,10 @@ namespace cell {
         void drawWorld(const WorldBuffer& world, const MaterialAtlas& materials);
 
         void beginLightStage();
-        void drawLights(const LightBuffer& lights);
+        void drawLights(const MaterialAtlas& materials, const LightBuffer& lights);
 
         void beginFinalStage();
-        void drawFinal(const MaterialAtlas& materials, float exposure = 1.0f, float gamma = 2.2f);
+        void drawFinal(float exposure = 1.0f, float gamma = 2.2f);
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
       

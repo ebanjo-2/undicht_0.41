@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(false, true);
+        undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -18,8 +18,15 @@ namespace cell {
         _materials.init(_gpu);
 
         // setting some materials for testing
-        uint32_t grass = _materials.setMaterial(Material("Grass", UND_ENGINE_SOURCE_DIR + "examples/cell/res/grass.png"));
-        uint32_t sand = _materials.setMaterial(Material("Sand", UND_ENGINE_SOURCE_DIR + "examples/cell/res/sand.png"));
+        uint32_t grass = _materials.setMaterial(Material("Grass", 
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/grass.png"
+        ));
+
+        uint32_t sand = _materials.setMaterial(Material("Sand", 
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/sand.png"
+        ));
+
+
 
         // setting some cells for testing
         std::vector<Cell> cells = {
@@ -36,11 +43,9 @@ namespace cell {
         _world.updateWorldBuffer(glm::ivec3(255,0,0));
         _world.updateWorldBuffer(glm::ivec3(-255,0,0));
 
-        PointLight first_light;
-        first_light._color = glm::vec3(1.0f, 1.0f, 1.0f);
-        first_light._pos = glm::vec3(5.0f, 5.0f, 50.0f);
-        first_light._brightness = 10.0f;
-        _lights.addPointLight(first_light);
+        _lights.addPointLight(PointLight(glm::vec3(05.0,3.0,50.0),glm::vec3(1.0,0.0,0.0),300));
+        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,00.0),glm::vec3(0.0,1.0,0.0),300));
+        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(0.0,0.0,1.0),300));
 
     }
 
@@ -86,10 +91,10 @@ namespace cell {
             _master_renderer.drawWorld(_world.getWorldBuffer(), _materials);
 
             _master_renderer.beginLightStage();
-            _master_renderer.drawLights(_lights);
+            _master_renderer.drawLights(_materials, _lights);
 
             _master_renderer.beginFinalStage();
-            _master_renderer.drawFinal(_materials, 0.1f);
+            _master_renderer.drawFinal(0.1f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

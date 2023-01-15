@@ -70,9 +70,9 @@ namespace cell {
         undicht::vulkan::Framebuffer& frame_buffer = _main_render_target.getFramebuffer(_swap_image_id);
         VkClearValue visible_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
         VkClearValue depth_clear_value{1.0f, 0};
-        VkClearValue material_clear_value{0, 0, 0, 0};
+        VkClearValue material_clear_value{255, 255, 0, 0};
         VkClearValue normal_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
-        VkClearValue light_clear_value{0.1f, 0.1f, 0.1f, 0.0f};
+        VkClearValue light_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
 
         std::vector<VkClearValue> clear_values = {
             visible_clear_value, 
@@ -134,12 +134,12 @@ namespace cell {
         _light_renderer.beginFrame();
     }
 
-    void MasterRenderer::drawLights(const LightBuffer& lights) {
+    void MasterRenderer::drawLights(const MaterialAtlas& materials, const LightBuffer& lights) {
 
         const VkImageView& depth = _main_render_target.getAttachment(_swap_image_id, 1);
         const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& normal = _main_render_target.getAttachment(_swap_image_id, 3);
-        _light_renderer.draw(lights, _global_uniform_buffer, _draw_cmd, depth, material, normal);
+        _light_renderer.draw(lights, materials, _global_uniform_buffer, _draw_cmd, depth, material, normal);
     }
 
     void MasterRenderer::beginFinalStage() {
@@ -148,12 +148,12 @@ namespace cell {
         _final_renderer.beginFrame();
     }
 
-    void MasterRenderer::drawFinal(const MaterialAtlas& materials, float exposure, float gamma) {
+    void MasterRenderer::drawFinal(float exposure, float gamma) {
 
         const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 4);
 
-        _final_renderer.draw(_global_uniform_buffer, materials, _draw_cmd, exposure, gamma, material, light);
+        _final_renderer.draw(_global_uniform_buffer, _draw_cmd, exposure, gamma, light);
     }
 
     void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {

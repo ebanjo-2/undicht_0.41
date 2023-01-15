@@ -6,11 +6,12 @@ namespace undicht {
 
     namespace vulkan {
 
-        void Texture::setExtent(uint32_t width, uint32_t height, uint32_t depth) {
+        void Texture::setExtent(uint32_t width, uint32_t height, uint32_t depth, uint32_t layers) {
             
             _width = width;
             _height = height;
             _depth = depth;
+            _layers = layers;
 
         }
 
@@ -66,7 +67,7 @@ namespace undicht {
         }
 
 
-        void Texture::setData(const char* data, uint32_t byte_size, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
+        void Texture::setData(const char* data, uint32_t byte_size, uint32_t layer, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
 
             if(data_image_extent.width == 0 && data_image_extent.height == 0)
                 data_image_extent = _image.getExtent();
@@ -79,7 +80,7 @@ namespace undicht {
             _transfer_buffer.setData(byte_size, 0, data);
 
             // copy data from transfer buffer to texture
-            VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT);
+            VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer);
             _copy_cmd.beginCommandBuffer(true);
             _copy_cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
             _copy_cmd.endCommandBuffer();

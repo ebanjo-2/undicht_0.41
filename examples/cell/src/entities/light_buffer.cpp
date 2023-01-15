@@ -11,10 +11,7 @@ namespace cell {
     using namespace tools;
 
     const undicht::BufferLayout LIGHT_VERTEX_LAYOUT({UND_VEC3F}); // per vertex data
-    const undicht::BufferLayout LIGHT_LAYOUT({UND_VEC3F, UND_VEC3F, UND_FLOAT32}); // per instance data
-    // light pos
-    // light color
-    // light brightness
+
 
     void LightBuffer::init(const undicht::vulkan::LogicalDevice& device) {
 
@@ -38,19 +35,20 @@ namespace cell {
         /// @brief add a point light to the buffer
         /// @return an unique id with which the light can be accessed
 
+        const uint32_t POINT_LIGHT_SIZE = POINT_LIGHT_LAYOUT.getTotalSize();
+
         // trying to reuse unused space in the _point_light_buffer
         std::vector<bool>::iterator it = std::find(_lights_in_use.begin(), _lights_in_use.end(), false);
         uint32_t id = it - _lights_in_use.begin();
 
-
-        if(id == _lights_in_use.size()) {
+        if(id == _lights_in_use.size()) 
             _lights_in_use.resize(id + 1);
-            _point_light_buffer.setInstanceData(nullptr, 0, (id + 1) * 7 * sizeof(float) * 1.5); // reserving memory for future lights
-        }
+        
+        // storing the point light data
+        char tmp[POINT_LIGHT_SIZE];
+        light.fillBuffer((float*)tmp);
 
-        _point_light_buffer.setInstanceData(glm::value_ptr(light._color), 3 * sizeof(float), 7 * sizeof(float) * id + 0);
-        _point_light_buffer.setInstanceData(glm::value_ptr(light._pos), 3 * sizeof(float), 7 * sizeof(float) * id + 3 * sizeof(float));
-        _point_light_buffer.setInstanceData(&light._brightness, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
+        _point_light_buffer.setInstanceData(tmp, POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
         _lights_in_use.at(id) = true;
 
         return id;
@@ -62,10 +60,14 @@ namespace cell {
             UND_ERROR << "failed to update point light: " << id << " because it doesnt exist\n";
             return;
         }
+        
+        const uint32_t POINT_LIGHT_SIZE = POINT_LIGHT_LAYOUT.getTotalSize();
 
-        _point_light_buffer.setInstanceData(glm::value_ptr(light._color), 3 * sizeof(float), 7 * sizeof(float) * id + 0);
-        _point_light_buffer.setInstanceData(glm::value_ptr(light._pos), 3 * sizeof(float), 7 * sizeof(float) * id + 3 * sizeof(float));
-        _point_light_buffer.setInstanceData(&light._brightness, 1 * sizeof(float), 7 * sizeof(float) * id + 6 * sizeof(float));
+        // storing the point light data
+        char tmp[POINT_LIGHT_SIZE];
+        light.fillBuffer((float*)tmp);
+
+        _point_light_buffer.setInstanceData(tmp, POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
         _lights_in_use.at(id) = true;
     }
 

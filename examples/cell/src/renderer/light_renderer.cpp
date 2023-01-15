@@ -15,11 +15,13 @@ namespace cell {
         setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/light.frag.spv");
         setDescriptorSetLayout({
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // global uniform buffer
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // position texture input
+            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // local uniform buffer
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, // tile map
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // depth texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // material texture input
             VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // normal texture input
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // color + specular input
         });
-        setVertexInputLayout(LIGHT_VERTEX_LAYOUT, LIGHT_LAYOUT);
+        setVertexInputLayout(LIGHT_VERTEX_LAYOUT, POINT_LIGHT_LAYOUT);
         setDepthStencilTest(true, false, VK_COMPARE_OP_GREATER);
         setRasterizer(true, true);
         setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
@@ -32,10 +34,14 @@ namespace cell {
         _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
         _sampler.init(gpu.getDevice());
 
+        // local uniform buffer
+        // contains the tile map's tile size 
+        _ubo.init(gpu, BufferLayout({UND_VEC2F}));
     }
 
     void LightRenderer::cleanUp() {
-
+        
+        _ubo.cleanUp();
         _sampler.cleanUp();
         Renderer::cleanUp();
     }
@@ -46,18 +52,26 @@ namespace cell {
     }
 
 
-    void LightRenderer::draw(const LightBuffer& lights, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView depth, VkImageView material, VkImageView normal){
+    void LightRenderer::draw(const LightBuffer& lights, const MaterialAtlas& materials, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView depth, VkImageView material, VkImageView normal){
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
 
         cmd.bindVertexBuffer(lights.getPointLightBuffer().getVertexBuffer().getBuffer(), 0);
         cmd.bindVertexBuffer(lights.getPointLightBuffer().getInstanceBuffer().getBuffer(), 1);
 
+        // storing the material tile maps dimensions in the global ubo
+        float tile_map_unit[2];
+        tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
+        tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
+        _ubo.setAttribute(0, tile_map_unit, 2 * sizeof(float));
+
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
         descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
-        descriptor_set.bindInputAttachment(1, depth);
-        descriptor_set.bindInputAttachment(2, material);
-        descriptor_set.bindInputAttachment(3, normal);
+        descriptor_set.bindUniformBuffer(1, _ubo.getBuffer());
+        descriptor_set.bindImage(2, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
+        descriptor_set.bindInputAttachment(3, depth);
+        descriptor_set.bindInputAttachment(4, material);
+        descriptor_set.bindInputAttachment(5, normal);
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());

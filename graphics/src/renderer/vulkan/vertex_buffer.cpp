@@ -50,7 +50,6 @@ namespace undicht {
         void VertexBuffer::setInstanceData(const void* data, uint32_t byte_size, uint32_t offset) {
 
             transferData(data, byte_size, offset, _instance_buffer);
-
         }
 
         const Buffer& VertexBuffer::getVertexBuffer() const {
@@ -73,7 +72,7 @@ namespace undicht {
         void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst) {
             
             // allocating memory + copying the old data if necessary
-            if(dst.getUsedSize() < byte_size + offset) {
+            if(dst.getAllocatedSize() < (byte_size + offset)) {
                 // copying the data from the old dst buffer to the new one
                 Buffer new_dst;
                 new_dst.init(dst);
@@ -91,17 +90,12 @@ namespace undicht {
             if(!byte_size) return;
 
             // storing the data in the transfer buffer
-            if(_transfer_buffer.getUsedSize() < byte_size) _transfer_buffer.allocate(*_device_handle, byte_size);
+            if(_transfer_buffer.getAllocatedSize() < byte_size) _transfer_buffer.allocate(*_device_handle, byte_size);
             _transfer_buffer.setData(byte_size, 0, data);
 
             // using a command buffer to copy the data to the dst buffer
-            VkBufferCopy copy_info = Buffer::createBufferCopy(byte_size, 0, offset);
-            _copy_cmd.beginCommandBuffer(true);
-            _copy_cmd.copy(_transfer_buffer.getBuffer(), dst.getBuffer(), copy_info);
-            _copy_cmd.endCommandBuffer();
-            _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
-            _device_handle->waitTransferQueueIdle(); // waiting for the transfer to finish (should probably use semaphores or smth.)
-            
+            copyData(_transfer_buffer, 0, byte_size, dst, offset);
+
             dst.setUsedSize(std::max(dst.getUsedSize(), byte_size + offset));
         }
 

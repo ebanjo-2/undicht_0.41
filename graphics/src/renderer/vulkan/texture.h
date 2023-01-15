@@ -36,7 +36,7 @@ namespace undicht {
         public:
 
             // set the settings before initializing the texture
-            void setExtent(uint32_t width, uint32_t height, uint32_t depth = 1);
+            void setExtent(uint32_t width, uint32_t height, uint32_t depth = 1, uint32_t layers = 1);
             void setFormat(VkFormat format);
             void setMipMaps(bool enable_mip_maps);
 
@@ -46,7 +46,7 @@ namespace undicht {
             const Image& getImage() const;
             const VkImageLayout& getLayout() const;
 
-            void setData(const char* data, uint32_t byte_size, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
+            void setData(const char* data, uint32_t byte_size, uint32_t layer = 0, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
 
         protected:
             // internal functions

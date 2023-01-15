@@ -11,6 +11,14 @@ set(WORLD_SOURCES
 )
 
 set(ENTITY_SOURCES
+		src/entities/entity.h
+		src/entities/entity.cpp
+		src/entities/entity_chunk.h
+		src/entities/entity_chunk.cpp
+		src/entities/entity_world.h
+		src/entities/entity_world.cpp
+    src/entities/lights/point_light.h
+    src/entities/lights/point_light.cpp
     src/entities/light_buffer.h
     src/entities/light_buffer.cpp
 )

@@ -36,10 +36,7 @@ namespace cell {
         setDescriptorSetLayout({
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // global uniform buffer
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // local uniform buffer
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, // tile map
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // depth texture input
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // material texture input
-            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // normal texture input
+            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // light texture input
         });
         setVertexInputLayout(SCREEN_QUAD_VERTEX_LAYOUT);
         setDepthStencilTest(false, false);
@@ -55,10 +52,9 @@ namespace cell {
         _sampler.init(device.getDevice());
 
         // local uniform buffer
-        // contains the tile map's tile size 
-        // and the exposure setting
+        // exposure setting
         // + gamma
-        _ubo.init(device, BufferLayout({UND_VEC2F, UND_FLOAT32, UND_FLOAT32}));
+        _ubo.init(device, BufferLayout({UND_FLOAT32, UND_FLOAT32}));
     }
 
     void FinalRenderer::cleanUp() {
@@ -75,26 +71,19 @@ namespace cell {
         Renderer::resizeViewport(viewport);
     }
 
-    void FinalRenderer::draw(const undicht::vulkan::UniformBuffer& global_ubo, const MaterialAtlas& atlas, undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView material, VkImageView light) {
+    void FinalRenderer::draw(const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView light) {
 
         cmd.bindGraphicsPipeline(_pipeline.getPipeline());
         cmd.bindVertexBuffer(_screen_quad.getVertexBuffer().getBuffer(), 0);
 
-        // storing the material tile maps dimensions in the global ubo
-        float tile_map_unit[2];
-        tile_map_unit[0] = 1.0f / MaterialAtlas::TILE_MAP_COLS; // width of a tile (in ndc)
-        tile_map_unit[1] = 1.0f / MaterialAtlas::TILE_MAP_ROWS; // height of a tile (in ndc)
-        _ubo.setAttribute(0, tile_map_unit, 2 * sizeof(float));
-        _ubo.setAttribute(1, &exposure, sizeof(float));
-        _ubo.setAttribute(2, &gamma, sizeof(float));
+        _ubo.setAttribute(0, &exposure, sizeof(float));
+        _ubo.setAttribute(1, &gamma, sizeof(float));
 
         // create a descriptor set pointing to the uniform buffers and the material atlas texture
         undicht::vulkan::DescriptorSet& descriptor_set = _descriptor_cache.accquire();
         descriptor_set.bindUniformBuffer(0, global_ubo.getBuffer());
         descriptor_set.bindUniformBuffer(1, _ubo.getBuffer());
-        descriptor_set.bindImage(2, atlas.getTileMap().getImage().getImageView(), atlas.getTileMap().getLayout(), _sampler.getSampler());
-        descriptor_set.bindInputAttachment(3, material);
-        descriptor_set.bindInputAttachment(4, light);
+        descriptor_set.bindInputAttachment(2, light);
 
         // bind the descriptor set
         cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());

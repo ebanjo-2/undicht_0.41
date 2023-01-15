@@ -45,7 +45,7 @@ void main() {
 	// output to the fragment shader
 	cell_uv = calcCellUv(vertex_pos, aFaceID);
 	pos_rel_cam = (global.view * world_pos).xyz;
-	normal_rel_cam = normalize(calcCellNormal(aFaceID) * mat3(global.view));
+	normal_rel_cam = normalize(mat3(global.view) * calcCellNormal(aFaceID));
 
 	gl_Position = global.proj * global.view * world_pos;
 	gl_Position.y = -gl_Position.y; // positive y is up, change my mind

@@ -20,7 +20,7 @@ namespace cell {
 
     void MaterialAtlas::init(const undicht::vulkan::LogicalDevice& device) {
 
-        _tile_map.setExtent(TILE_MAP_WIDTH, TILE_MAP_HEIGHT);
+        _tile_map.setExtent(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 1, 2);
         _tile_map.setFormat(translate(TILE_MAP_FORMAT));
         _tile_map.setMipMaps(false);
         _tile_map.init(device);
@@ -64,19 +64,17 @@ namespace cell {
 
         _materials.at(fixed_id) = mat;
 
-        // loading the diffuse texture
-        ImageData data;
-        ImageFile(mat.getDiffuseTexture(), data);
-
-        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
-            UND_ERROR << "failed to load diffuse texture: " << mat.getDiffuseTexture() << "\n";
-            return;
-        }
+        // loading the textures
+        ImageData diffuse_data;
+        ImageData specular_data;
+        loadDiffuseTexture(mat.getDiffuseTexture(), diffuse_data);
+        loadSpecularTexture(mat.getSpecularTexture(), specular_data);
 
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _tile_map.setData(data._pixels.data(), data._pixels.size(), {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(diffuse_data._pixels.data(), diffuse_data._pixels.size(), 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(specular_data._pixels.data(), specular_data._pixels.size(), 1, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
     }
 
     const Material* MaterialAtlas::getMaterial(const std::string& mat_name) const {
@@ -112,5 +110,66 @@ namespace cell {
         return _tile_map;
     }
 
-    
+    //////////////////////////////////// protected material atlas functions ////////////////////////////////////
+
+    void MaterialAtlas::loadDiffuseTexture(const std::string& file_name, ImageData& data) {
+
+        if(!file_name.compare("")) {
+            // init the data with default values
+            data._nr_channels = 4;
+            data._width = 16;
+            data._height = 16;
+            data._pixels.resize(16 * 16 * 4);
+
+            for(int x = 0; x < 16; x++) {
+                for(int y = 0; y < 16; y++) {
+                    data._pixels.at(4 * (x * 16 + y) + 0) = 0;
+                    data._pixels.at(4 * (x * 16 + y) + 1) = 100;
+                    data._pixels.at(4 * (x * 16 + y) + 2) = 200;
+                    data._pixels.at(4 * (x * 16 + y) + 3) = 0; // roughness
+                }
+            }
+
+            return;
+        }
+
+        ImageFile(file_name, data);
+
+        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
+            UND_ERROR << "failed to load diffuse texture: " << file_name << "\n";
+            return;
+        }
+
+    }
+
+    void MaterialAtlas::loadSpecularTexture(const std::string& file_name, ImageData& data) {
+
+        if(!file_name.compare("")) {
+            // init the data with default values
+            data._nr_channels = 4;
+            data._width = 16;
+            data._height = 16;
+            data._pixels.resize(16 * 16 * 4);
+
+            for(int x = 0; x < 16; x++) {
+                for(int y = 0; y < 16; y++) {
+                    data._pixels.at(4 * (x * 16 + y) + 0) = 200; // specular color
+                    data._pixels.at(4 * (x * 16 + y) + 1) = 200;
+                    data._pixels.at(4 * (x * 16 + y) + 2) = 200;
+                    data._pixels.at(4 * (x * 16 + y) + 3) = 255; // metalness
+                }
+            }
+
+            return;
+        }
+
+        ImageFile(file_name, data);
+
+        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
+            UND_ERROR << "failed to load Specular texture: " << file_name << "\n";
+            return;
+        }
+
+    }
+
 } // cell

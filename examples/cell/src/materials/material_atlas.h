@@ -5,6 +5,7 @@
 #include "renderer/vulkan/texture.h"
 #include "materials/material.h"
 #include "vector"
+#include "images/image_file.h"
 
 namespace cell {
 
@@ -42,6 +43,12 @@ namespace cell {
         int getMaterialID(const std::string& mat_name) const; // -1 if the material wasnt found
 
         const undicht::vulkan::Texture& getTileMap() const;
+
+      protected:
+        // protected material atlas functions
+
+        void loadDiffuseTexture(const std::string& file_name, undicht::tools::ImageData& data);
+        void loadSpecularTexture(const std::string& file_name, undicht::tools::ImageData& data);
 
     };
 
