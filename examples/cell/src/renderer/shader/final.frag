@@ -18,7 +18,7 @@ layout(binding = 1) uniform LocalUBO {
 	float gamma;
 } local;
 
-layout (input_attachment_index = 1, set = 0, binding = 2) uniform subpassInput input_light;
+layout (input_attachment_index = 0, set = 0, binding = 2) uniform subpassInput input_light;
 
 
 void main() {

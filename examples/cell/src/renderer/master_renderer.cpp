@@ -213,8 +213,8 @@ namespace cell {
         _main_render_target.addSubPass(
             {0}, // outputs only to the visible attachment
             {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {2, 4},
-            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
+            {4},
+            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // final subpass waits for the lighting subpass at the fragment shader stage
         _main_render_target.addSubPassDependency(

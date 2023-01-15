@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(true, true);
+        undicht::Engine::init(false, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -43,9 +43,9 @@ namespace cell {
         _world.updateWorldBuffer(glm::ivec3(255,0,0));
         _world.updateWorldBuffer(glm::ivec3(-255,0,0));
 
-        _lights.addPointLight(PointLight(glm::vec3(05.0,3.0,50.0),glm::vec3(1.0,0.0,0.0),300));
-        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,00.0),glm::vec3(0.0,1.0,0.0),300));
-        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(0.0,0.0,1.0),300));
+        _lights.addPointLight(PointLight(glm::vec3(05.0,3.0,50.0),glm::vec3(1.0,0.0,0.0),30));
+        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,00.0),glm::vec3(0.0,1.0,0.0),30));
+        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(0.0,0.0,1.0),30));
 
     }
 
