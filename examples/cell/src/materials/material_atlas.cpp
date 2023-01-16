@@ -67,8 +67,8 @@ namespace cell {
         // loading the textures
         ImageData diffuse_data;
         ImageData specular_data;
-        loadDiffuseTexture(mat.getDiffuseTexture(), diffuse_data);
-        loadSpecularTexture(mat.getSpecularTexture(), specular_data);
+        loadAlbedoTexture(mat.getAlbedoTexture(), diffuse_data);
+        loadNormalTexture(mat.getNormalTexture(), specular_data);
 
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
@@ -112,7 +112,7 @@ namespace cell {
 
     //////////////////////////////////// protected material atlas functions ////////////////////////////////////
 
-    void MaterialAtlas::loadDiffuseTexture(const std::string& file_name, ImageData& data) {
+    void MaterialAtlas::loadAlbedoTexture(const std::string& file_name, ImageData& data) {
 
         if(!file_name.compare("")) {
             // init the data with default values
@@ -136,13 +136,13 @@ namespace cell {
         ImageFile(file_name, data);
 
         if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
-            UND_ERROR << "failed to load diffuse texture: " << file_name << "\n";
+            UND_ERROR << "failed to load Albedo + Roughness texture: " << file_name << "\n";
             return;
         }
 
     }
 
-    void MaterialAtlas::loadSpecularTexture(const std::string& file_name, ImageData& data) {
+    void MaterialAtlas::loadNormalTexture(const std::string& file_name, ImageData& data) {
 
         if(!file_name.compare("")) {
             // init the data with default values
@@ -153,9 +153,9 @@ namespace cell {
 
             for(int x = 0; x < 16; x++) {
                 for(int y = 0; y < 16; y++) {
-                    data._pixels.at(4 * (x * 16 + y) + 0) = 200; // specular color
-                    data._pixels.at(4 * (x * 16 + y) + 1) = 200;
-                    data._pixels.at(4 * (x * 16 + y) + 2) = 200;
+                    data._pixels.at(4 * (x * 16 + y) + 0) = 0; // normal
+                    data._pixels.at(4 * (x * 16 + y) + 1) = 255;
+                    data._pixels.at(4 * (x * 16 + y) + 2) = 0;
                     data._pixels.at(4 * (x * 16 + y) + 3) = 255; // metalness
                 }
             }
@@ -166,7 +166,7 @@ namespace cell {
         ImageFile(file_name, data);
 
         if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
-            UND_ERROR << "failed to load Specular texture: " << file_name << "\n";
+            UND_ERROR << "failed to load Normal + Metalness texture: " << file_name << "\n";
             return;
         }
 

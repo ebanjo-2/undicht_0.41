@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(false, true);
+        undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -26,6 +26,11 @@ namespace cell {
             UND_ENGINE_SOURCE_DIR + "examples/cell/res/sand.png"
         ));
 
+        uint32_t gold = _materials.setMaterial(Material("Gold",
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_albedo.png",
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_metal.png"
+        ));
+
 
 
         // setting some cells for testing
@@ -34,6 +39,7 @@ namespace cell {
             Cell(50, 1, 50, 100, 21, 70, grass),
             Cell(65, 21, 50, 85, 50, 70, sand),
             Cell(5, 5, 5, 6, 7, 6, grass),
+            Cell(20, 4, 10, 44, 8, 34, gold),
         };
 
         _world.loadChunk(glm::ivec3(0,0,0), cells);
@@ -43,9 +49,9 @@ namespace cell {
         _world.updateWorldBuffer(glm::ivec3(255,0,0));
         _world.updateWorldBuffer(glm::ivec3(-255,0,0));
 
-        _lights.addPointLight(PointLight(glm::vec3(05.0,3.0,50.0),glm::vec3(1.0,0.0,0.0),30));
-        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,00.0),glm::vec3(0.0,1.0,0.0),30));
-        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(0.0,0.0,1.0),30));
+        _lights.addPointLight(PointLight(glm::vec3(05.4,50.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
+        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,20.0),glm::vec3(10.0,10.0,10.0)));
+        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(1.0,0.0,1.0)));
 
     }
 
@@ -94,7 +100,7 @@ namespace cell {
             _master_renderer.drawLights(_materials, _lights);
 
             _master_renderer.beginFinalStage();
-            _master_renderer.drawFinal(0.1f);
+            _master_renderer.drawFinal(1.0f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

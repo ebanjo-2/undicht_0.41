@@ -4,23 +4,19 @@ namespace cell {
 
     using namespace undicht;
 
-    const BufferLayout POINT_LIGHT_LAYOUT({UND_VEC3F, UND_VEC3F, UND_FLOAT32, UND_FLOAT32, UND_FLOAT32});
+    const BufferLayout POINT_LIGHT_LAYOUT({UND_VEC3F, UND_VEC3F, UND_FLOAT32});
     // vec3: position
     // vec3: color
     // float: range
-    // float: linear attenuation factor
-    // float: quadratic attenuation factor
-
 
     PointLight::PointLight() {
 
     }
 
-    PointLight::PointLight(const glm::vec3& pos, const glm::vec3& color, float range) {
+    PointLight::PointLight(const glm::vec3& pos, const glm::vec3& color) {
         
         setPosition(pos);
         setColor(color);
-        setRange(range);
 
     }
 
@@ -32,18 +28,13 @@ namespace cell {
     void PointLight::setColor(const glm::vec3& color) {
 
         _color = color;
+
+        // calculating the distance at which the brightness of the light is less then 0.0005
+        // radiance = brightness / (distance²)
+        float brightness = glm::length(color);
+        _range = glm::sqrt(brightness / 0.0005);
+
     }
-
-    void PointLight::setRange(float range) {
-        // calculating values for the attenuation constants
-        // https://wiki.ogre3d.org/Light+Attenuation+Shortcut
-
-        _range = range;
-
-        _a_linear = 4.5f / range;
-        _a_quadr = 75.0f / (range * range);
-    }
-
 
     uint32_t PointLight::fillBuffer(float* buffer) const {
         /// @brief stores the point light data in the buffer
@@ -59,10 +50,8 @@ namespace cell {
         buffer[5] = _color.z;
 
         buffer[6] = _range;
-        buffer[7] = _a_linear;
-        buffer[8] = _a_quadr;
 
-        return 9 * sizeof(float);
+        return 7 * sizeof(float);
     }
 
 } // cell

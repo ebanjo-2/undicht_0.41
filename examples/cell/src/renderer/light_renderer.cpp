@@ -22,7 +22,7 @@ namespace cell {
             VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, // normal texture input
         });
         setVertexInputLayout(LIGHT_VERTEX_LAYOUT, POINT_LIGHT_LAYOUT);
-        setDepthStencilTest(true, false, VK_COMPARE_OP_GREATER);
+        setDepthStencilTest(false, false, VK_COMPARE_OP_GREATER);
         setRasterizer(true, true);
         setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); // hdr buffer, just add the light intensities

@@ -4,8 +4,6 @@ layout(location = 0) out vec4 out_color;
 
 layout(location = 0) in vec3 light_color;
 layout(location = 1) in vec3 light_pos_rel_cam;
-layout(location = 2) in float light_lin_factor;
-layout(location = 3) in float light_qua_factor;
 
 layout(binding = 0) uniform GlobalUBO {
 	mat4 view;
@@ -26,48 +24,81 @@ layout (input_attachment_index = 0, set = 0, binding = 3) uniform subpassInput i
 layout (input_attachment_index = 1, set = 0, binding = 4) uniform subpassInput input_material;
 layout (input_attachment_index = 2, set = 0, binding = 5) uniform subpassInput input_normal;
 
-vec3 calcFragPosRelCam(float depth, vec2 screen_pos, mat4 inv_proj);
-float diffuse(vec3 normal, vec3 direction_to_light);
-float specular(vec3 normal, vec3 direction_to_light, vec3 direction_to_cam);
+// reading the inputs
+vec3 calcFragPosRelCam();
+vec2 getTileMapUV();
+
+// pbr math functions
+vec3 fresnelSchlick(float cosTheta, vec3 F0);
+float DistributionGGX(vec3 N, vec3 H, float roughness);
+float GeometrySchlickGGX(float NdotV, float roughness);
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
+
+const float PI = 3.14159265359;
 
 void main() {
 
-	// getting the position of the fragment from the depth buffer
-	float depth = subpassLoad(input_depth).r;
-	vec2 screen_pos = gl_FragCoord.xy * global.inv_viewport * 2.0 - 1.0;
-	vec3 frag_pos_rel_cam = calcFragPosRelCam(depth, screen_pos, global.inv_proj);
-
-	// getting the normal of the fragment from the normal buffer
+	// getting the position and normal of the fragment (in view space)
+	vec3 frag_pos_rel_cam = calcFragPosRelCam();
 	vec3 frag_normal_rel_cam = subpassLoad(input_normal).xyz;
+	vec3 N = normalize(frag_normal_rel_cam);
 
-	// calculating the lights intensity at the position of the fragment
-	float d = length(frag_pos_rel_cam - light_pos_rel_cam);
-	float intensity = 1 / (1 + light_lin_factor * d + light_qua_factor * d * d) - 0.01;
-	intensity = max(intensity, 0);
+	// reading the material properties
+	vec2 tile_map_uv = getTileMapUV();
+	vec4 albedo_roughness = texture(tile_map, vec3(tile_map_uv, 0));
+	vec4 normal_metal = texture(tile_map, vec3(tile_map_uv, 1));
+	vec3 albedo = albedo_roughness.rgb;
+	float roughness = albedo_roughness.a;
+	float metallic = normal_metal.a;
+	//float roughness = 0.95f;
+	//float metallic = 0.0f;
 
-	// calculating the tile map uv
-	uvec2 material = uvec2(subpassLoad(input_material).xy * 255);
-	vec2 cell_uv = subpassLoad(input_material).zw;
-	vec2 tile_map_uv = (material + cell_uv * 0.99) * local.tile_map_unit;
+	// frequently used vectors
+	vec3 V = normalize(-frag_pos_rel_cam); // cam sits at (0,0,0) in the view space
+	vec3 L = normalize(light_pos_rel_cam - frag_pos_rel_cam);
+	vec3 H = normalize(V + L); // half vector between the direction to the light and to the cam
 
-	// getting the data from the tile map
-	vec4 diffuse_roughness = texture(tile_map, vec3(tile_map_uv, 0));
-	vec4 specular_metal = texture(tile_map, vec3(tile_map_uv, 1));
+	float distance    = length(light_pos_rel_cam - frag_pos_rel_cam);
+	float attenuation = 1.0 / (distance * distance);
+    vec3 radiance     = max(light_color * attenuation , 0.0);
+    
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
 
-	// calculating the final color
-	vec3 dir_to_light = normalize(light_pos_rel_cam - frag_pos_rel_cam);
-	float phong = diffuse(frag_normal_rel_cam, dir_to_light) + specular(frag_normal_rel_cam, dir_to_light, normalize(-frag_pos_rel_cam)) + 0.1f;
-	out_color = vec4(diffuse_roughness.rgb * light_color * phong * intensity, 0.0f);
+    // cook-torrance brdf
+    float NDF = DistributionGGX(N, H, roughness);        
+    float G   = GeometrySmith(N, V, L, roughness);      
+    vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
+        
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+        
+    vec3 numerator    = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    vec3 specular     = numerator / denominator;  
+            
+    // add to outgoing radiance Lo
+    float NdotL = max(dot(N, L), 0.0);
+    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 1.0f); 
 
 }
 
-vec3 calcFragPosRelCam(float depth, vec2 screen_pos, mat4 inv_proj) {
+//////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
+
+vec3 calcFragPosRelCam() {
+	// reconstructing the fragments position in view space (relative to the camera)
+	// from the depth value read from the depth buffer
+
+	// reading the depth value from the depth input texture
+	float depth = subpassLoad(input_depth).r;
+	vec2 screen_pos = gl_FragCoord.xy * global.inv_viewport * 2.0 - 1.0;
+
     // thanks for the math 
     // https://stackoverflow.com/questions/32227283/getting-world-position-from-depth-buffer-value
-
     vec4 clipSpacePosition = vec4(screen_pos, depth, 1.0);
 	clipSpacePosition.y = -clipSpacePosition.y;
-    vec4 viewSpacePosition = inv_proj * clipSpacePosition;
+    vec4 viewSpacePosition = global.inv_proj * clipSpacePosition;
 
     // Perspective division
     viewSpacePosition /= viewSpacePosition.w;
@@ -75,18 +106,56 @@ vec3 calcFragPosRelCam(float depth, vec2 screen_pos, mat4 inv_proj) {
 	return viewSpacePosition.xyz;
 }
 
-float diffuse(vec3 normal, vec3 direction_to_light){
-	
-	return max(dot(direction_to_light, normal),0.0);
+vec2 getTileMapUV() {
+
+	uvec2 material = uvec2(subpassLoad(input_material).xy * 255);
+	vec2 cell_uv = subpassLoad(input_material).zw;
+	vec2 tile_map_uv = (material + cell_uv * 0.99) * local.tile_map_unit;
+
+	return tile_map_uv;
 }
 
-float specular(vec3 normal, vec3 direction_to_light, vec3 direction_to_cam){
 
-	const float shininess = 128;
-	const float specularStrength = 0.7;
+//////////////////////////////////////////// pbr math functions ////////////////////////////////////////////
 
-	vec3 reflectDir = reflect(- direction_to_light, normal);
-	float spec = pow(max(dot(direction_to_cam, reflectDir), 0.0), shininess);
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+	// calculate the ratio between specular and diffuse reflection
+	// materials with a higher "metalness" absorb fewer light, so the specular reflection is greater
+	// at greater reflection angles the specular part also gets bigger
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
 	
-	return specularStrength * spec;
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+	
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness) {
+
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+	
+    return num / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+	
+    return ggx1 * ggx2;
 }

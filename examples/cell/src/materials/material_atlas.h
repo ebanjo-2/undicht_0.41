@@ -47,8 +47,8 @@ namespace cell {
       protected:
         // protected material atlas functions
 
-        void loadDiffuseTexture(const std::string& file_name, undicht::tools::ImageData& data);
-        void loadSpecularTexture(const std::string& file_name, undicht::tools::ImageData& data);
+        void loadAlbedoTexture(const std::string& file_name, undicht::tools::ImageData& data);
+        void loadNormalTexture(const std::string& file_name, undicht::tools::ImageData& data);
 
     };
 

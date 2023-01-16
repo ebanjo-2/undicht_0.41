@@ -6,8 +6,8 @@ namespace cell {
 
     }
 
-    Material::Material(const std::string& name, const std::string& diffuse_texture, const std::string& specular_texture) :
-        _name(name), _diffuse_texture(diffuse_texture), _specular_texture(specular_texture) {
+    Material::Material(const std::string& name, const std::string& albedo_texture, const std::string& normal_texture) :
+        _name(name), _albedo_texture(albedo_texture), _normal_texture(normal_texture) {
 
     }
 
@@ -21,24 +21,24 @@ namespace cell {
         return _name;
     }
 
-    void Material::setDiffuseTexture(const std::string& diffuse_texture) {
+    void Material::setAlbedoTexture(const std::string& albedo_texture) {
         
-        _diffuse_texture = diffuse_texture;
+        _albedo_texture = albedo_texture;
     }
 
-    void Material::setSpecularTexture(const std::string& specular_texture) {
+    void Material::setNormalTexture(const std::string& normal_texture) {
 
-        _specular_texture = specular_texture;
+        _normal_texture = normal_texture;
     }
 
-    const std::string& Material::getDiffuseTexture() const {
+    const std::string& Material::getAlbedoTexture() const {
         
-        return _diffuse_texture;
+        return _albedo_texture;
     }
 
-    const std::string& Material::getSpecularTexture() const {
+    const std::string& Material::getNormalTexture() const {
 
-        return _specular_texture;
+        return _normal_texture;
     }
 
 } // cell
