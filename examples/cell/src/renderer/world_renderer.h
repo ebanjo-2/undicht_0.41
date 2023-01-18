@@ -19,31 +19,31 @@
 
 namespace cell {
 
-    class WorldRenderer : public undicht::vulkan::Renderer {
+    class WorldRenderer {
 
       protected:
 
+        undicht::vulkan::LogicalDevice _device_handle;
+
         // renderer
         undicht::vulkan::Sampler _sampler;
+        undicht::vulkan::Renderer _renderer;
         undicht::vulkan::UniformBuffer _local_uniform_buffer;
         std::vector<undicht::vulkan::UniformBuffer> _per_chunk_uniform_buffer;
         int _last_used_chunk_ubo = -1;
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
+        void init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
         void cleanUp();
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
-
-        void draw(const WorldBuffer& world, const MaterialAtlas& materials, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd);
-        void beginFrame();
-
-        const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;
+        
+        void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd);
+        void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd);
 
       protected:
         // private renderer functions 
-
 
         // creates the given number of (unused) per chunk ubos 
         void createPerChunkUBOs(uint32_t num);

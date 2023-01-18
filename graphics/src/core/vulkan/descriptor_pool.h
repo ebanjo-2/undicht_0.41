@@ -18,7 +18,7 @@ namespace undicht {
 
         public:
 
-            void init(const VkDevice& device, uint32_t pool_size = 1000);
+            void init(const VkDevice& device, const std::vector<VkDescriptorType> descriptor_types, uint32_t pool_size = 1000);
             void cleanUp(); // will also destroy any descriptor sets allocated from this pool
 
             const VkDescriptorPool& getDescriptorPool() const;

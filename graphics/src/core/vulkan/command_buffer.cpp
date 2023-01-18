@@ -74,9 +74,9 @@ namespace undicht {
             vkCmdBindIndexBuffer(_cmd_buffer, buffer, 0, VK_INDEX_TYPE_UINT32);
         }
 
-        void CommandBuffer::bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout) {
+        void CommandBuffer::bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout, uint32_t slot) {
 
-            vkCmdBindDescriptorSets(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &set, 0, nullptr);
+            vkCmdBindDescriptorSets(_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, slot, 1, &set, 0, nullptr);
         }
 
         void CommandBuffer::draw(uint32_t vertex_count, bool draw_indexed, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {

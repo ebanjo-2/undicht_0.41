@@ -32,7 +32,7 @@ namespace undicht {
 
             VkPipeline _pipeline;
             VkPipelineLayout _layout; // contains info about the input to the shaders (ubo and texture bindings, push constants)
-            VkDescriptorSetLayout _descriptor_set_layout;
+            std::vector<VkDescriptorSetLayout> _descriptor_set_layouts;
 
         public:
 
@@ -45,7 +45,7 @@ namespace undicht {
             void setRasterizationState(bool enable_culling, bool cull_ccw_faces = false, bool wire_frame = false);
             // void setMultisampleState(uint32_t samples);
             void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendFactor src_color_factor = {}, VkBlendFactor dst_color_factor = {}, VkBlendOp alpha_blend_op = {}, VkBlendFactor src_alpha_factor = {}, VkBlendFactor dst_alpha_factor = {});
-            void setShaderInput(const VkDescriptorSetLayout& layout);
+            void setShaderInput(const VkDescriptorSetLayout& layout, uint32_t slot = 0);
             void setDepthStencilState(bool enable_depth_test, bool write_depth_values = true, VkCompareOp compare_op = VK_COMPARE_OP_LESS);
 
             void init(const VkDevice& device, VkRenderPass render_pass, uint32_t subpass = 0);
@@ -54,6 +54,7 @@ namespace undicht {
             const VkViewport& getViewport() const;
             const VkPipeline& getPipeline() const;
             const VkPipelineLayout& getPipelineLayout() const;
+            const VkDescriptorSetLayout& getDescriptorSetLayout(uint32_t slot = 0) const;
 
             // a function that allows to set the entire layout of a vertex binding
             void setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout);
@@ -74,9 +75,9 @@ namespace undicht {
             VkViewport static createViewport(const VkExtent2D& extent);
             VkRect2D static createScissor(const VkExtent2D& extent);
             VkPipelineViewportStateCreateInfo static createPipelineViewportStateCreateInfo(const VkViewport& viewport, const VkRect2D& scissor);
-            VkDescriptorSetLayoutBinding static createDescriptorSetLayoutBinding(VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags = VK_SHADER_STAGE_ALL_GRAPHICS);
-            VkDescriptorSetLayoutCreateInfo static createDescriptorSetLayoutCreateInfo(const std::vector<VkDescriptorSetLayoutBinding>& bindings = {});
-            VkPipelineLayoutCreateInfo static createPipelineLayoutCreateInfo(const VkDescriptorSetLayout& layout = VK_NULL_HANDLE);
+            //VkDescriptorSetLayoutBinding static createDescriptorSetLayoutBinding(VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags = VK_SHADER_STAGE_ALL_GRAPHICS);
+            //VkDescriptorSetLayoutCreateInfo static createDescriptorSetLayoutCreateInfo(const std::vector<VkDescriptorSetLayoutBinding>& bindings = {});
+            VkPipelineLayoutCreateInfo static createPipelineLayoutCreateInfo(const std::vector<VkDescriptorSetLayout>& layouts = {});
 
         };
 

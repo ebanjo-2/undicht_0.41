@@ -14,7 +14,7 @@ layout(location = 2) out vec3 pos_rel_cam;
 layout(location = 3) out vec3 normal_rel_cam;
 layout(location = 4) out vec2 cell_uv;
 
-layout(binding = 0) uniform GlobalUBO {
+layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
 	mat4 proj;
 	mat4 inv_view;
@@ -23,11 +23,11 @@ layout(binding = 0) uniform GlobalUBO {
 	vec2 inv_viewport;
 } global;
 
-layout(binding = 1) uniform LocalUBO {
+layout(set = 1, binding = 0) uniform LocalUBO {
 	vec2 tile_map_unit;
 } local;
 
-layout(binding = 2) uniform ChunkUBO {
+layout(set = 2, binding = 0) uniform ChunkUBO {
 	ivec3 pos;
 } chunk;
 
@@ -49,7 +49,6 @@ void main() {
 
 	gl_Position = global.proj * global.view * world_pos;
 	gl_Position.y = -gl_Position.y; // positive y is up, change my mind
-
 }
 
 vec2 calcCellUv(vec3 vertex_pos, uint face) {

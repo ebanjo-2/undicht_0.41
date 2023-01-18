@@ -11,7 +11,7 @@ layout(location = 3) in float aRange;
 layout(location = 0) out vec3 light_color;
 layout(location = 1) out vec3 light_pos_rel_cam;
 
-layout(binding = 0) uniform GlobalUBO {
+layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
 	mat4 proj;
 	mat4 inv_view;

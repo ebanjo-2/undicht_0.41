@@ -15,28 +15,32 @@
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
 #include "entities/light_buffer.h"
+#include "entities/lights/direct_light.h"
 
 namespace cell {
 
-    class LightRenderer : public undicht::vulkan::Renderer {
+    class LightRenderer {
 
       protected:
+      
+        undicht::vulkan::VertexBuffer _screen_quad;
 
         // renderer
+        undicht::vulkan::Renderer _point_light_renderer;
+        undicht::vulkan::Renderer _direct_light_renderer;
         undicht::vulkan::Sampler _sampler;
-        undicht::vulkan::UniformBuffer _ubo;
+        undicht::vulkan::UniformBuffer _local_ubo;
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
+        void init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
         void cleanUp();
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void draw(const LightBuffer& lights, const MaterialAtlas& materials, const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, VkImageView depth, VkImageView material, VkImageView normal);
-        void beginFrame();
-
-        const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout() const;
+        void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView material, VkImageView normal);
+        void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
+        void draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd);
 
     };
 

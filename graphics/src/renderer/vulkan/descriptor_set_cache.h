@@ -17,20 +17,22 @@ namespace undicht {
 
         protected:
 
+            std::vector<uint32_t> _pool_sizes;
+            std::vector<DescriptorSetLayout> _layouts;
             std::vector<DescriptorPool> _descriptor_pools;
-            std::vector<DescriptorSet> _descriptor_sets;
-            uint32_t _unused_set = 0;
+            std::vector<std::vector<DescriptorSet>> _descriptor_sets;
+            std::vector<uint32_t> _unused_sets;
 
-            DescriptorSetLayout _layout;
+            
             LogicalDevice _device_handle;
 
         public:
 
-            void init(const LogicalDevice& device, const DescriptorSetLayout& layout);
+            void init(const LogicalDevice& device, const std::vector<DescriptorSetLayout>& layouts, const std::vector<uint32_t>& pool_sizes);
             void cleanUp();
 
-            void reset();
-            DescriptorSet& accquire();
+            void reset(const std::vector<uint32_t>& slots);
+            DescriptorSet& accquire(uint32_t slot);
 
         };
 

@@ -32,7 +32,7 @@ namespace undicht {
             void bindGraphicsPipeline(const VkPipeline& pipeline);
             void bindVertexBuffer(const VkBuffer& buffer, uint32_t binding);
             void bindIndexBuffer(const VkBuffer& buffer);
-            void bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout);
+            void bindDescriptorSet(const VkDescriptorSet& set, const VkPipelineLayout& layout, uint32_t slot = 0);
             void draw(uint32_t vertex_count, bool draw_indexed = false, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);
             
             // other commands

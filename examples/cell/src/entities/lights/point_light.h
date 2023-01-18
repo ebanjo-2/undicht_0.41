@@ -26,7 +26,7 @@ namespace cell {
         void setColor(const glm::vec3& color);
 
         /// @brief stores the point light data in the buffer
-        /// @param buffer if not nullptr, the data of the pointlight will be stored (layout as described by )
+        /// @param buffer if not nullptr, the data of the pointlight will be stored (layout as described by POINT_LIGHT_LAYOUT)
         /// @return the size of the data that gets stored
         uint32_t fillBuffer(float* buffer) const;
 

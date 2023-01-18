@@ -8,12 +8,17 @@
 #include "core/vulkan/descriptor_set_layout.h"
 #include "core/vulkan/pipeline.h"
 #include "core/vulkan/shader.h"
+#include "core/vulkan/command_buffer.h"
 
 #include "renderer/vulkan/descriptor_set_cache.h"
+#include "renderer/vulkan/vertex_buffer.h"
 
 namespace undicht {
 
     namespace vulkan {
+
+        const extern BufferLayout SCREEN_QUAD_VERTEX_LAYOUT;
+        const extern std::vector<float> SCREEN_QUAD_VERTICES;
 
         class Renderer {
         /// @brief class that combines a pipeline, a shader and a descriptor cache
@@ -29,9 +34,13 @@ namespace undicht {
 
             // Pipeline
             uint32_t _sub_pass = 0;
-            undicht::vulkan::DescriptorSetLayout _descriptor_set_layout;
+            std::vector<bool> _extern_layouts;
+            std::vector<DescriptorSetLayout> _descriptor_set_layouts;
+            std::vector<uint32_t> _descriptor_set_pool_sizes;
             undicht::vulkan::DescriptorSetCache _descriptor_cache;
             undicht::vulkan::Pipeline _pipeline;
+
+            std::vector<undicht::vulkan::DescriptorSet*> _descriptor_sets;
 
         public:
 
@@ -40,7 +49,8 @@ namespace undicht {
 
             // settings that have(!) to be set before the pipeline is initialized
             virtual void setShaders(const std::string& vertex_shader, const std::string& fragment_shader);
-            virtual void setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types);
+            virtual void setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types, uint32_t slot = 0, uint32_t descriptor_pool_size = 1000);
+            virtual void setDescriptorSetLayout(const undicht::vulkan::DescriptorSetLayout& layout, uint32_t slot = 0, uint32_t descriptor_pool_size = 1000);
             virtual void setVertexInputLayout(const undicht::BufferLayout& vertex_layout, const undicht::BufferLayout& instance_layout = {});
             virtual void setDepthStencilTest(bool enable_depth_test = true, bool write_depth_values = true, VkCompareOp compare_op = VK_COMPARE_OP_LESS);
             virtual void setRasterizer(bool enable_culling, bool cull_ccw_faces = false, bool wire_frame = false);
@@ -54,6 +64,24 @@ namespace undicht {
 
             // settings that can be changed after the pipeline is initialized
             virtual void resizeViewport(VkExtent2D viewport);
+
+            // binding descriptors
+            void resetDescriptorCache(uint32_t slot);
+            void accquireDescriptorSet(uint32_t slot);
+            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer);
+            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler);
+            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view);
+
+            // drawing
+            void bindPipeline(undicht::vulkan::CommandBuffer& cmd);
+            void bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, uint32_t slot = 0);
+            void bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& descriptor_set, uint32_t slot = 0); // bind an external descriptor set
+            void bindVertexBuffer(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::VertexBuffer& vbo, bool bind_index_buffer = false, bool bind_instance_buffer = false);
+            void draw(undicht::vulkan::CommandBuffer& cmd, uint32_t vertex_count, bool draw_indexed = false, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);
+
+            // getters
+            const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout(uint32_t slot = 0) const;
+
 
         };
 

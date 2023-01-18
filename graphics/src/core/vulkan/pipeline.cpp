@@ -73,9 +73,12 @@ namespace undicht {
             _blend_attachments.at(attachment) = createPipelineColorBlendAttachmentState(enable_blending, color_blend_op, src_color_factor, dst_color_factor, alpha_blend_op, src_alpha_factor, dst_alpha_factor);
         }
 
-        void Pipeline::setShaderInput(const VkDescriptorSetLayout& layout) {
+        void Pipeline::setShaderInput(const VkDescriptorSetLayout& layout, uint32_t slot) {
 
-            _descriptor_set_layout = layout;
+            if(slot >= _descriptor_set_layouts.size())
+                _descriptor_set_layouts.resize(slot + 1);
+
+            _descriptor_set_layouts.at(slot) = layout;
         }
 
         void Pipeline::setDepthStencilState(bool enable_depth_test, bool write_depth_values, VkCompareOp compare_op) {
@@ -94,7 +97,7 @@ namespace undicht {
             _multisample_state = createPipelineMultisampleStateCreateInfo();
 
             // creating the pipeline layout
-            VkPipelineLayoutCreateInfo layout_info = createPipelineLayoutCreateInfo(_descriptor_set_layout);
+            VkPipelineLayoutCreateInfo layout_info = createPipelineLayoutCreateInfo(_descriptor_set_layouts);
             vkCreatePipelineLayout(device, &layout_info, {}, &_layout);
 
             // joining all pipeline info structs
@@ -142,6 +145,17 @@ namespace undicht {
             
             return _layout;
         }
+
+        const VkDescriptorSetLayout& Pipeline::getDescriptorSetLayout(uint32_t slot) const {
+
+            if(slot >= _descriptor_set_layouts.size()) {
+                UND_ERROR << "failed to return descriptor set layout " << slot << "\n";
+                return VK_NULL_HANDLE;
+            }
+
+            return _descriptor_set_layouts.at(slot);
+        }
+
 
             // a function that allows to set the entire layout of a vertex binding
         void Pipeline::setVertexBinding(uint32_t id, uint32_t location_offset, const undicht::BufferLayout& layout) {
@@ -343,7 +357,7 @@ namespace undicht {
             return info;
         }
 
-        VkDescriptorSetLayoutBinding Pipeline::createDescriptorSetLayoutBinding(VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags) {
+        /*VkDescriptorSetLayoutBinding Pipeline::createDescriptorSetLayoutBinding(VkDescriptorType descriptor_type, VkShaderStageFlags stage_flags) {
             // describes a binding for an ubo or texture into a shader
 
             VkDescriptorSetLayoutBinding binding{};
@@ -352,9 +366,9 @@ namespace undicht {
             binding.stageFlags = stage_flags;
 
             return binding;
-        }
+        }*/
 
-        VkDescriptorSetLayoutCreateInfo Pipeline::createDescriptorSetLayoutCreateInfo(const std::vector<VkDescriptorSetLayoutBinding>& bindings) {
+        /*VkDescriptorSetLayoutCreateInfo Pipeline::createDescriptorSetLayoutCreateInfo(const std::vector<VkDescriptorSetLayoutBinding>& bindings) {
             // describes the binding points of the shaders for ubos and textures
 
             VkDescriptorSetLayoutCreateInfo info{};
@@ -365,9 +379,9 @@ namespace undicht {
             info.pBindings = bindings.data();
 
             return info;
-        }
+        }*/
 
-        VkPipelineLayoutCreateInfo Pipeline::createPipelineLayoutCreateInfo(const VkDescriptorSetLayout& layout) {
+        VkPipelineLayoutCreateInfo Pipeline::createPipelineLayoutCreateInfo(const std::vector<VkDescriptorSetLayout>& layouts) {
 
             VkPipelineLayoutCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -375,11 +389,13 @@ namespace undicht {
             info.flags = 0;
             info.pushConstantRangeCount = 0;
             info.pPushConstantRanges = nullptr;
+            info.setLayoutCount = layouts.size();
+            info.pSetLayouts = layouts.data();
 
-            if(layout != VK_NULL_HANDLE) {
+            /*if(layout != VK_NULL_HANDLE) {
                 info.setLayoutCount = 1;
                 info.pSetLayouts = &layout;
-            }
+            }*/
 
             return info;
         }

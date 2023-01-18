@@ -14,7 +14,7 @@ void Frame::init(const undicht::vulkan::LogicalDevice& device, const std::vector
     for(const undicht::vulkan::DescriptorSetLayout& layout : descriptor_layouts) {
 
         undicht::vulkan::DescriptorSetCache cache;
-        cache.init(device, layout);
+        cache.init(device, {layout}, {1000});
         _descriptor_set_caches.push_back(cache);
     }
 
@@ -43,6 +43,6 @@ void Frame::begin() {
     _render_finished_fence.waitForProcessToFinish(true, 1000000000); // 1 sec
 
     for(undicht::vulkan::DescriptorSetCache& cache : _descriptor_set_caches)
-        cache.reset();
+        cache.reset({0});
 
 }

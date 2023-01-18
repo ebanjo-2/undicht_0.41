@@ -33,6 +33,9 @@ namespace cell {
         uint32_t _swap_image_id = -1;
 
         // used by all stages
+        undicht::vulkan::DescriptorSetLayout _global_descriptor_layout; // to bind the global uniform buffer
+        undicht::vulkan::DescriptorSetCache _global_descriptor_cache;
+        undicht::vulkan::DescriptorSet _global_descriptor_set;
         undicht::vulkan::CommandBuffer _draw_cmd;
         undicht::vulkan::Fence _render_finished_fence;
         undicht::vulkan::Semaphore _render_finished_semaphore;
@@ -56,14 +59,14 @@ namespace cell {
 
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
 
-        void beginGeometryStage();
-        void drawWorld(const WorldBuffer& world, const MaterialAtlas& materials);
+        void beginGeometryStage(const MaterialAtlas& materials);
+        void drawWorld(const WorldBuffer& world);
 
-        void beginLightStage();
-        void drawLights(const MaterialAtlas& materials, const LightBuffer& lights);
+        void beginLightStage(const MaterialAtlas& materials);
+        void drawLights(const LightBuffer& lights);
 
-        void beginFinalStage();
-        void drawFinal(float exposure = 1.0f, float gamma = 2.2f);
+        void beginFinalStage(float exposure = 1.0f, float gamma = 2.2f);
+        void drawFinal();
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
       
@@ -71,12 +74,6 @@ namespace cell {
         // private functions
 
         void initMainRenderTarget(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
-
-        /*void initGlobalObjects(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
-        void initFrameBuffers(undicht::vulkan::SwapChain& swap_chain);
-        void resizeFrameBuffers(undicht::vulkan::SwapChain& swap_chain);
-        void cleanUpGlobalObjects();*/
-
 
     };
 

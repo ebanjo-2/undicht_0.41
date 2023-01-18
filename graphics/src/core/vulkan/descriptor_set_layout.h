@@ -14,6 +14,7 @@ namespace undicht {
 
             VkDevice _device_handle;
 
+            std::vector<VkDescriptorType> _binding_types;
             std::vector<VkDescriptorSetLayoutBinding> _bindings;
             VkDescriptorSetLayout _layout;
 
@@ -26,6 +27,7 @@ namespace undicht {
             void cleanUp();
 
             const VkDescriptorSetLayout& getLayout() const;
+            const std::vector<VkDescriptorType>& getDescriptorTypes() const;
 
         protected:
             // creating DescriptorSetLayout related structs

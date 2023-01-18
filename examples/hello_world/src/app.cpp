@@ -100,7 +100,7 @@ void HelloWorldApp::mainLoop() {
     
     for(int i = 0; i < _model._vertex_buffers.size(); i++) {
         if(!_model._vertex_count.at(i)) continue;
-        undicht::vulkan::DescriptorSet& descriptor_set = _frames[_current_frame]._descriptor_set_caches[0].accquire();
+        undicht::vulkan::DescriptorSet& descriptor_set = _frames[_current_frame]._descriptor_set_caches[0].accquire(0);
         descriptor_set.bindUniformBuffer(0, _uniform_buffer.getBuffer());
         descriptor_set.bindImage(1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
 

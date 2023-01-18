@@ -50,8 +50,8 @@ namespace cell {
         _world.updateWorldBuffer(glm::ivec3(-255,0,0));
 
         _lights.addPointLight(PointLight(glm::vec3(05.4,50.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
-        _lights.addPointLight(PointLight(glm::vec3(10.0,3.0,20.0),glm::vec3(10.0,10.0,10.0)));
-        _lights.addPointLight(PointLight(glm::vec3(15.0,3.0,50.0),glm::vec3(1.0,0.0,1.0)));
+        _lights.addPointLight(PointLight(glm::vec3(10.5,20.5,20.5),glm::vec3(50.0,50.0,50.0)));
+        _lights.addPointLight(PointLight(glm::vec3(15.5,3.5,50.5),glm::vec3(1.0,0.0,1.0)));
 
     }
 
@@ -93,14 +93,14 @@ namespace cell {
         if(_master_renderer.beginFrame(_swap_chain)) {
             _master_renderer.loadPlayerCamera(_player);
 
-            _master_renderer.beginGeometryStage();
-            _master_renderer.drawWorld(_world.getWorldBuffer(), _materials);
+            _master_renderer.beginGeometryStage(_materials);
+            _master_renderer.drawWorld(_world.getWorldBuffer());
 
-            _master_renderer.beginLightStage();
-            _master_renderer.drawLights(_materials, _lights);
+            _master_renderer.beginLightStage(_materials);
+            _master_renderer.drawLights(_lights);
 
-            _master_renderer.beginFinalStage();
-            _master_renderer.drawFinal(1.0f);
+            _master_renderer.beginFinalStage(1.0f, 2.2f);
+            _master_renderer.drawFinal();
 
             _master_renderer.endFrame(_swap_chain);
         } else {

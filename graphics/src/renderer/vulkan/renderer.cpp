@@ -1,8 +1,21 @@
 #include "renderer/vulkan/renderer.h"
+#include "debug.h"
 
 namespace undicht {
 
     namespace vulkan {
+
+        const BufferLayout SCREEN_QUAD_VERTEX_LAYOUT({UND_VEC2F, UND_VEC2F});
+
+        const std::vector<float> SCREEN_QUAD_VERTICES = {
+            -1.0f,  1.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f,
+             1.0f, -1.0f, 1.0f, 0.0f,
+
+            -1.0f,  1.0f, 0.0f, 1.0f,
+             1.0f, -1.0f, 1.0f, 0.0f,
+             1.0f,  1.0f, 1.0f, 1.0f,
+        };
 
         /////////////////////////////////// first thing to initialize!!!! ///////////////////////////////////
 
@@ -20,15 +33,38 @@ namespace undicht {
             _shader.init(_device_handle.getDevice());
         }
 
-        void Renderer::setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types) {
+        void Renderer::setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types, uint32_t slot, uint32_t descriptor_pool_size) {
             /// @brief set the layout of the resources used by the shaders
             /// for example binding type 0 could be a uniform buffer, the binding 1 could be a image sampler
 
-            for(int i = 0; i < binding_types.size(); i++)
-                _descriptor_set_layout.setBinding(i, binding_types.at(i));
+            DescriptorSetLayout layout;
 
-            _descriptor_set_layout.init(_device_handle.getDevice());
-            _descriptor_cache.init(_device_handle, _descriptor_set_layout);
+            for(int i = 0; i < binding_types.size(); i++)
+                layout.setBinding(i, binding_types.at(i));
+
+            layout.init(_device_handle.getDevice());
+            
+            setDescriptorSetLayout(layout, slot, descriptor_pool_size);
+            _extern_layouts.at(slot) = false; // a layout that was created by the renderer and which has to be cleaned Up by the renderer
+        }
+                    
+        void Renderer::setDescriptorSetLayout(const undicht::vulkan::DescriptorSetLayout& layout, uint32_t slot, uint32_t descriptor_pool_size) {
+
+            if(slot <= _descriptor_set_layouts.size()) {
+                _descriptor_set_layouts.resize(slot + 1);
+                _descriptor_set_pool_sizes.resize(slot + 1);
+                _extern_layouts.resize(slot + 1, true);
+                _descriptor_sets.resize(slot + 1, nullptr);
+            }
+
+            if(_extern_layouts.at(slot) == false) {
+                _descriptor_set_layouts.at(slot).cleanUp();
+            }
+
+            _extern_layouts.at(slot) = true;
+            _descriptor_set_layouts.at(slot) = layout;
+            _descriptor_set_pool_sizes.at(slot) = descriptor_pool_size;
+            _pipeline.setShaderInput(layout.getLayout(), slot);
         }
 
         void Renderer::setVertexInputLayout(const undicht::BufferLayout& vertex_layout, const undicht::BufferLayout& instance_layout) {
@@ -68,10 +104,12 @@ namespace undicht {
             _render_pass_handle = render_pass;
             _sub_pass = sub_pass;
 
+            // init the descriptor set cache
+            _descriptor_cache.init(_device_handle, _descriptor_set_layouts, _descriptor_set_pool_sizes);
+
             // init the pipeline
             _pipeline.setViewport(viewport);
             _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
-            _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
             _pipeline.init(_device_handle.getDevice(), render_pass.getRenderPass(), _sub_pass);
 
         }
@@ -80,7 +118,13 @@ namespace undicht {
             
             _pipeline.cleanUp();
             _descriptor_cache.cleanUp();
-            _descriptor_set_layout.cleanUp();
+
+            for(int i = 0; i < _descriptor_set_layouts.size(); i++) {
+                if(!_extern_layouts.at(i))
+                    _descriptor_set_layouts.at(i).cleanUp();
+
+            }
+
             _shader.cleanUp();
         }
 
@@ -92,7 +136,92 @@ namespace undicht {
             _pipeline.setViewport(viewport);
             _pipeline.init(_device_handle.getDevice(), _render_pass_handle.getRenderPass(), _sub_pass);
         }
+
+        ////////////////////////////////////////// binding descriptors //////////////////////////////////////////
+
+        void Renderer::resetDescriptorCache(uint32_t slot) {
+
+            _descriptor_cache.reset({slot});
+        }
+
+        void Renderer::accquireDescriptorSet(uint32_t slot) {
+            
+            _descriptor_sets.at(slot) = &_descriptor_cache.accquire(slot);
+        }
+
+        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer) {
+            
+            if(!_descriptor_sets.at(descriptor_set_slot)) {
+                UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
+                return;
+            }
+
+            _descriptor_sets.at(descriptor_set_slot)->bindUniformBuffer(binding, buffer);
+        }
+
+        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler) {
+            
+            if(!_descriptor_sets.at(descriptor_set_slot)) {
+                UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
+                return;
+            }
+
+            _descriptor_sets.at(descriptor_set_slot)->bindImage(binding, image_view, layout, sampler);
+        }
+
+        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view) {
+            
+            if(!_descriptor_sets.at(descriptor_set_slot)) {
+                UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
+                return;
+            }
+
+            _descriptor_sets.at(descriptor_set_slot)->bindInputAttachment(binding, image_view);
+        }
         
+
+        //////////////////////////////////////////////// drawing ////////////////////////////////////////////////
+
+        void Renderer::bindPipeline(undicht::vulkan::CommandBuffer& cmd) {
+
+            cmd.bindGraphicsPipeline(_pipeline.getPipeline());
+        }
+
+        void Renderer::bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, uint32_t slot) {
+
+            cmd.bindDescriptorSet(_descriptor_sets.at(slot)->getDescriptorSet(), _pipeline.getPipelineLayout(), slot);
+        }
+
+        void Renderer::bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& descriptor_set, uint32_t slot) {
+            // bind an external descriptor set
+
+            cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout(), slot);
+        }
+
+        void Renderer::bindVertexBuffer(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::VertexBuffer& vbo, bool bind_index_buffer, bool bind_instance_buffer) {
+
+            cmd.bindVertexBuffer(vbo.getVertexBuffer().getBuffer(), 0);
+
+            if(bind_index_buffer)
+                cmd.bindIndexBuffer(vbo.getIndexBuffer().getBuffer());
+
+            if(bind_instance_buffer)
+                cmd.bindVertexBuffer(vbo.getInstanceBuffer().getBuffer(), 1);
+
+        }
+        
+        void Renderer::draw(undicht::vulkan::CommandBuffer& cmd, uint32_t vertex_count, bool draw_indexed, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
+
+            cmd.draw(vertex_count, draw_indexed, instance_count, first_vertex, first_instance);
+        }
+
+        //////////////////////////////////////////////// getters ////////////////////////////////////////////////
+
+        const undicht::vulkan::DescriptorSetLayout& Renderer::getDescriptorSetLayout(uint32_t slot) const {
+        
+            return _descriptor_set_layouts.at(slot);
+        }
+
     } // namespace vulkan
 
 } // namespace undicht

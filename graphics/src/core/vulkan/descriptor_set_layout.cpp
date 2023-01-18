@@ -6,7 +6,10 @@ namespace undicht {
 
         void DescriptorSetLayout::setBinding(uint32_t binding, const VkDescriptorType& type) {
 
-            if(_bindings.size() <= binding) _bindings.resize(binding + 1, {});
+            if(_bindings.size() <= binding) {
+                _bindings.resize(binding + 1, {});
+                _binding_types.resize(binding + 1, {});
+            } 
 
             // determining the shader stage
             VkShaderStageFlagBits shader_stage;
@@ -18,7 +21,7 @@ namespace undicht {
                 shader_stage = VK_SHADER_STAGE_ALL_GRAPHICS;
 
             _bindings.at(binding) = createDescriptorSetLayoutBinding(binding, type, shader_stage);
-
+            _binding_types.at(binding) = type;
         }
 
         void DescriptorSetLayout::init(const VkDevice& device) {
@@ -42,6 +45,10 @@ namespace undicht {
             return _layout;
         }
 
+        const std::vector<VkDescriptorType>& DescriptorSetLayout::getDescriptorTypes() const {
+
+            return _binding_types;
+        }
 
         /////////////////////////// creating DescriptorSetLayout related structs ///////////////////////////
 

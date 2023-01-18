@@ -30,10 +30,15 @@ namespace cell {
             UND_VEC2F, // inverse viewport size
         }));
 
+        // global descriptor set
+        _global_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // global ubo
+        _global_descriptor_layout.init(device.getDevice());
+        _global_descriptor_cache.init(device, {_global_descriptor_layout}, {1});
+
         initMainRenderTarget(device, swap_chain);
 
-        _world_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 0);
-        _light_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 1);
+        _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0);
+        _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
         _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
     }
 
@@ -43,6 +48,8 @@ namespace cell {
         _light_renderer.cleanUp();
         _final_renderer.cleanUp();
 
+        _global_descriptor_cache.cleanUp();
+        _global_descriptor_layout.cleanUp();
         _global_uniform_buffer.cleanUp();
 
         _render_finished_fence.cleanUp();
@@ -55,6 +62,9 @@ namespace cell {
     }
 
     bool MasterRenderer::beginFrame(undicht::vulkan::SwapChain& swap_chain) {
+
+        _global_descriptor_cache.reset({0});
+        _global_descriptor_set = _global_descriptor_cache.accquire(0);
 
         // waiting for the previous frame to finish
         if(_swap_image_id != -1) 
@@ -116,44 +126,46 @@ namespace cell {
         _global_uniform_buffer.setAttribute(2, glm::value_ptr(inv_view), 16 * sizeof(float));
         _global_uniform_buffer.setAttribute(3, glm::value_ptr(inv_proj), 16 * sizeof(float));
 
+        _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
     }
 
-    void MasterRenderer::beginGeometryStage() {
+    void MasterRenderer::beginGeometryStage(const MaterialAtlas& materials) {
 
-        _world_renderer.beginFrame();
+        _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd);
     }
 
-    void MasterRenderer::drawWorld(const WorldBuffer& world, const MaterialAtlas& materials) {
+    void MasterRenderer::drawWorld(const WorldBuffer& world) {
 
-        _world_renderer.draw(world, materials, _global_uniform_buffer, _draw_cmd);
+        _world_renderer.draw(world, _draw_cmd);
     }
 
-    void MasterRenderer::beginLightStage() {
+    void MasterRenderer::beginLightStage(const MaterialAtlas& materials) {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
-        _light_renderer.beginFrame();
-    }
 
-    void MasterRenderer::drawLights(const MaterialAtlas& materials, const LightBuffer& lights) {
-
-        const VkImageView& depth = _main_render_target.getAttachment(_swap_image_id, 1);
         const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& normal = _main_render_target.getAttachment(_swap_image_id, 3);
-        _light_renderer.draw(lights, materials, _global_uniform_buffer, _draw_cmd, depth, material, normal);
+
+        _light_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd, material, normal);
     }
 
-    void MasterRenderer::beginFinalStage() {
+    void MasterRenderer::drawLights(const LightBuffer& lights) {
+
+        _light_renderer.draw(lights, _draw_cmd);
+    }
+
+    void MasterRenderer::beginFinalStage(float exposure, float gamma) {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
-        _final_renderer.beginFrame();
-    }
 
-    void MasterRenderer::drawFinal(float exposure, float gamma) {
-
-        const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 4);
 
-        _final_renderer.draw(_global_uniform_buffer, _draw_cmd, exposure, gamma, light);
+        _final_renderer.beginFrame(_draw_cmd, exposure, gamma, light);
+    }
+
+    void MasterRenderer::drawFinal() {
+
+        _final_renderer.draw(_draw_cmd);
     }
 
     void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {
@@ -178,8 +190,8 @@ namespace cell {
 
         const VkFormat DEPTH_BUFFER_FORMAT = translate(UND_DEPTH32F);
         const VkFormat MATERIAL_BUFFER_FORMAT = translate(UND_R8G8B8A8); // material + cell_uv
-        const VkFormat NORMAL_BUFFER_FORMAT = translate(UND_VEC4F16); // normal
-        const VkFormat LIGHT_BUFFER_FORMAT = translate(UND_VEC4F16); // using 2 byte floats to store a higher range (hdr) 
+        const VkFormat NORMAL_BUFFER_FORMAT = translate(UND_VEC4F); // normal (32 bit floats needed for the depth stored in the alpha)
+        const VkFormat LIGHT_BUFFER_FORMAT = translate(UND_VEC4F16); // using 2 byte floats to store a higher range (hdr)
 
         _main_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
         _main_render_target.addVisibleAttachment(swap_chain, true, true); // 0
@@ -195,10 +207,10 @@ namespace cell {
         );
         // lighting subpass
         _main_render_target.addSubPass(
-            {4}, // uses the depth buffer as an "output", but doesnt write to it
-            {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {1, 2, 3},
-            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
+            {1, 4}, // uses the depth buffer as an "output", but doesnt write to it
+            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
+            {2, 3},
+            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // lighting subpass waits for the geometry subpass at the fragment shader stage
         _main_render_target.addSubPassDependency(

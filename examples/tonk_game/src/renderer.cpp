@@ -51,7 +51,7 @@ namespace tonk {
     void Renderer::beginFrame(undicht::vulkan::SwapChain& swap_chain) {
 
         // reset descriptor caches
-        _map_descriptor_cache.reset();
+        _map_descriptor_cache.reset({0});
         
         // wait for previous frame to finish
         _render_finished_fence.waitForProcessToFinish();
@@ -79,7 +79,7 @@ namespace tonk {
         _map_ubo.setAttribute(1, &zoom_factor, sizeof(zoom_factor));
         _map_ubo.setAttribute(2, glm::value_ptr(map_center), 2 * sizeof(float));
 
-        DescriptorSet map_descriptor = _map_descriptor_cache.accquire();
+        DescriptorSet map_descriptor = _map_descriptor_cache.accquire(0);
         map_descriptor.bindImage(0, tile_map.getMap().getImage().getImageView(), tile_map.getMap().getLayout(), _sampler.getSampler());
         map_descriptor.bindUniformBuffer(1, _map_ubo.getBuffer());
 
@@ -143,7 +143,7 @@ namespace tonk {
         _map_descriptor_set_layout.init(_device.getDevice());
 
         // init descriptor cache
-        _map_descriptor_cache.init(_device, _map_descriptor_set_layout);
+        _map_descriptor_cache.init(_device, {_map_descriptor_set_layout}, {1000});
 
         // init the pipeline
         _map_pipeline.setViewport(viewport);

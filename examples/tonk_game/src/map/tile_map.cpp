@@ -45,7 +45,7 @@ namespace tonk {
         int pos_x = (id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _map.setData(data._pixels.data(), data._pixels.size(), {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _map.setData(data._pixels.data(), data._pixels.size(), 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
         
     }
 

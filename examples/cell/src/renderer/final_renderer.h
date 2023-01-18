@@ -14,15 +14,16 @@
 
 namespace cell {
 
-    class FinalRenderer : public undicht::vulkan::Renderer {
+    class FinalRenderer {
     
       protected:
 
         undicht::vulkan::VertexBuffer _screen_quad;
 
         // renderer
+        undicht::vulkan::Renderer _renderer;
         undicht::vulkan::Sampler _sampler;
-        undicht::vulkan::UniformBuffer _ubo;
+        undicht::vulkan::UniformBuffer _local_ubo;
 
       public:
 
@@ -30,9 +31,10 @@ namespace cell {
         void cleanUp();
         
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
-
-        void draw(const undicht::vulkan::UniformBuffer& global_ubo, undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView light);
-        void beginFrame();
+        
+        void beginFrame(undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView light);
+        void draw(undicht::vulkan::CommandBuffer& cmd);
+        
 
     };
 

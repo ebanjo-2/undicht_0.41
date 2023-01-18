@@ -5,7 +5,7 @@ layout(location = 0) out vec4 out_color;
 layout(location = 0) in vec3 light_color;
 layout(location = 1) in vec3 light_pos_rel_cam;
 
-layout(binding = 0) uniform GlobalUBO {
+layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
 	mat4 proj;
 	mat4 inv_view;
@@ -14,18 +14,17 @@ layout(binding = 0) uniform GlobalUBO {
 	vec2 inv_viewport;
 } global;
 
-layout(binding = 1) uniform LocalUBO {
+layout(set = 1, binding = 0) uniform LocalUBO {
 	vec2 tile_map_unit;
 } local;
 
-layout (binding = 2) uniform sampler2DArray tile_map;
+layout (set = 1, binding = 1) uniform sampler2DArray tile_map;
 
-layout (input_attachment_index = 0, set = 0, binding = 3) uniform subpassInput input_depth;
-layout (input_attachment_index = 1, set = 0, binding = 4) uniform subpassInput input_material;
-layout (input_attachment_index = 2, set = 0, binding = 5) uniform subpassInput input_normal;
+layout (set = 1, input_attachment_index = 0, binding = 2) uniform subpassInput input_material;
+layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal;
 
 // reading the inputs
-vec3 calcFragPosRelCam();
+vec3 calcFragPosRelCam(float depth);
 vec2 getTileMapUV();
 
 // pbr math functions
@@ -39,8 +38,9 @@ const float PI = 3.14159265359;
 void main() {
 
 	// getting the position and normal of the fragment (in view space)
-	vec3 frag_pos_rel_cam = calcFragPosRelCam();
-	vec3 frag_normal_rel_cam = subpassLoad(input_normal).xyz;
+    vec4 normal_depth = subpassLoad(input_normal);
+	vec3 frag_pos_rel_cam = calcFragPosRelCam(normal_depth.a);
+	vec3 frag_normal_rel_cam = normal_depth.xyz;
 	vec3 N = normalize(frag_normal_rel_cam);
 
 	// reading the material properties
@@ -86,12 +86,12 @@ void main() {
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
 
-vec3 calcFragPosRelCam() {
+vec3 calcFragPosRelCam(float depth) {
 	// reconstructing the fragments position in view space (relative to the camera)
 	// from the depth value read from the depth buffer
 
 	// reading the depth value from the depth input texture
-	float depth = subpassLoad(input_depth).r;
+	// float depth = subpassLoad(input_depth).r;
 	vec2 screen_pos = gl_FragCoord.xy * global.inv_viewport * 2.0 - 1.0;
 
     // thanks for the math 
