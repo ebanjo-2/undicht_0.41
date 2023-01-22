@@ -40,8 +40,7 @@ namespace cell {
 
         // local uniform buffer
         // exposure setting
-        // + gamma
-        _local_ubo.init(device, BufferLayout({UND_FLOAT32, UND_FLOAT32}));
+        _local_ubo.init(device, BufferLayout({UND_FLOAT32}));
     }
 
     void FinalRenderer::cleanUp() {
@@ -58,16 +57,15 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, float exposure, float gamma, VkImageView light) {
+    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, float exposure, VkImageView light) {
 
         _renderer.resetDescriptorCache(1);
         _renderer.accquireDescriptorSet(1);
         
         // updating the local ubo
         _local_ubo.setAttribute(0, &exposure, sizeof(float));
-        _local_ubo.setAttribute(1, &gamma, sizeof(float));
-        _renderer.bindDescriptor(1, 0, _local_ubo.getBuffer());
-        _renderer.bindDescriptor(1, 1, light);
+        _renderer.bindUniformBuffer(1, 0, _local_ubo.getBuffer());
+        _renderer.bindInputAttachment(1, 1, light);
         _renderer.bindDescriptorSet(cmd, 1);
 
     }

@@ -1,4 +1,5 @@
 #include "direct_light.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace cell {
 
@@ -12,16 +13,17 @@ namespace cell {
 
     }
 
-    DirectLight::DirectLight(const glm::vec3& direction, const glm::vec3& color) {
+    DirectLight::DirectLight(const glm::vec3& direction, const glm::vec3& color, const glm::vec3 shadow_origin) {
 
         setDirection(direction);
         setColor(color);
-
+        setShadowOrigin(shadow_origin);
     }
 
     void DirectLight::setDirection(const glm::vec3& direction) {
 
-        _direction = direction;
+        _direction = glm::normalize(direction);
+        updateShadowMatrices();
     }
 
     void DirectLight::setColor(const glm::vec3& color) {
@@ -29,16 +31,60 @@ namespace cell {
         _color = color;
     }
 
-    uint32_t DirectLight::fillBuffer(float* buffer) const {
-        /// @brief stores the point light data in the buffer
-        /// @param buffer if not nullptr, the data of the pointlight will be stored (layout as described by )
-        /// @return the size of the data that gets stored
+    void DirectLight::setShadowOrigin(const glm::vec3& shadow_origin) {
 
-        if(buffer != nullptr) {
+        _shadow_origin = shadow_origin;
+        updateShadowMatrices();
+    }
 
-        }
+    void DirectLight::setShadowProjSize(float proj_width, float proj_height) {
+        // the area the projection matrix should cover
+
+        _shadow_proj_width = proj_width;
+        _shadow_proj_height = proj_height;
+
+        updateShadowMatrices();
+    } 
+
+
+    const glm::vec3& DirectLight::getDirection() const {
+
+        return _direction;
+    }
+
+    const glm::vec3& DirectLight::getColor() const {
+
+        return _color;
+    }
+
+    const glm::vec3& DirectLight::getShadowOrigin() const {
+
+        return _shadow_origin;
+    }
+
+    const glm::mat4& DirectLight::getShadowView() const{
         
-        return 6 * sizeof(float);
+        return _shadow_view;
+    }
+
+    const glm::mat4& DirectLight::getShadowProj() const{
+        
+        return _shadow_proj;
+    }
+
+    ////////////////////////////////////// private functions //////////////////////////////////////
+
+    void DirectLight::updateShadowMatrices() {
+
+        float right = _shadow_proj_width / 2.0f;
+        float top = _shadow_proj_height / 2.0f;
+
+        //_shadow_view = glm::lookAt(glm::vec3(10,30,0), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
+        //_shadow_view = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0, 1, 0));
+        _shadow_view =            glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), 
+                                  glm::vec3( 0.0f, 0.0f,  0.0f), 
+                                  glm::vec3( 0.0f, 1.0f,  0.0f));  
+        _shadow_proj = glm::ortho(-right, right, -top, top, 1.0f, 7.5f);
     }
 
 }

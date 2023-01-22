@@ -165,6 +165,27 @@ namespace undicht {
             return VK_NULL_HANDLE;
         }
 
+        const VkImage& RenderTarget::getLocalAttachment(uint32_t frame, uint32_t attachment) const {
+            // cant return extern attachments
+
+            for(int i = 0; i <  _frame_data.at(frame)._attachments.size(); i++) {
+
+                if(_frame_data.at(frame)._attachment_ids.at(i) == attachment)
+                    return _frame_data.at(frame)._attachments.at(i).getImage();
+
+            }
+
+            UND_ERROR << "failed to return local attachment " << attachment << " for frame " << frame << ", no such attachment found\n";
+            return VK_NULL_HANDLE;
+        } 
+
+
+        VkExtent2D RenderTarget::getExtent() const {
+            
+            return _extent;
+        }
+
+
     } // namespace vulkan
 
 } // namespace undicht

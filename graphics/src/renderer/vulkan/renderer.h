@@ -68,9 +68,9 @@ namespace undicht {
             // binding descriptors
             void resetDescriptorCache(uint32_t slot);
             void accquireDescriptorSet(uint32_t slot);
-            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer);
-            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler);
-            void bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view);
+            void bindUniformBuffer(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer);
+            void bindImage(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler);
+            void bindInputAttachment(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view);
 
             // drawing
             void bindPipeline(undicht::vulkan::CommandBuffer& cmd);
@@ -81,7 +81,7 @@ namespace undicht {
 
             // getters
             const undicht::vulkan::DescriptorSetLayout& getDescriptorSetLayout(uint32_t slot = 0) const;
-
+            VkViewport getViewport() const;
 
         };
 

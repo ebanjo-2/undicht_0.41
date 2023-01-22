@@ -38,6 +38,16 @@ namespace undicht {
     unsigned int FixedType::getSize() const {
 
         return m_size * m_num_components;
+    }       
+
+    unsigned int FixedType::getCompSize() const {
+
+        return m_size;
+    }
+
+    unsigned int FixedType::getNumComp() const {
+
+        return m_num_components;
     }
 
 } // namespace undicht

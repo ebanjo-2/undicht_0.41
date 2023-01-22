@@ -149,7 +149,7 @@ namespace undicht {
             _descriptor_sets.at(slot) = &_descriptor_cache.accquire(slot);
         }
 
-        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer) {
+        void Renderer::bindUniformBuffer(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer) {
             
             if(!_descriptor_sets.at(descriptor_set_slot)) {
                 UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
@@ -159,7 +159,7 @@ namespace undicht {
             _descriptor_sets.at(descriptor_set_slot)->bindUniformBuffer(binding, buffer);
         }
 
-        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler) {
+        void Renderer::bindImage(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view, const VkImageLayout& layout, const VkSampler& sampler) {
             
             if(!_descriptor_sets.at(descriptor_set_slot)) {
                 UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
@@ -169,7 +169,7 @@ namespace undicht {
             _descriptor_sets.at(descriptor_set_slot)->bindImage(binding, image_view, layout, sampler);
         }
 
-        void Renderer::bindDescriptor(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view) {
+        void Renderer::bindInputAttachment(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view) {
             
             if(!_descriptor_sets.at(descriptor_set_slot)) {
                 UND_ERROR << "failed to bind descriptor, please accquire a descriptor set first\n";
@@ -220,6 +220,11 @@ namespace undicht {
         const undicht::vulkan::DescriptorSetLayout& Renderer::getDescriptorSetLayout(uint32_t slot) const {
         
             return _descriptor_set_layouts.at(slot);
+        }
+
+        VkViewport Renderer::getViewport() const {
+
+            return _pipeline.getViewport();
         }
 
     } // namespace vulkan

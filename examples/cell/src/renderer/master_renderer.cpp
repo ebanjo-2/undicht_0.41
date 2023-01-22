@@ -35,8 +35,10 @@ namespace cell {
         _global_descriptor_layout.init(device.getDevice());
         _global_descriptor_cache.init(device, {_global_descriptor_layout}, {1});
 
+        initShadowRenderTarget(device, {512, 512}, swap_chain.getSwapImageCount());
         initMainRenderTarget(device, swap_chain);
 
+        _shadow_renderer.init(device, {512, 512}, _shadow_map_target.getRenderPass(), 0);
         _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0);
         _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
         _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
@@ -44,6 +46,7 @@ namespace cell {
 
     void MasterRenderer::cleanUp() {
         
+        _shadow_renderer.cleanUp();
         _world_renderer.cleanUp();
         _light_renderer.cleanUp();
         _final_renderer.cleanUp();
@@ -58,6 +61,7 @@ namespace cell {
         _draw_cmd.cleanUp();
         _swap_image_ready.cleanUp();
 
+        _shadow_map_target.cleanUp();
         _main_render_target.cleanUp();
     }
 
@@ -76,31 +80,16 @@ namespace cell {
         if(_swap_image_id == -1)
             return false;
 
-        // clearing the framebuffer
-        undicht::vulkan::Framebuffer& frame_buffer = _main_render_target.getFramebuffer(_swap_image_id);
-        VkClearValue visible_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
-        VkClearValue depth_clear_value{1.0f, 0};
-        VkClearValue material_clear_value{255, 255, 0, 0};
-        VkClearValue normal_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
-        VkClearValue light_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
-
-        std::vector<VkClearValue> clear_values = {
-            visible_clear_value, 
-            depth_clear_value,
-            material_clear_value, 
-            normal_clear_value, 
-            light_clear_value,
-        };
-
         // beginning the render pass
         _draw_cmd.resetCommandBuffer();
         _draw_cmd.beginCommandBuffer(true);
-        _draw_cmd.beginRenderPass(_main_render_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _viewport, clear_values);
 
         return true;
     }
 
     void MasterRenderer::endFrame(undicht::vulkan::SwapChain& swap_chain) {
+
+        _current_pass = NO_PASS;
 
         // ending the render pass
         _draw_cmd.endRenderPass();
@@ -129,7 +118,51 @@ namespace cell {
         _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
     }
 
-    void MasterRenderer::beginGeometryStage(const MaterialAtlas& materials) {
+    void MasterRenderer::beginShadowPass(const DirectLight& light) {
+
+        _current_pass = SHADOW_PASS;
+
+        undicht::vulkan::Framebuffer& frame_buffer = _shadow_map_target.getFramebuffer(_swap_image_id);
+        VkClearValue depth_clear_value{1.0f, 0};
+
+        _draw_cmd.beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
+    
+        _shadow_renderer.beginFrame(light, _draw_cmd);
+    }
+
+    void MasterRenderer::drawToShadowMap(const WorldBuffer& world) {
+        
+        _shadow_renderer.draw(world, _draw_cmd);
+    }
+
+    void MasterRenderer::beginMainRenderPass() {
+
+        // end shadow pass
+        if(_current_pass == SHADOW_PASS)
+            _draw_cmd.endRenderPass();
+
+        _current_pass = MAIN_PASS;
+
+        // clearing the framebuffer
+        undicht::vulkan::Framebuffer& frame_buffer = _main_render_target.getFramebuffer(_swap_image_id);
+        VkClearValue visible_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
+        VkClearValue depth_clear_value{1.0f, 0};
+        VkClearValue material_clear_value{255, 255, 0, 0};
+        VkClearValue normal_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+        VkClearValue light_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+
+        std::vector<VkClearValue> clear_values = {
+            visible_clear_value, 
+            depth_clear_value,
+            material_clear_value, 
+            normal_clear_value, 
+            light_clear_value,
+        };
+
+        _draw_cmd.beginRenderPass(_main_render_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _viewport, clear_values);
+    }
+
+    void MasterRenderer::beginGeometrySubPass(const MaterialAtlas& materials) {
 
         _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd);
     }
@@ -139,14 +172,14 @@ namespace cell {
         _world_renderer.draw(world, _draw_cmd);
     }
 
-    void MasterRenderer::beginLightStage(const MaterialAtlas& materials) {
+    void MasterRenderer::beginLightSubPass(const MaterialAtlas& materials) {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
         const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
         const VkImageView& normal = _main_render_target.getAttachment(_swap_image_id, 3);
-
         _light_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd, material, normal);
+
     }
 
     void MasterRenderer::drawLights(const LightBuffer& lights) {
@@ -154,13 +187,21 @@ namespace cell {
         _light_renderer.draw(lights, _draw_cmd);
     }
 
-    void MasterRenderer::beginFinalStage(float exposure, float gamma) {
+    void MasterRenderer::drawLight(const DirectLight& light) {
+
+        const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
+        const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+        _light_renderer.draw(light, shadow_map, shadow_map_layout, _draw_cmd);
+    }
+
+    void MasterRenderer::beginFinalSubPass(float exposure) {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
         const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 4);
 
-        _final_renderer.beginFrame(_draw_cmd, exposure, gamma, light);
+        _final_renderer.beginFrame(_draw_cmd, exposure, light);
     }
 
     void MasterRenderer::drawFinal() {
@@ -177,6 +218,7 @@ namespace cell {
         _global_uniform_buffer.setAttribute(5, inv_viewport, 2 * sizeof(float));
 
         _main_render_target.resize(_viewport, &swap_chain);
+        //_shadow_map_target.resize(_viewport);
 
         _world_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _light_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
@@ -184,7 +226,33 @@ namespace cell {
     }
 
     ///////////////////////////////////////// private functions /////////////////////////////////////////
-    
+
+    void MasterRenderer::initShadowRenderTarget(const undicht::vulkan::LogicalDevice& device, VkExtent2D extent, uint32_t num_frames) {
+
+        const VkFormat SHADOW_MAP_FORMAT = translate(UND_DEPTH32F);
+
+        _shadow_map_target.setDeviceHandle(device, num_frames);
+        _shadow_map_target.addAttachment(SHADOW_MAP_FORMAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, 1, true, true); // 0
+        // Attachment will be transitioned to shader read at render pass end
+        // thanks to https://github.com/SaschaWillems/Vulkan/blob/master/examples/shadowmapping/shadowmapping.cpp
+
+        _shadow_map_target.addSubPass({0}, {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+
+        // Use subpass dependencies for layout transitions
+        _shadow_map_target.addSubPassDependency(
+            VK_SUBPASS_EXTERNAL, 0,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+        );
+        _shadow_map_target.addSubPassDependency(
+            0, VK_SUBPASS_EXTERNAL,
+            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT
+        );
+
+        _shadow_map_target.init(extent);
+    }
+
     void MasterRenderer::initMainRenderTarget(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain) {
         // using https://learnopengl.com/Advanced-Lighting/Deferred-Shading as a reference for setting up the geometry buffer
 
@@ -216,7 +284,16 @@ namespace cell {
         _main_render_target.addSubPassDependency(
             0,
             1,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_ACCESS_SHADER_READ_BIT
+        );
+        // wait for the shadow pass to finish
+        _main_render_target.addSubPassDependency(
+            VK_SUBPASS_EXTERNAL,
+            1,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             VK_ACCESS_SHADER_READ_BIT

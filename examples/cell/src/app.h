@@ -22,6 +22,7 @@ namespace cell {
         MasterRenderer _master_renderer;
         DrawableWorld _world;
         LightBuffer _lights;
+        DirectLight _sun;
         MaterialAtlas _materials;
 
     public:

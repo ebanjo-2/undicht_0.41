@@ -57,6 +57,8 @@ namespace undicht {
             const RenderPass& getRenderPass() const;
             Framebuffer& getFramebuffer(uint32_t frame);
             const VkImageView& getAttachment(uint32_t frame, uint32_t attachment) const;
+            const VkImage& getLocalAttachment(uint32_t frame, uint32_t attachment) const; // cant return extern attachments
+            VkExtent2D getExtent() const;
 
         };
 

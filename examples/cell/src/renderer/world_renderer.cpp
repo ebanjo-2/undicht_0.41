@@ -74,8 +74,8 @@ namespace cell {
 
         // updating + binding the local descriptor set
         _renderer.accquireDescriptorSet(1);
-        _renderer.bindDescriptor(1, 0, _local_uniform_buffer.getBuffer());
-        _renderer.bindDescriptor(1, 1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
+        _renderer.bindUniformBuffer(1, 0, _local_uniform_buffer.getBuffer());
+        _renderer.bindImage(1, 1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
         _renderer.bindDescriptorSet(cmd, 1);
 
         // binding the global descriptor set
@@ -100,7 +100,7 @@ namespace cell {
 
             // create a descriptor set pointing to the uniform buffers and the cell texture
             _renderer.accquireDescriptorSet(2);
-            _renderer.bindDescriptor(2, 0, per_chunk_ubo.getBuffer());
+            _renderer.bindUniformBuffer(2, 0, per_chunk_ubo.getBuffer());
 
             // binding the ubo to the shader
             _renderer.bindDescriptorSet(cmd, 2);
@@ -114,7 +114,6 @@ namespace cell {
 
 
     ///////////////////////////////// private renderer functions /////////////////////////////////
-
 
     void WorldRenderer::createPerChunkUBOs(uint32_t num) {
 

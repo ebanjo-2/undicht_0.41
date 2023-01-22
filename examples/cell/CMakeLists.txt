@@ -38,6 +38,8 @@ set(RENDERER_SOURCES
     src/renderer/final_renderer.cpp
     src/renderer/light_renderer.h
     src/renderer/light_renderer.cpp
+    src/renderer/shadow_renderer.h
+    src/renderer/shadow_renderer.cpp
 )
 
 set(MATERIALS_SOURCES

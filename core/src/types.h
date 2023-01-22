@@ -40,6 +40,9 @@ namespace undicht {
 
         // size of the complete type (number of components * size of each component)
         unsigned int getSize() const;
+        unsigned int getCompSize() const;
+        unsigned int getNumComp() const;
+         
     };
 
 

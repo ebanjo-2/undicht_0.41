@@ -2,9 +2,9 @@
 
 layout(location = 0) out vec4 out_color;
 
-layout(location = 0) in vec3 light_color;
-layout(location = 1) in vec3 light_pos_rel_cam;
+layout(location = 0) in vec3 light_dir_rel_cam;
 
+// global inputs
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
 	mat4 proj;
@@ -14,6 +14,7 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 	vec2 inv_viewport;
 } global;
 
+// inputs for all light renderers
 layout(set = 1, binding = 0) uniform LocalUBO {
 	vec2 tile_map_unit;
 } local;
@@ -21,11 +22,22 @@ layout(set = 1, binding = 0) uniform LocalUBO {
 layout (set = 1, binding = 1) uniform sampler2DArray tile_map;
 
 layout (set = 1, input_attachment_index = 0, binding = 2) uniform subpassInput input_material;
-layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal;
+layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal; // contains the normal data + depth
+
+// inputs specific to this type of light renderer
+layout(set = 2, binding = 0) uniform LightUBO {
+	vec3 color;
+    vec3 direction;
+	mat4 view;
+	mat4 proj;
+} light;
+
+layout (set = 2, binding = 1) uniform sampler2D shadow_map;
 
 // reading the inputs
 vec3 calcFragPosRelCam(float depth);
 vec2 getTileMapUV();
+float isInShadow(vec3 frag_pos_rel_cam);
 
 // pbr math functions
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
@@ -55,12 +67,11 @@ void main() {
 
 	// frequently used vectors
 	vec3 V = normalize(-frag_pos_rel_cam); // cam sits at (0,0,0) in the view space
-	vec3 L = normalize(light_pos_rel_cam - frag_pos_rel_cam);
+	vec3 L = normalize(-light_dir_rel_cam);
 	vec3 H = normalize(V + L); // half vector between the direction to the light and to the cam
 
-	float distance    = length(light_pos_rel_cam - frag_pos_rel_cam);
-	float attenuation = 1.0 / (distance * distance);
-    vec3 radiance     = max(light_color * attenuation , 0.0);
+	float attenuation = 1.0; // directional light, no attenuation
+    vec3 radiance     = max(light.color * attenuation , 0.0);
     
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
@@ -76,12 +87,12 @@ void main() {
         
     vec3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular     = numerator / denominator;  
+    vec3 specular     = numerator / denominator;
             
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);
-    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 1.0f); 
-
+    //out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 1.0f) * isInShadow(frag_pos_rel_cam); 
+    out_color = vec4(texture(shadow_map, global.inv_viewport * gl_FragCoord.xy).r);
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -114,6 +125,27 @@ vec2 getTileMapUV() {
 
 	return tile_map_uv;
 }
+
+float isInShadow(vec3 frag_pos_rel_cam) {
+
+    vec4 world_pos = global.inv_view * vec4(frag_pos_rel_cam, 1.0f);
+    vec4 pos_in_light_space = light.proj * light.view * world_pos;
+
+    // perform perspective divide
+    vec3 projCoords = pos_in_light_space.xyz / pos_in_light_space.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadow_map, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow 
+    float bias = 0.005;
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
+
+    return shadow;
+}
+
 
 
 //////////////////////////////////////////// pbr math functions ////////////////////////////////////////////

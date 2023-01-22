@@ -10,16 +10,24 @@
 #include "renderer/world_renderer.h"
 #include "renderer/light_renderer.h"
 #include "renderer/final_renderer.h"
+#include "renderer/shadow_renderer.h"
 #include "renderer/vulkan/texture.h"
 #include "renderer/vulkan/render_target.h"
 
 #include "entities/light_buffer.h"
+#include "entities/lights/direct_light.h"
 
 #include "3D/camera/perspective_camera_3d.h"
 
 namespace cell {
 
     class MasterRenderer {
+
+      enum Pass {
+        NO_PASS,
+        SHADOW_PASS,
+        MAIN_PASS
+      };
 
       protected:
 
@@ -41,7 +49,13 @@ namespace cell {
         undicht::vulkan::Semaphore _render_finished_semaphore;
         undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
-        // main stage
+        Pass _current_pass = NO_PASS;
+
+        // shadow pass
+        undicht::vulkan::RenderTarget _shadow_map_target;
+        ShadowRenderer _shadow_renderer;
+
+        // main pass
         undicht::vulkan::RenderTarget _main_render_target;
         WorldRenderer _world_renderer;
         LightRenderer _light_renderer;
@@ -59,13 +73,18 @@ namespace cell {
 
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
 
-        void beginGeometryStage(const MaterialAtlas& materials);
+        // shadow pass
+        void beginShadowPass(const DirectLight& light);
+        void drawToShadowMap(const WorldBuffer& world);
+
+        // main pass
+        void beginMainRenderPass();
+        void beginGeometrySubPass(const MaterialAtlas& materials);
         void drawWorld(const WorldBuffer& world);
-
-        void beginLightStage(const MaterialAtlas& materials);
+        void beginLightSubPass(const MaterialAtlas& materials);
         void drawLights(const LightBuffer& lights);
-
-        void beginFinalStage(float exposure = 1.0f, float gamma = 2.2f);
+        void drawLight(const DirectLight& light);
+        void beginFinalSubPass(float exposure = 1.0f);
         void drawFinal();
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
@@ -73,6 +92,7 @@ namespace cell {
       protected:
         // private functions
 
+        void initShadowRenderTarget(const undicht::vulkan::LogicalDevice& device, VkExtent2D extent,  uint32_t num_frames);
         void initMainRenderTarget(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
 
     };

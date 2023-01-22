@@ -17,6 +17,8 @@ namespace cell {
         _player.init();
         _materials.init(_gpu);
 
+        _player.setPosition(glm::vec3(0, 5, 10));
+
         // setting some materials for testing
         uint32_t grass = _materials.setMaterial(Material("Grass", 
             UND_ENGINE_SOURCE_DIR + "examples/cell/res/grass.png"
@@ -31,8 +33,6 @@ namespace cell {
             UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_metal.png"
         ));
 
-
-
         // setting some cells for testing
         std::vector<Cell> cells = {
             Cell(0, 0, 0, 255, 1, 255, grass),
@@ -40,6 +40,7 @@ namespace cell {
             Cell(65, 21, 50, 85, 50, 70, sand),
             Cell(5, 5, 5, 6, 7, 6, grass),
             Cell(20, 4, 10, 44, 8, 34, gold),
+            Cell(0, 10, 30, 1, 11, 31, gold),
         };
 
         _world.loadChunk(glm::ivec3(0,0,0), cells);
@@ -52,6 +53,11 @@ namespace cell {
         _lights.addPointLight(PointLight(glm::vec3(05.4,50.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
         _lights.addPointLight(PointLight(glm::vec3(10.5,20.5,20.5),glm::vec3(50.0,50.0,50.0)));
         _lights.addPointLight(PointLight(glm::vec3(15.5,3.5,50.5),glm::vec3(1.0,0.0,1.0)));
+
+        _sun.setColor(glm::vec3(23.47, 21.31, 20.79));
+        //_sun.setColor(glm::vec3(1.0,0.0,1.0));
+        _sun.setDirection(glm::vec3(0, -1, 0)); // will get normalized
+        _sun.setShadowOrigin(glm::vec3(0, 2, 10));
 
     }
 
@@ -84,6 +90,8 @@ namespace cell {
 
         // updating the world
         _player.move(getDeltaT(), _main_window);
+        //_sun._shadow_view = _player.getViewMatrix();
+        //_sun._shadow_proj = _player.getCameraProjectionMatrix();
 
         // checking if the window is minimized
         if(_main_window.isMinimized())
@@ -92,14 +100,19 @@ namespace cell {
         // drawing a new frame
         if(_master_renderer.beginFrame(_swap_chain)) {
             _master_renderer.loadPlayerCamera(_player);
+            
+            // shadow pass
+            _master_renderer.beginShadowPass(_sun);
+            _master_renderer.drawToShadowMap(_world.getWorldBuffer());
 
-            _master_renderer.beginGeometryStage(_materials);
+            // main render pass
+            _master_renderer.beginMainRenderPass();
+            _master_renderer.beginGeometrySubPass(_materials);
             _master_renderer.drawWorld(_world.getWorldBuffer());
-
-            _master_renderer.beginLightStage(_materials);
-            _master_renderer.drawLights(_lights);
-
-            _master_renderer.beginFinalStage(1.0f, 2.2f);
+            _master_renderer.beginLightSubPass(_materials);
+            //_master_renderer.drawLights(_lights);
+            _master_renderer.drawLight(_sun);
+            _master_renderer.beginFinalSubPass(1.0f);
             _master_renderer.drawFinal();
 
             _master_renderer.endFrame(_swap_chain);

@@ -45,14 +45,28 @@ namespace undicht {
             uint32_t last_size = 0;
 
             for(int i = 0; i < layout.m_types.size(); i++) {
+
+                const FixedType& type = layout.getType(i);
+
                 // moving past the last type
                 offset += last_size;
 
                 // calculating the correct offset for the current type
                 uint32_t current_size = layout.getType(i).getSize();
                 uint32_t alignment = current_size;
-                alignment = std::max(alignment, 4u); // nothing smaller than 4 bytes
-                alignment = std::min(alignment, 16u); // types bigger than 16 bytes still have to be aligned as if they were 16 bytes
+
+                // alignment rules taken from https://stackoverflow.com/questions/45638520/ubos-and-their-alignments-in-vulkan
+                if(type.getNumComp() == 1) 
+                    alignment = type.getCompSize(); // A scalar of size N has a base alignment of N.
+                else if(type.getNumComp() == 2) 
+                    alignment = 2 * type.getCompSize(); // A two-component vector, with components of size N, has a base alignment of 2 N.
+                else if(type.getNumComp() == 3 || type.getNumComp() == 4)
+                    alignment = 4 * type.getCompSize(); // A three- or four-component vector, with components of size N, has a base alignment of 4 N.
+                else // for 3*3 and 4*4 matrices this should work
+                    alignment = 16;
+
+                //alignment = std::max(alignment, 4u); // nothing smaller than 4 bytes
+                //alignment = std::min(alignment, 16u); // types bigger than 16 bytes still have to be aligned as if they were 16 bytes
 
                 if(offset % alignment)
                     offset += alignment - (offset % alignment);
