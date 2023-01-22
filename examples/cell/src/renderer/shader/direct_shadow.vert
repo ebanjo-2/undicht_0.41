@@ -17,7 +17,7 @@ layout(set = 1, binding = 0) uniform LocalUBO {
 } local;
 
 layout(set = 2, binding = 0) uniform ChunkUBO {
-	vec3 pos;
+	ivec3 pos;
 } chunk;
 
 
@@ -27,8 +27,5 @@ void main() {
 	vec4 world_pos = vec4(vertex_pos + chunk.pos, 1.0f);
 
 	gl_Position = local.proj * local.view * world_pos;
-	gl_Position.y = -gl_Position.y; // positive y is up, change my mind
-
-	//gl_Position = vec4((aPos.xy) * 2.0f - 1.0f, 0.0f, 1.0f);
-	// gl_Position.y = -gl_Position.y;
+	//gl_Position.y = -gl_Position.y; // positive y is up, change my mind
 }

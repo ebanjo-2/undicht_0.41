@@ -49,21 +49,27 @@ namespace cell {
         _direct_light_renderer.init(viewport, render_pass, subpass);
 
         // Sampler
-        _sampler.setMinFilter(VK_FILTER_NEAREST);
-        _sampler.setMaxFilter(VK_FILTER_NEAREST);
-        _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
-        _sampler.init(gpu.getDevice());
+        _tile_map_sampler.setMinFilter(VK_FILTER_NEAREST);
+        _tile_map_sampler.setMaxFilter(VK_FILTER_NEAREST);
+        _tile_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _tile_map_sampler.init(gpu.getDevice());
+
+        _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
+        _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
+        _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+        _shadow_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _shadow_map_sampler.init(gpu.getDevice());
 
         // local uniform buffer
         // contains the tile map's tile size 
         _local_ubo.init(gpu, BufferLayout({UND_VEC2F}));
 
         // per light ubo (only used by the direct lights at the moment)
-        // light color
-        // light direction
         // shadow view matrix
         // shadow proj matrix
-        _light_ubo.init(gpu, BufferLayout({UND_VEC3F, UND_VEC3F, UND_MAT4F, UND_MAT4F}));
+        // light color
+        // light direction
+        _light_ubo.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC3F, UND_VEC3F}));
     }
 
     void LightRenderer::cleanUp() {
@@ -73,7 +79,8 @@ namespace cell {
         _light_ubo.cleanUp();
         _local_descriptor_layout.cleanUp();
         _descriptor_cache.cleanUp();
-        _sampler.cleanUp();
+        _tile_map_sampler.cleanUp();
+        _shadow_map_sampler.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
     }
@@ -99,7 +106,7 @@ namespace cell {
 
         // updating + binding the local descriptor set
         _local_descriptor_set.bindUniformBuffer(0, _local_ubo.getBuffer());
-        _local_descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
+        _local_descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _tile_map_sampler.getSampler());
         _local_descriptor_set.bindInputAttachment(2, material);
         _local_descriptor_set.bindInputAttachment(3, normal);
 
@@ -122,14 +129,14 @@ namespace cell {
     void LightRenderer::draw(const DirectLight& light, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, undicht::vulkan::CommandBuffer& cmd) {
         
         // storing the lights data in the ubo
-        _light_ubo.setAttribute(0, glm::value_ptr(light.getColor()), 3 * sizeof(float));
-        _light_ubo.setAttribute(1, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
-        _light_ubo.setAttribute(2, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
-        _light_ubo.setAttribute(3, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
+        _light_ubo.setAttribute(0, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
+        _light_ubo.setAttribute(1, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
+        _light_ubo.setAttribute(2, glm::value_ptr(light.getColor()), 3 * sizeof(float));
+        _light_ubo.setAttribute(3, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
 
         _direct_light_renderer.accquireDescriptorSet(2);
         _direct_light_renderer.bindUniformBuffer(2, 0, _light_ubo.getBuffer());
-        _direct_light_renderer.bindImage(2, 1, shadow_map, shadow_map_layout, _sampler.getSampler());
+        _direct_light_renderer.bindImage(2, 1, shadow_map, shadow_map_layout, _shadow_map_sampler.getSampler());
         _direct_light_renderer.bindDescriptorSet(cmd, 2);
 
         _direct_light_renderer.bindPipeline(cmd);

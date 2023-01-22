@@ -27,10 +27,10 @@ namespace cell {
 
         // keyboard input
         if (input_window.isKeyPressed(GLFW_KEY_W))
-            setPosition(getPosition() - getViewDirection() * step);
+            setPosition(getPosition() + getViewDirection() * step);
 
         if (input_window.isKeyPressed(GLFW_KEY_S))
-            setPosition(getPosition() + getViewDirection() * step);
+            setPosition(getPosition() - getViewDirection() * step);
 
         if (input_window.isKeyPressed(GLFW_KEY_A))
             setPosition(getPosition() - getRightDirection() * step);

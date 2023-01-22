@@ -21,8 +21,8 @@ namespace cell {
         glm::vec3 _shadow_origin;
         glm::mat4 _shadow_view;
         glm::mat4 _shadow_proj;
-        float _shadow_proj_width = 20.0f;
-        float _shadow_proj_height = 20.0f;
+        float _shadow_proj_width = 200.0f;
+        float _shadow_proj_height = 200.0f;
 
       public:
 

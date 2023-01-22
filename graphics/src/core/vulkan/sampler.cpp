@@ -14,6 +14,11 @@ namespace undicht {
             _max_filter = filter;
         }
 
+        void Sampler::setRepeatMode(VkSamplerAddressMode mode) {
+            
+            _repeat_mode = mode;
+        }
+
         void Sampler::setMipMapMode(VkSamplerMipmapMode mode) {
             
             _mip_map_mode = mode;
@@ -24,7 +29,7 @@ namespace undicht {
 
             _device_handle = device;
 
-            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, _mip_map_mode, false, 1.0f);
+            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, _repeat_mode, _mip_map_mode, false, 1.0f);
             vkCreateSampler(_device_handle, &info, {}, &_sampler);
 
         }
@@ -42,16 +47,16 @@ namespace undicht {
 
         //////////////////////////// creating sampler related structs /////////////////////////////
 
-        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy) {
+        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerAddressMode repeat_mode, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy) {
             
             VkSamplerCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             info.pNext = nullptr;
             info.magFilter = min_filter;
             info.minFilter = max_filter;
-            info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            info.addressModeU = repeat_mode;
+            info.addressModeV = repeat_mode;
+            info.addressModeW = repeat_mode;
             info.anisotropyEnable = anisotropy;
             info.maxAnisotropy = max_anisotropy;
             info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;

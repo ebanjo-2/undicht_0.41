@@ -28,7 +28,8 @@ namespace cell {
         // renderer
         undicht::vulkan::Renderer _point_light_renderer;
         undicht::vulkan::Renderer _direct_light_renderer;
-        undicht::vulkan::Sampler _sampler;
+        undicht::vulkan::Sampler _tile_map_sampler;
+        undicht::vulkan::Sampler _shadow_map_sampler;
         undicht::vulkan::DescriptorSetCache _descriptor_cache;
 
         undicht::vulkan::UniformBuffer _local_ubo;

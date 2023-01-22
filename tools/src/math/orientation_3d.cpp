@@ -97,13 +97,11 @@ namespace undicht {
 			if (!m_relative_orientation) {
 
 				m_transf_mat = glm::toMat4(getRotation()) * glm::translate(glm::mat4(1.0f), getPosition());
-			}
-			else {
+			} else {
 				// scaling the translation by the scale of the parent orientation
 
 				m_transf_mat = glm::toMat4(getRotation()) * glm::translate(glm::mat4(1.0f), m_relative_orientation->getScale() * getPosition());
 			}
-
 
 		}
 
@@ -186,6 +184,7 @@ namespace undicht {
 
 			glm::quat rotation = glm::angleAxis(0.0f, glm::vec3(0, 0, -1));
 
+			// for (int i = angles.size() - 1; i >= 0; i--) {
 			for (int i = 0; i < angles.size(); i++) {
 
 				switch (axes[i]) {

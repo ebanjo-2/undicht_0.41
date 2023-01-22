@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(true, true);
+        undicht::Engine::init(false, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -56,8 +56,8 @@ namespace cell {
 
         _sun.setColor(glm::vec3(23.47, 21.31, 20.79));
         //_sun.setColor(glm::vec3(1.0,0.0,1.0));
-        _sun.setDirection(glm::vec3(0, -1, 0)); // will get normalized
-        _sun.setShadowOrigin(glm::vec3(0, 2, 10));
+        _sun.setDirection(glm::vec3(1, -1, -1)); // will get normalized
+        _sun.setShadowOrigin(glm::vec3(5, 50, 50));
 
     }
 
@@ -91,6 +91,8 @@ namespace cell {
         // updating the world
         _player.move(getDeltaT(), _main_window);
         //_sun._shadow_view = _player.getViewMatrix();
+        //_sun.setShadowOrigin(_player.getPosition());
+        //_sun.setDirection(_player.getViewDirection());
         //_sun._shadow_proj = _player.getCameraProjectionMatrix();
 
         // checking if the window is minimized
@@ -110,9 +112,9 @@ namespace cell {
             _master_renderer.beginGeometrySubPass(_materials);
             _master_renderer.drawWorld(_world.getWorldBuffer());
             _master_renderer.beginLightSubPass(_materials);
-            //_master_renderer.drawLights(_lights);
+            _master_renderer.drawLights(_lights);
             _master_renderer.drawLight(_sun);
-            _master_renderer.beginFinalSubPass(1.0f);
+            _master_renderer.beginFinalSubPass(1.5f);
             _master_renderer.drawFinal();
 
             _master_renderer.endFrame(_swap_chain);

@@ -79,12 +79,10 @@ namespace cell {
         float right = _shadow_proj_width / 2.0f;
         float top = _shadow_proj_height / 2.0f;
 
+        _shadow_view = glm::lookAt(getShadowOrigin(), getShadowOrigin() + getDirection(), glm::vec3(0.0f, 1.0f, 0.0f));
         //_shadow_view = glm::lookAt(glm::vec3(10,30,0), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
         //_shadow_view = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0, 1, 0));
-        _shadow_view =            glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), 
-                                  glm::vec3( 0.0f, 0.0f,  0.0f), 
-                                  glm::vec3( 0.0f, 1.0f,  0.0f));  
-        _shadow_proj = glm::ortho(-right, right, -top, top, 1.0f, 7.5f);
+        _shadow_proj = glm::ortho(-right, right, -top, top, -100.0f, 100.0f);
     }
 
 }

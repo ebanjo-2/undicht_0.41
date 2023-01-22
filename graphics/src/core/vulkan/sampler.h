@@ -16,6 +16,7 @@ namespace undicht {
 
             VkFilter _min_filter = VK_FILTER_LINEAR;
             VkFilter _max_filter = VK_FILTER_LINEAR;
+            VkSamplerAddressMode _repeat_mode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             VkSamplerMipmapMode _mip_map_mode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
         public:
@@ -23,6 +24,7 @@ namespace undicht {
             // set these settings before initializing the sampler
             void setMinFilter(VkFilter filter);
             void setMaxFilter(VkFilter filter);
+            void setRepeatMode(VkSamplerAddressMode mode);
             void setMipMapMode(VkSamplerMipmapMode mode);
 
             void init(const VkDevice& device);
@@ -33,7 +35,7 @@ namespace undicht {
         protected:
             // creating sampler related structs
 
-            VkSamplerCreateInfo static createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy);
+            VkSamplerCreateInfo static createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerAddressMode repeat_mode, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy);
 
         };
 
