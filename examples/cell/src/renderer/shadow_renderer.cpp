@@ -47,12 +47,13 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void ShadowRenderer::beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd) {
+    void ShadowRenderer::beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set) {
 
         _last_used_chunk_ubo = -1;
         _renderer.resetDescriptorCache(1);
         _renderer.resetDescriptorCache(2);
         _renderer.accquireDescriptorSet(1);
+        _renderer.bindDescriptorSet(cmd, global_descriptor_set, 0);
 
         _local_ubo.setAttribute(0, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
         _local_ubo.setAttribute(1, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));

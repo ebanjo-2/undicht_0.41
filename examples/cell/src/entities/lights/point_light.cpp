@@ -32,7 +32,7 @@ namespace cell {
         // calculating the distance at which the brightness of the light is less then 0.0005
         // radiance = brightness / (distance²)
         float brightness = glm::length(color);
-        _range = glm::sqrt(brightness / 0.0005);
+        _range = glm::sqrt(brightness / 0.001);
 
     }
 

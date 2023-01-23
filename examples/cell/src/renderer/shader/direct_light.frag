@@ -26,18 +26,14 @@ layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput i
 
 // inputs specific to this type of light renderer
 layout(set = 2, binding = 0) uniform LightUBO {
-    mat4 shadow_view;
-	mat4 shadow_proj;
 	vec3 color;
     vec3 direction;
 } light;
 
-layout (set = 2, binding = 1) uniform sampler2D shadow_map;
 
 // reading the inputs
 vec3 calcFragPosRelCam(float depth);
 vec2 getTileMapUV();
-float isInLight(vec3 frag_pos_rel_cam);
 
 // pbr math functions
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
@@ -91,10 +87,8 @@ void main() {
             
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);
-    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 1.0f) * isInLight(frag_pos_rel_cam); 
-    //out_color = vec4(texture(shadow_map, global.inv_viewport * gl_FragCoord.xy).r) * 0.01;
-    //out_color = vec4(isInShadow(frag_pos_rel_cam));
-    //out_color = out_color * out_color * out_color * out_color;
+    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f);
+
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -127,28 +121,6 @@ vec2 getTileMapUV() {
 
 	return tile_map_uv;
 }
-
-float isInLight(vec3 frag_pos_rel_cam) {
-
-    vec4 world_pos = global.inv_view * vec4(frag_pos_rel_cam, 1.0f);
-    vec4 pos_in_light_space = light.shadow_proj * light.shadow_view * world_pos;
-
-    // perform perspective divide
-    vec3 projCoords = pos_in_light_space.xyz / pos_in_light_space.w;
-    // transform to [0,1] range
-    projCoords.xy = projCoords.xy * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadow_map, projCoords.xy).r;
-    // get depth of current fragment from light's perspective
-    float currentDepth = min(1.0f, projCoords.z);
-    // check whether current frag pos is in shadow 
-    float bias = 0.005;
-    float light = (currentDepth - bias <= closestDepth)  ? 1.0 : 0.0;  
-
-    return light;
-}
-
-
 
 //////////////////////////////////////////// pbr math functions ////////////////////////////////////////////
 

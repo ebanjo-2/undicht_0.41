@@ -26,7 +26,7 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd); // only one direct light for now
+        void beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set); // only one direct light for now
         void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd); // draw to shadow map
     
       protected:

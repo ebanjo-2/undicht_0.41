@@ -21,7 +21,7 @@ namespace cell {
         _renderer.setDeviceHandle(gpu);
         _renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/world.frag.spv");
         _renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global ubo
-        _renderer.setDescriptorSetLayout({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER /*local ubo*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER /*tile map*/}, 1);
+        _renderer.setDescriptorSetLayout({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER /*local ubo*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER /*tile map*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*shadow map*/}, 1);
         _renderer.setDescriptorSetLayout({ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER /*per chunk data*/}, 2);
         _renderer.setVertexInputLayout(CUBE_VERTEX_LAYOUT, CELL_LAYOUT);
         _renderer.setDepthStencilTest(true, true);
@@ -29,14 +29,21 @@ namespace cell {
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         _renderer.setBlending(0, false); // material output
         _renderer.setBlending(1, false); // normal output
+        _renderer.setBlending(2, false); // light / shadow output
 
         _renderer.init(viewport, render_pass, subpass);
 
-        // renderer
-        _sampler.setMinFilter(VK_FILTER_NEAREST);
-        _sampler.setMaxFilter(VK_FILTER_NEAREST);
-        _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
-        _sampler.init(gpu.getDevice());
+        // Sampler
+        _tile_map_sampler.setMinFilter(VK_FILTER_NEAREST);
+        _tile_map_sampler.setMaxFilter(VK_FILTER_NEAREST);
+        _tile_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _tile_map_sampler.init(gpu.getDevice());
+
+        _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
+        _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
+        _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+        _shadow_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _shadow_map_sampler.init(gpu.getDevice());
 
         // uniform buffer layout:
         // vec2 tile map unit (size of one tile in normalized device coords)
@@ -50,7 +57,8 @@ namespace cell {
             ubo.cleanUp();
 
         _local_uniform_buffer.cleanUp();
-        _sampler.cleanUp();
+        _tile_map_sampler.cleanUp();
+        _shadow_map_sampler.cleanUp();
 
         _renderer.cleanUp();
     }
@@ -60,7 +68,7 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void WorldRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd) {
+    void WorldRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout) {
 
         _last_used_chunk_ubo = -1;
         _renderer.resetDescriptorCache(1);
@@ -75,7 +83,8 @@ namespace cell {
         // updating + binding the local descriptor set
         _renderer.accquireDescriptorSet(1);
         _renderer.bindUniformBuffer(1, 0, _local_uniform_buffer.getBuffer());
-        _renderer.bindImage(1, 1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _sampler.getSampler());
+        _renderer.bindImage(1, 1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _tile_map_sampler.getSampler());
+        _renderer.bindImage(1, 2, shadow_map, shadow_map_layout, _shadow_map_sampler.getSampler());
         _renderer.bindDescriptorSet(cmd, 1);
 
         // binding the global descriptor set

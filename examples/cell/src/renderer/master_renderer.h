@@ -71,10 +71,11 @@ namespace cell {
         bool beginFrame(undicht::vulkan::SwapChain& swap_chain);
         void endFrame(undicht::vulkan::SwapChain& swap_chain);
 
+        // do before starting to render
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
 
         // shadow pass
-        void beginShadowPass(const DirectLight& light);
+        void beginShadowPass(const DirectLight& light); // only one shadow source for now
         void drawToShadowMap(const WorldBuffer& world);
 
         // main pass

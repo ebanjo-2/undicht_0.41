@@ -22,12 +22,14 @@ namespace cell {
 
         // global uniform buffer (contains global uniform data, such as the players camera)
         _global_uniform_buffer.init(device, BufferLayout({
-            UND_MAT4F, // view
-            UND_MAT4F, // proj
-            UND_MAT4F, // inverse view
-            UND_MAT4F, // inverse projection
-            UND_VEC2F, // viewport size
-            UND_VEC2F, // inverse viewport size
+            UND_MAT4F, // 0 view
+            UND_MAT4F, // 1 proj
+            UND_MAT4F, // 2 inverse view
+            UND_MAT4F, // 3 inverse projection
+            UND_VEC2F, // 4 viewport size
+            UND_VEC2F, // 5 inverse viewport size
+            UND_MAT4F, // 6 shadow view matrix
+            UND_MAT4F, // 7 shadow proj matrix
         }));
 
         // global descriptor set
@@ -115,19 +117,23 @@ namespace cell {
         _global_uniform_buffer.setAttribute(2, glm::value_ptr(inv_view), 16 * sizeof(float));
         _global_uniform_buffer.setAttribute(3, glm::value_ptr(inv_proj), 16 * sizeof(float));
 
-        _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
     }
 
     void MasterRenderer::beginShadowPass(const DirectLight& light) {
 
         _current_pass = SHADOW_PASS;
 
+        // loading the global shadow source
+        _global_uniform_buffer.setAttribute(6, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(7, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
+        _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+
         undicht::vulkan::Framebuffer& frame_buffer = _shadow_map_target.getFramebuffer(_swap_image_id);
         VkClearValue depth_clear_value{1.0f, 0};
 
         _draw_cmd.beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
-    
-        _shadow_renderer.beginFrame(light, _draw_cmd);
+        _shadow_renderer.beginFrame(light, _draw_cmd, _global_descriptor_set);
+
     }
 
     void MasterRenderer::drawToShadowMap(const WorldBuffer& world) {
@@ -152,19 +158,23 @@ namespace cell {
         VkClearValue light_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
 
         std::vector<VkClearValue> clear_values = {
-            visible_clear_value, 
+            visible_clear_value,
             depth_clear_value,
-            material_clear_value, 
-            normal_clear_value, 
+            material_clear_value,
+            normal_clear_value,
             light_clear_value,
         };
 
         _draw_cmd.beginRenderPass(_main_render_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _viewport, clear_values);
+
     }
 
     void MasterRenderer::beginGeometrySubPass(const MaterialAtlas& materials) {
 
-        _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd);
+        const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
+        const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+        _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd, shadow_map, shadow_map_layout);
     }
 
     void MasterRenderer::drawWorld(const WorldBuffer& world) {
@@ -192,7 +202,7 @@ namespace cell {
         const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
         const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
-        _light_renderer.draw(light, shadow_map, shadow_map_layout, _draw_cmd);
+        _light_renderer.draw(light, _draw_cmd);
     }
 
     void MasterRenderer::beginFinalSubPass(float exposure) {
@@ -218,7 +228,6 @@ namespace cell {
         _global_uniform_buffer.setAttribute(5, inv_viewport, 2 * sizeof(float));
 
         _main_render_target.resize(_viewport, &swap_chain);
-        //_shadow_map_target.resize(_viewport);
 
         _world_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _light_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
@@ -270,8 +279,8 @@ namespace cell {
 
         // geometry subpass
         _main_render_target.addSubPass(
-            {1, 2, 3},
-            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
+            {1, 2, 3, 4},
+            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
         );
         // lighting subpass
         _main_render_target.addSubPass(
@@ -283,15 +292,6 @@ namespace cell {
         // lighting subpass waits for the geometry subpass at the fragment shader stage
         _main_render_target.addSubPassDependency(
             0,
-            1,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            VK_ACCESS_SHADER_READ_BIT
-        );
-        // wait for the shadow pass to finish
-        _main_render_target.addSubPassDependency(
-            VK_SUBPASS_EXTERNAL,
             1,
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,

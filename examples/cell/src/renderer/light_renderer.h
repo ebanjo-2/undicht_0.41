@@ -29,7 +29,6 @@ namespace cell {
         undicht::vulkan::Renderer _point_light_renderer;
         undicht::vulkan::Renderer _direct_light_renderer;
         undicht::vulkan::Sampler _tile_map_sampler;
-        undicht::vulkan::Sampler _shadow_map_sampler;
         undicht::vulkan::DescriptorSetCache _descriptor_cache;
 
         undicht::vulkan::UniformBuffer _local_ubo;
@@ -47,7 +46,7 @@ namespace cell {
 
         void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView material, VkImageView normal);
         void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
-        void draw(const DirectLight& light, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, undicht::vulkan::CommandBuffer& cmd);
+        void draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd);
 
     };
 

@@ -13,6 +13,7 @@ layout(location = 1) out flat vec2 material;
 layout(location = 2) out vec3 pos_rel_cam;
 layout(location = 3) out vec3 normal_rel_cam;
 layout(location = 4) out vec2 cell_uv;
+layout(location = 5) out vec4 pos_on_shadow_map;
 
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
@@ -21,6 +22,8 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 inv_proj;
 	vec2 viewport;
 	vec2 inv_viewport;
+	mat4 shadow_view;
+	mat4 shadow_proj;
 } global;
 
 layout(set = 1, binding = 0) uniform LocalUBO {
@@ -46,6 +49,8 @@ void main() {
 	cell_uv = calcCellUv(vertex_pos, aFaceID);
 	pos_rel_cam = (global.view * world_pos).xyz;
 	normal_rel_cam = normalize(mat3(global.view) * calcCellNormal(aFaceID));
+	pos_on_shadow_map = global.shadow_proj * global.shadow_view * world_pos;
+	pos_on_shadow_map = pos_on_shadow_map.xyz / pos_on_shadow_map.w
 
 	gl_Position = global.proj * global.view * world_pos;
 	gl_Position.y = -gl_Position.y; // positive y is up, change my mind

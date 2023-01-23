@@ -12,6 +12,8 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 inv_proj;
 	vec2 viewport;
 	vec2 inv_viewport;
+	mat4 shadow_view;
+	mat4 shadow_proj;
 } global;
 
 layout(set = 1, binding = 0) uniform LocalUBO {
@@ -76,11 +78,11 @@ void main() {
         
     vec3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular     = numerator / denominator;  
+    vec3 specular     = numerator / denominator;
             
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);
-    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 1.0f); 
+    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f); 
 
 }
 

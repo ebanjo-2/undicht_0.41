@@ -22,7 +22,7 @@ void main() {
     // so gamma correction will be done automatically
     //mapped = pow(mapped, vec3(1.0 / local.gamma)); // gamma correction 
   
-
+    //out_color = vec4(subpassLoad(input_light).a);
     //out_color = vec4(hdr_color, 1.0);
     out_color = vec4(mapped, 1.0);
 }

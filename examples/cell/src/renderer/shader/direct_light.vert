@@ -16,8 +16,6 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 
 // inputs specific to this type of light renderer
 layout(set = 2, binding = 0) uniform LightUBO {
-	mat4 view;
-	mat4 proj;
 	vec3 color;
     vec3 direction;
 } light;

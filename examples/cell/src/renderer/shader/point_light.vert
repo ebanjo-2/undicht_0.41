@@ -18,6 +18,8 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 inv_proj;
 	vec2 viewport;
 	vec2 inv_viewport;
+	mat4 shadow_view;
+	mat4 shadow_proj;
 } global;
 
 void main() {

@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(false, true);
+        undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -35,7 +35,7 @@ namespace cell {
 
         // setting some cells for testing
         std::vector<Cell> cells = {
-            Cell(0, 0, 0, 255, 1, 255, grass),
+            Cell(0, 0, 0, 255, 1, 255, sand),
             Cell(50, 1, 50, 100, 21, 70, grass),
             Cell(65, 21, 50, 85, 50, 70, sand),
             Cell(5, 5, 5, 6, 7, 6, grass),
@@ -54,8 +54,7 @@ namespace cell {
         _lights.addPointLight(PointLight(glm::vec3(10.5,20.5,20.5),glm::vec3(50.0,50.0,50.0)));
         _lights.addPointLight(PointLight(glm::vec3(15.5,3.5,50.5),glm::vec3(1.0,0.0,1.0)));
 
-        _sun.setColor(glm::vec3(23.47, 21.31, 20.79));
-        //_sun.setColor(glm::vec3(1.0,0.0,1.0));
+        _sun.setColor(glm::vec3(23.47, 21.31, 20.79) * 0.01f);
         _sun.setDirection(glm::vec3(1, -1, -1)); // will get normalized
         _sun.setShadowOrigin(glm::vec3(5, 50, 50));
 
@@ -90,18 +89,14 @@ namespace cell {
 
         // updating the world
         _player.move(getDeltaT(), _main_window);
-        //_sun._shadow_view = _player.getViewMatrix();
-        //_sun.setShadowOrigin(_player.getPosition());
-        //_sun.setDirection(_player.getViewDirection());
-        //_sun._shadow_proj = _player.getCameraProjectionMatrix();
 
         // checking if the window is minimized
         if(_main_window.isMinimized())
             return;
 
         // drawing a new frame
+        _master_renderer.loadPlayerCamera(_player);
         if(_master_renderer.beginFrame(_swap_chain)) {
-            _master_renderer.loadPlayerCamera(_player);
             
             // shadow pass
             _master_renderer.beginShadowPass(_sun);
@@ -114,7 +109,7 @@ namespace cell {
             _master_renderer.beginLightSubPass(_materials);
             _master_renderer.drawLights(_lights);
             _master_renderer.drawLight(_sun);
-            _master_renderer.beginFinalSubPass(1.5f);
+            _master_renderer.beginFinalSubPass(50.0f);
             _master_renderer.drawFinal();
 
             _master_renderer.endFrame(_swap_chain);

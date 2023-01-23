@@ -32,7 +32,8 @@ namespace cell {
         _point_light_renderer.setDepthStencilTest(true, false, VK_COMPARE_OP_GREATER);
         _point_light_renderer.setRasterizer(true, true);
         _point_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        _point_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); // hdr buffer, just add the light intensities
+        // hdr buffer, just add the light intensities
+        _point_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); 
         _point_light_renderer.init(viewport, render_pass, subpass);
 
         // setting up the direct light renderer
@@ -40,12 +41,13 @@ namespace cell {
         _direct_light_renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/direct_light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/direct_light.frag.spv");
         _direct_light_renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global descriptors
         _direct_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
-        _direct_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER}, 2, 1); // light specific descriptors
+        _direct_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 2, 1); // light specific descriptors
         _direct_light_renderer.setVertexInputLayout(SCREEN_QUAD_VERTEX_LAYOUT);
         _direct_light_renderer.setDepthStencilTest(false, false);
         _direct_light_renderer.setRasterizer(false);
         _direct_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        _direct_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); // hdr buffer, just add the light intensities
+         // hdr buffer, just add the light intensities (multiplied by the shadow effect determined by the world renderer)
+        _direct_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_DST_ALPHA, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE);
         _direct_light_renderer.init(viewport, render_pass, subpass);
 
         // Sampler
@@ -54,22 +56,15 @@ namespace cell {
         _tile_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
         _tile_map_sampler.init(gpu.getDevice());
 
-        _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
-        _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
-        _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-        _shadow_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
-        _shadow_map_sampler.init(gpu.getDevice());
-
         // local uniform buffer
         // contains the tile map's tile size 
         _local_ubo.init(gpu, BufferLayout({UND_VEC2F}));
 
         // per light ubo (only used by the direct lights at the moment)
-        // shadow view matrix
-        // shadow proj matrix
+
         // light color
         // light direction
-        _light_ubo.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F, UND_VEC3F, UND_VEC3F}));
+        _light_ubo.init(gpu, BufferLayout({UND_VEC3F, UND_VEC3F}));
     }
 
     void LightRenderer::cleanUp() {
@@ -80,7 +75,6 @@ namespace cell {
         _local_descriptor_layout.cleanUp();
         _descriptor_cache.cleanUp();
         _tile_map_sampler.cleanUp();
-        _shadow_map_sampler.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
     }
@@ -123,20 +117,16 @@ namespace cell {
         _point_light_renderer.bindPipeline(cmd);
         _point_light_renderer.bindVertexBuffer(cmd, lights.getPointLightBuffer(), false, true);
         _point_light_renderer.draw(cmd, lights.getPointLightModelVertexCount(), false, lights.getPointLightCount());
-
     }
 
-    void LightRenderer::draw(const DirectLight& light, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, undicht::vulkan::CommandBuffer& cmd) {
+    void LightRenderer::draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd) {
         
         // storing the lights data in the ubo
-        _light_ubo.setAttribute(0, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
-        _light_ubo.setAttribute(1, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
-        _light_ubo.setAttribute(2, glm::value_ptr(light.getColor()), 3 * sizeof(float));
-        _light_ubo.setAttribute(3, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
+        _light_ubo.setAttribute(0, glm::value_ptr(light.getColor()), 3 * sizeof(float));
+        _light_ubo.setAttribute(1, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
 
         _direct_light_renderer.accquireDescriptorSet(2);
         _direct_light_renderer.bindUniformBuffer(2, 0, _light_ubo.getBuffer());
-        _direct_light_renderer.bindImage(2, 1, shadow_map, shadow_map_layout, _shadow_map_sampler.getSampler());
         _direct_light_renderer.bindDescriptorSet(cmd, 2);
 
         _direct_light_renderer.bindPipeline(cmd);
