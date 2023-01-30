@@ -40,7 +40,7 @@ namespace cell {
             Cell(65, 21, 50, 85, 50, 70, sand),
             Cell(5, 5, 5, 6, 7, 6, grass),
             Cell(20, 4, 10, 44, 8, 34, gold),
-            Cell(0, 10, 30, 1, 11, 31, gold),
+            Cell(0, 1, 30, 1, 11, 31, gold),
         };
 
         _world.loadChunk(glm::ivec3(0,0,0), cells);
@@ -88,6 +88,8 @@ namespace cell {
         }
 
         // updating the world
+        _sun.setDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), -0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        _sun.setShadowOrigin(glm::vec3(0,0,50) + -100.0f * _sun.getDirection()); // rotating the sun pointing at 0,0,50
         _player.move(getDeltaT(), _main_window);
 
         // checking if the window is minimized
@@ -107,10 +109,10 @@ namespace cell {
             _master_renderer.beginGeometrySubPass(_materials);
             _master_renderer.drawWorld(_world.getWorldBuffer());
             _master_renderer.beginLightSubPass(_materials);
-            _master_renderer.drawLights(_lights);
             _master_renderer.drawLight(_sun);
-            _master_renderer.beginFinalSubPass(50.0f);
-            _master_renderer.drawFinal();
+            _master_renderer.drawLights(_lights);
+            _master_renderer.beginFinalSubPass();
+            _master_renderer.drawFinal(50.0f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

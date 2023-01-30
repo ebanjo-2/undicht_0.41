@@ -119,6 +119,12 @@ namespace undicht {
         return std::chrono::duration<double, std::milli>(_this_frame_time - _last_frame_time).count() ;
     }
 
+    double Engine::getTimeSinceEpoch() const {
+
+        return _this_frame_time.time_since_epoch().count();
+    }
+
+
     ////////////////////////////////////////////////////////////////////////
 
     void Engine::onWindowResize() {

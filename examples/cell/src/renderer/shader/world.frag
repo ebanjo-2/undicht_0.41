@@ -41,6 +41,8 @@ void main() {
 	out_material.zw = fract(cell_uv);
 	out_normal = vec4(normal_rel_cam, gl_FragCoord.z);
 	out_light = vec4(0.0f, 0.0f, 0.0f, isInLight(pos_on_shadow_map)); // store isInLight in the alpha channel;
+
+	//out_light = vec4(pow(texture(shadow_map, global.inv_viewport * gl_FragCoord.xy).r, 4));
 }
 
 float isInLight(vec4 pos_on_shadow_map) {

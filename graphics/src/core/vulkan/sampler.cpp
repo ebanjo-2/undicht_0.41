@@ -19,6 +19,12 @@ namespace undicht {
             _repeat_mode = mode;
         }
 
+        void Sampler::setBorderColor(VkBorderColor color) {
+
+            _border_color = color;
+        }
+
+
         void Sampler::setMipMapMode(VkSamplerMipmapMode mode) {
             
             _mip_map_mode = mode;
@@ -29,7 +35,7 @@ namespace undicht {
 
             _device_handle = device;
 
-            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, _repeat_mode, _mip_map_mode, false, 1.0f);
+            VkSamplerCreateInfo info = createSamplerCreateInfo(_min_filter, _max_filter, _repeat_mode, _border_color, _mip_map_mode, false, 1.0f);
             vkCreateSampler(_device_handle, &info, {}, &_sampler);
 
         }
@@ -47,7 +53,7 @@ namespace undicht {
 
         //////////////////////////// creating sampler related structs /////////////////////////////
 
-        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerAddressMode repeat_mode, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy) {
+        VkSamplerCreateInfo Sampler::createSamplerCreateInfo(VkFilter min_filter, VkFilter max_filter, VkSamplerAddressMode repeat_mode, VkBorderColor border_color, VkSamplerMipmapMode mip_map_mode, bool anisotropy, float max_anisotropy) {
             
             VkSamplerCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -59,7 +65,7 @@ namespace undicht {
             info.addressModeW = repeat_mode;
             info.anisotropyEnable = anisotropy;
             info.maxAnisotropy = max_anisotropy;
-            info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+            info.borderColor = border_color;
             info.unnormalizedCoordinates = VK_FALSE; // use uv range of [0,1] instead of the actual pixel size
             info.compareEnable = VK_FALSE;
             info.compareOp = VK_COMPARE_OP_ALWAYS;

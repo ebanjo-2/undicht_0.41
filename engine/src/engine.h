@@ -65,6 +65,8 @@ namespace undicht {
         /** time in milliseconds since last frame started */
         double getDeltaT() const;
 
+        double getTimeSinceEpoch() const;
+
     protected:
         // default event handling
 

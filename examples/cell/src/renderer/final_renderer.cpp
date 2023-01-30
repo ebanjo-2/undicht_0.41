@@ -57,20 +57,22 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, float exposure, VkImageView light) {
+    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, VkImageView light_hdr) {
 
         _renderer.resetDescriptorCache(1);
         _renderer.accquireDescriptorSet(1);
         
-        // updating the local ubo
-        _local_ubo.setAttribute(0, &exposure, sizeof(float));
-        _renderer.bindUniformBuffer(1, 0, _local_ubo.getBuffer());
-        _renderer.bindInputAttachment(1, 1, light);
-        _renderer.bindDescriptorSet(cmd, 1);
+        // binding the light hdr texture
+        _renderer.bindInputAttachment(1, 1, light_hdr);
 
     }
 
-    void FinalRenderer::draw(undicht::vulkan::CommandBuffer& cmd) {
+    void FinalRenderer::draw(undicht::vulkan::CommandBuffer& cmd, float exposure) {
+
+        // update + bind local ubo
+        _local_ubo.setAttribute(0, &exposure, sizeof(float));
+        _renderer.bindUniformBuffer(1, 0, _local_ubo.getBuffer());
+        _renderer.bindDescriptorSet(cmd, 1);
 
         _renderer.bindPipeline(cmd);
         _renderer.bindVertexBuffer(cmd, _screen_quad);

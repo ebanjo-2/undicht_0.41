@@ -50,7 +50,6 @@ void main() {
 	pos_rel_cam = (global.view * world_pos).xyz;
 	normal_rel_cam = normalize(mat3(global.view) * calcCellNormal(aFaceID));
 	pos_on_shadow_map = global.shadow_proj * global.shadow_view * world_pos;
-	pos_on_shadow_map = pos_on_shadow_map.xyz / pos_on_shadow_map.w
 
 	gl_Position = global.proj * global.view * world_pos;
 	gl_Position.y = -gl_Position.y; // positive y is up, change my mind

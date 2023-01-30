@@ -49,9 +49,12 @@ namespace cell {
         undicht::vulkan::Semaphore _render_finished_semaphore;
         undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
+        // keeping track of which pass were currently in
         Pass _current_pass = NO_PASS;
 
         // shadow pass
+        const uint32_t _SHADOW_MAP_WIDTH = 512;
+        const uint32_t _SHADOW_MAP_HEIGHT = 512;
         undicht::vulkan::RenderTarget _shadow_map_target;
         ShadowRenderer _shadow_renderer;
 
@@ -75,7 +78,7 @@ namespace cell {
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
 
         // shadow pass
-        void beginShadowPass(const DirectLight& light); // only one shadow source for now
+        void beginShadowPass(const DirectLight& global_shadow_source); // only one shadow source for now
         void drawToShadowMap(const WorldBuffer& world);
 
         // main pass
@@ -85,8 +88,8 @@ namespace cell {
         void beginLightSubPass(const MaterialAtlas& materials);
         void drawLights(const LightBuffer& lights);
         void drawLight(const DirectLight& light);
-        void beginFinalSubPass(float exposure = 1.0f);
-        void drawFinal();
+        void beginFinalSubPass();
+        void drawFinal(float exposure = 1.0f);
 
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
       

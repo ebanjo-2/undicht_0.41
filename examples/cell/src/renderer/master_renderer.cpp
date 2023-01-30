@@ -37,10 +37,10 @@ namespace cell {
         _global_descriptor_layout.init(device.getDevice());
         _global_descriptor_cache.init(device, {_global_descriptor_layout}, {1});
 
-        initShadowRenderTarget(device, {512, 512}, swap_chain.getSwapImageCount());
+        initShadowRenderTarget(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, swap_chain.getSwapImageCount());
         initMainRenderTarget(device, swap_chain);
 
-        _shadow_renderer.init(device, {512, 512}, _shadow_map_target.getRenderPass(), 0);
+        _shadow_renderer.init(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, _shadow_map_target.getRenderPass(), 0);
         _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0);
         _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
         _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
@@ -86,6 +86,9 @@ namespace cell {
         _draw_cmd.resetCommandBuffer();
         _draw_cmd.beginCommandBuffer(true);
 
+        // bind global ubo in case no shadow pass is started, in which case the ubo will be rebound
+        _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+
         return true;
     }
 
@@ -119,20 +122,19 @@ namespace cell {
 
     }
 
-    void MasterRenderer::beginShadowPass(const DirectLight& light) {
+    void MasterRenderer::beginShadowPass(const DirectLight& global_shadow_source) {
 
         _current_pass = SHADOW_PASS;
 
         // loading the global shadow source
-        _global_uniform_buffer.setAttribute(6, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
-        _global_uniform_buffer.setAttribute(7, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
-        _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+        _global_uniform_buffer.setAttribute(6, glm::value_ptr(global_shadow_source.getShadowView()), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(7, glm::value_ptr(global_shadow_source.getShadowProj()), 16 * sizeof(float));
 
         undicht::vulkan::Framebuffer& frame_buffer = _shadow_map_target.getFramebuffer(_swap_image_id);
         VkClearValue depth_clear_value{1.0f, 0};
 
         _draw_cmd.beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
-        _shadow_renderer.beginFrame(light, _draw_cmd, _global_descriptor_set);
+        _shadow_renderer.beginFrame(global_shadow_source, _draw_cmd, _global_descriptor_set);
 
     }
 
@@ -199,24 +201,21 @@ namespace cell {
 
     void MasterRenderer::drawLight(const DirectLight& light) {
 
-        const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
-        const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
         _light_renderer.draw(light, _draw_cmd);
     }
 
-    void MasterRenderer::beginFinalSubPass(float exposure) {
+    void MasterRenderer::beginFinalSubPass() {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
-        const VkImageView& light = _main_render_target.getAttachment(_swap_image_id, 4);
+        const VkImageView& light_hdr = _main_render_target.getAttachment(_swap_image_id, 4);
 
-        _final_renderer.beginFrame(_draw_cmd, exposure, light);
+        _final_renderer.beginFrame(_draw_cmd, light_hdr);
     }
 
-    void MasterRenderer::drawFinal() {
+    void MasterRenderer::drawFinal(float exposure) {
 
-        _final_renderer.draw(_draw_cmd);
+        _final_renderer.draw(_draw_cmd, exposure);
     }
 
     void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {

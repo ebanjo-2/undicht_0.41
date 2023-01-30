@@ -41,7 +41,8 @@ namespace cell {
 
         _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
         _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
-        _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+        _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER);
+        _shadow_map_sampler.setBorderColor(VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE);
         _shadow_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
         _shadow_map_sampler.init(gpu.getDevice());
 
