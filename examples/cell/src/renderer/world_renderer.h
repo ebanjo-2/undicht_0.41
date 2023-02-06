@@ -27,7 +27,6 @@ namespace cell {
 
         // renderer
         undicht::vulkan::Sampler _tile_map_sampler;
-        undicht::vulkan::Sampler _shadow_map_sampler;
         undicht::vulkan::Renderer _renderer;
         undicht::vulkan::UniformBuffer _local_uniform_buffer;
         std::vector<undicht::vulkan::UniformBuffer> _per_chunk_uniform_buffer;
@@ -40,7 +39,7 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
         
-        void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout);
+        void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd);
         void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd);
 
       protected:

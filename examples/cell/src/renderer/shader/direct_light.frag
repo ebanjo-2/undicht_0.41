@@ -17,23 +17,31 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 // inputs for all light renderers
 layout(set = 1, binding = 0) uniform LocalUBO {
 	vec2 tile_map_unit;
+    ivec2 shadow_offset_texture_size;
+    ivec2 shadow_offset_filter_size;
 } local;
 
 layout (set = 1, binding = 1) uniform sampler2DArray tile_map;
+layout (set = 1, binding = 2) uniform sampler3D shadow_offsets;
 
-layout (set = 1, input_attachment_index = 0, binding = 2) uniform subpassInput input_material;
-layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal; // contains the normal data + depth
+layout (set = 1, input_attachment_index = 0, binding = 3) uniform subpassInput input_material;
+layout (set = 1, input_attachment_index = 1, binding = 4) uniform subpassInput input_normal; // contains the normal data + depth
+layout (set = 1, input_attachment_index = 2, binding = 5) uniform subpassInput input_shadow_map_pos; // position of the fragment on the shadow map
 
 // inputs specific to this type of light renderer
 layout(set = 2, binding = 0) uniform LightUBO {
 	vec3 color;
     vec3 direction;
+    vec2 shadow_map_unit;
 } light;
+
+layout (set = 2, binding = 1) uniform sampler2D shadow_map;
 
 
 // reading the inputs
 vec3 calcFragPosRelCam(float depth);
 vec2 getTileMapUV();
+float isInLight(vec3 N, vec3 L);
 
 // pbr math functions
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
@@ -42,6 +50,7 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 const float PI = 3.14159265359;
+
 
 void main() {
 
@@ -87,8 +96,8 @@ void main() {
             
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);
-    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f);
-
+    out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f) * isInLight(N, L);
+    //out_color = subpassLoad(input_shadow_map_pos);
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -120,6 +129,59 @@ vec2 getTileMapUV() {
 	vec2 tile_map_uv = (material + cell_uv * 0.99) * local.tile_map_unit;
 
 	return tile_map_uv;
+}
+
+float isInLight(vec3 N, vec3 L) {
+
+    vec4 pos_on_shadow_map = subpassLoad(input_shadow_map_pos); // pos of this fragment on the shadow 
+    vec3 shadow_coords = vec3(0.0, 0.0, min(pos_on_shadow_map.z, 1.0f)); // going to contain the position on the shadow map per sample
+    ivec2 current_filter = ivec2(mod(gl_FragCoord.xy, vec2(local.shadow_offset_texture_size))); // filter for the current fragment
+    ivec3 offset_coord = ivec3(0, current_filter); // going to be used to access a offset from the 3D offset texture
+
+    float random_sample_radius = 1.0f;
+    float bias = mix(0.01, 0.0, dot(N, L));
+    int shadow_sum = 0;
+
+    // ring 0 contains the offsets that are the furthest from the fragment
+    int ring;
+    int total_rings = local.shadow_offset_filter_size.x;
+    int samples_per_ring = local.shadow_offset_filter_size.y;
+
+    for(ring = 0; ring < total_rings; ring++) {
+
+        int ring_sum = 0;
+
+        // testing the samples on the current ring (2 at a time)
+        for(int i = 0; i < samples_per_ring / 2; i++) {
+
+            offset_coord.x = (ring * samples_per_ring / 2 + i); // 2 samples per texel (rg and ba)
+            vec4 offsets = texelFetch(shadow_offsets, offset_coord, 0) * random_sample_radius;
+            float dist;
+
+            // first sample
+            shadow_coords.xy = pos_on_shadow_map.xy + offsets.rg * light.shadow_map_unit;
+            dist = shadow_coords.z - texture(shadow_map, shadow_coords.xy).r;
+            ring_sum += ((dist > bias) ? 1 : 0);
+
+            // second sample
+            shadow_coords.xy = pos_on_shadow_map.xy + offsets.ba * light.shadow_map_unit;
+            dist = shadow_coords.z - texture(shadow_map, shadow_coords.xy).r;
+            ring_sum += ((dist > bias) ? 1 : 0);
+
+        }
+
+        // adding the result of testing from this ring to the total shadow sum
+        shadow_sum += ring_sum;
+
+        // if all of the samples on this ring were in shadow or light -> not going to test the inner rings
+        if((ring_sum == samples_per_ring) || (ring_sum == 0))
+            break;
+
+    }
+
+    float shadow = float(shadow_sum) / ((ring + 1) * samples_per_ring);
+
+    return 1.0f - shadow; // light;
 }
 
 //////////////////////////////////////////// pbr math functions ////////////////////////////////////////////

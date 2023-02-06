@@ -25,7 +25,9 @@ namespace undicht {
                 {UND_INT16, VK_FORMAT_R16_SINT},
                 {UND_INT32, VK_FORMAT_R32_SINT},
                 {UND_INT64, VK_FORMAT_R64_SINT},
-                {UND_R8, VK_FORMAT_R8_SRGB},
+                {UND_R8, VK_FORMAT_R8_UNORM},
+                {UND_R8_SRGB, VK_FORMAT_R8_SRGB},
+                {UND_R16, VK_FORMAT_R16_UNORM},
 
                 // types with 2 components
                 {UND_VEC2F, VK_FORMAT_R32G32_SFLOAT},
@@ -36,7 +38,9 @@ namespace undicht {
                 {FixedType(Type::INT, 2, 2), VK_FORMAT_R16G16_SINT},
                 {FixedType(Type::INT, 4, 2), VK_FORMAT_R32G32_SINT},
                 {FixedType(Type::INT, 8, 2), VK_FORMAT_R64G64_SINT},
-                {UND_R8G8, VK_FORMAT_R8G8_SRGB},
+                {UND_R8G8, VK_FORMAT_R8G8_UNORM},
+                {UND_R16G16, VK_FORMAT_R16G16_UNORM},
+                {UND_R8G8_SRGB, VK_FORMAT_R8G8_SRGB},
 
                 // types with 3 components
                 {UND_VEC3F, VK_FORMAT_R32G32B32_SFLOAT},
@@ -47,8 +51,11 @@ namespace undicht {
                 {FixedType(Type::INT, 2, 3), VK_FORMAT_R16G16B16_SINT},
                 {FixedType(Type::INT, 4, 3), VK_FORMAT_R32G32B32_SINT},
                 {FixedType(Type::INT, 8, 3), VK_FORMAT_R64G64B64_SINT},
-                {UND_R8G8B8, VK_FORMAT_R8G8B8_SRGB},
-                {UND_B8G8R8, VK_FORMAT_B8G8R8_SRGB},
+                {UND_R8G8B8, VK_FORMAT_R8G8B8_UNORM},
+                {UND_R16G16B16, VK_FORMAT_R8G8B8_UNORM},
+                {UND_B8G8R8, VK_FORMAT_B8G8R8_UNORM},
+                {UND_R8G8B8_SRGB, VK_FORMAT_R8G8B8_SRGB},
+                {UND_B8G8R8_SRGB, VK_FORMAT_B8G8R8_SRGB},
 
                 // types with 4 components
                 {UND_VEC4F, VK_FORMAT_R32G32B32A32_SFLOAT},
@@ -59,8 +66,11 @@ namespace undicht {
                 {FixedType(Type::INT, 2, 4), VK_FORMAT_R16G16B16A16_SINT},
                 {FixedType(Type::INT, 4, 4), VK_FORMAT_R32G32B32A32_SINT},
                 {FixedType(Type::INT, 8, 4), VK_FORMAT_R64G64B64A64_SINT},
-                {UND_R8G8B8A8, VK_FORMAT_R8G8B8A8_SRGB},
-                {UND_B8G8R8A8, VK_FORMAT_B8G8R8A8_SRGB},
+                {UND_R8G8B8A8, VK_FORMAT_R8G8B8A8_UNORM},
+                {UND_R16G16B16A16, VK_FORMAT_R16G16B16A16_UNORM},
+                {UND_B8G8R8A8, VK_FORMAT_B8G8R8A8_UNORM},
+                {UND_R8G8B8A8_SRGB, VK_FORMAT_R8G8B8A8_SRGB},
+                {UND_B8G8R8A8_SRGB, VK_FORMAT_B8G8R8A8_SRGB},
 
                 // depth buffer formats
                 {UND_DEPTH32F, VK_FORMAT_D32_SFLOAT},

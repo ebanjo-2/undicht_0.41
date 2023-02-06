@@ -21,7 +21,7 @@ namespace cell {
         _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 2, 1000); // chunk specific descriptors
         _renderer.setVertexInputLayout(CUBE_VERTEX_LAYOUT, CELL_LAYOUT);
         _renderer.setDepthStencilTest(true, true);
-        _renderer.setRasterizer(true, true);
+        _renderer.setRasterizer(true, true, false);
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         //_renderer.setBlending(0, false);
         _renderer.init(viewport, render_pass, subpass);

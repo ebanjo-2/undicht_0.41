@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(true, true);
+        undicht::Engine::init(false, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -88,7 +88,7 @@ namespace cell {
         }
 
         // updating the world
-        _sun.setDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), -0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        _sun.setDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), -1.0, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
         _sun.setShadowOrigin(glm::vec3(0,0,50) + -100.0f * _sun.getDirection()); // rotating the sun pointing at 0,0,50
         _player.move(getDeltaT(), _main_window);
 
@@ -112,7 +112,7 @@ namespace cell {
             _master_renderer.drawLight(_sun);
             _master_renderer.drawLights(_lights);
             _master_renderer.beginFinalSubPass();
-            _master_renderer.drawFinal(50.0f);
+            _master_renderer.drawFinal(25.0f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

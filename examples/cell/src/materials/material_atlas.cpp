@@ -16,7 +16,7 @@ namespace cell {
     const int32_t MaterialAtlas::TILE_MAP_HEIGHT = TILE_HEIGHT * 64; // 16 * 64 = 1024
     const int32_t MaterialAtlas::TILE_MAP_COLS = TILE_MAP_WIDTH / TILE_WIDTH;
     const int32_t MaterialAtlas::TILE_MAP_ROWS = TILE_MAP_HEIGHT / TILE_HEIGHT;
-    const FixedType MaterialAtlas::TILE_MAP_FORMAT = UND_R8G8B8A8;
+    const FixedType MaterialAtlas::TILE_MAP_FORMAT = UND_R8G8B8A8_SRGB;
 
     void MaterialAtlas::init(const undicht::vulkan::LogicalDevice& device) {
 

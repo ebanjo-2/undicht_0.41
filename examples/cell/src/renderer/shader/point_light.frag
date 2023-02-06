@@ -18,12 +18,13 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 
 layout(set = 1, binding = 0) uniform LocalUBO {
 	vec2 tile_map_unit;
+    ivec2 shadow_offset_texture_size;
 } local;
 
 layout (set = 1, binding = 1) uniform sampler2DArray tile_map;
 
-layout (set = 1, input_attachment_index = 0, binding = 2) uniform subpassInput input_material;
-layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal; // contains the normal data + depth
+layout (set = 1, input_attachment_index = 0, binding = 3) uniform subpassInput input_material;
+layout (set = 1, input_attachment_index = 1, binding = 4) uniform subpassInput input_normal; // contains the normal data + depth
 
 // reading the inputs
 vec3 calcFragPosRelCam(float depth);

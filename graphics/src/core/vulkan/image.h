@@ -43,7 +43,7 @@ namespace undicht {
             // creating image related structs
 
             VkImageCreateInfo static createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage);
-            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, const VkFormat& format, VkImageAspectFlags flags);
+            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, const VkFormat& format, VkImageAspectFlags flags);
             VkMemoryAllocateInfo static createMemoryAllocateInfo(uint32_t byte_size, uint32_t mem_type_index);
 
         public:

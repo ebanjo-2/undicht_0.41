@@ -24,7 +24,7 @@ namespace undicht {
             _layers = 1;
 
             // creating the image view
-            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _mip_levels, _layers, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &info, {}, &_image_view);
 
         }
@@ -96,7 +96,7 @@ namespace undicht {
             vkBindImageMemory(_device_handle, _image, _memory, 0);
 
             // creating the image view
-            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &image_view_info, {}, &_image_view);
 
         }
@@ -121,10 +121,11 @@ namespace undicht {
             return info;
         }
 
-        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, const VkFormat& format, VkImageAspectFlags flags) {
+        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, const VkFormat& format, VkImageAspectFlags flags) {
 
             VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_2D;
 
+            if(extent.depth > 1) view_type = VK_IMAGE_VIEW_TYPE_3D;
             if(layer_count > 1) view_type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
             VkImageViewCreateInfo info{};

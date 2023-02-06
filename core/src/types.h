@@ -9,7 +9,9 @@ namespace undicht {
         UNSIGNED_INT,
         FLOAT,
         COLOR_BGRA, // reverse order of channels
+        COLOR_BGRA_SRGB,
         COLOR_RGBA,
+        COLOR_RGBA_SRGB,
         DEPTH_BUFFER,
         DEPTH_STENCIL_BUFFER,
     };
@@ -87,8 +89,21 @@ namespace undicht {
 #define UND_R8G8B8 FixedType(Type::COLOR_RGBA, 1, 3)
 #define UND_R8G8B8A8 FixedType(Type::COLOR_RGBA, 1, 4)
 
+#define UND_R8_SRGB FixedType(Type::COLOR_RGBA_SRGB, 1, 1)
+#define UND_R8G8_SRGB FixedType(Type::COLOR_RGBA_SRGB, 1, 2)
+#define UND_R8G8B8_SRGB FixedType(Type::COLOR_RGBA_SRGB, 1, 3)
+#define UND_R8G8B8A8_SRGB FixedType(Type::COLOR_RGBA_SRGB, 1, 4)
+
+#define UND_R16 FixedType(Type::COLOR_RGBA, 2, 1)
+#define UND_R16G16 FixedType(Type::COLOR_RGBA, 2, 2)
+#define UND_R16G16B16 FixedType(Type::COLOR_RGBA, 2, 3)
+#define UND_R16G16B16A16 FixedType(Type::COLOR_RGBA, 2, 4)
+
 #define UND_B8G8R8 FixedType(Type::COLOR_BGRA, 1, 3)
 #define UND_B8G8R8A8 FixedType(Type::COLOR_BGRA, 1, 4)
+
+#define UND_B8G8R8_SRGB FixedType(Type::COLOR_BGRA_SRGB, 1, 3)
+#define UND_B8G8R8A8_SRGB FixedType(Type::COLOR_BGRA_SRGB, 1, 4)
 
 #define UND_DEPTH32F undicht::FixedType(Type::DEPTH_BUFFER, 4, 1)
 #define UND_DEPTH32F_STENCIL8 undicht::FixedType(Type::DEPTH_STENCIL_BUFFER, 5, 1)

@@ -34,8 +34,11 @@ namespace undicht {
         }
 
         void Renderer::setDescriptorSetLayout(const std::vector<VkDescriptorType>& binding_types, uint32_t slot, uint32_t descriptor_pool_size) {
-            /// @brief set the layout of the resources used by the shaders
-            /// for example binding type 0 could be a uniform buffer, the binding 1 could be a image sampler
+            /** @brief tell the renderer to use an internal descriptor set layout at the specified slot
+             * the renderer will create the layout based on the specified binding_types,
+             * will create a descriptor pool for the layout (if descriptor_pool_size > 0)
+             * and will also handle the cleanup of the resources 
+            */
 
             DescriptorSetLayout layout;
 
@@ -49,6 +52,11 @@ namespace undicht {
         }
                     
         void Renderer::setDescriptorSetLayout(const undicht::vulkan::DescriptorSetLayout& layout, uint32_t slot, uint32_t descriptor_pool_size) {
+            /** @brief tell the renderer to use an extern descriptor set layout at the specified slot
+             * i.e. for global descriptors, like a global ubo containing the main camera matrices
+             * will create a descriptor pool for the layout (if descriptor_pool_size > 0)
+             * will handle the cleanup of the descriptor pool, but not of the external layout
+            */
 
             if(slot <= _descriptor_set_layouts.size()) {
                 _descriptor_set_layouts.resize(slot + 1);

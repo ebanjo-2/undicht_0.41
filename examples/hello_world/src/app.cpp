@@ -222,9 +222,9 @@ void HelloWorldApp::loadTexture(const undicht::tools::ImageData& data, undicht::
     }
     
     if(data._nr_channels == 3) {
-        loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8));
+        loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8_SRGB));
     } else {
-        loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8A8));
+        loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8A8_SRGB));
     }
 
     loadTo.init(_gpu);
