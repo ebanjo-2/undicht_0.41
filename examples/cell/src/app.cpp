@@ -9,7 +9,7 @@ namespace cell {
 
     void App::init() {
 
-        undicht::Engine::init(false, true);
+        undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -57,6 +57,8 @@ namespace cell {
         _sun.setColor(glm::vec3(23.47, 21.31, 20.79) * 0.01f);
         _sun.setDirection(glm::vec3(1, -1, -1)); // will get normalized
         _sun.setShadowOrigin(glm::vec3(5, 50, 50));
+
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_Ref.hdr");
 
     }
 
@@ -111,6 +113,7 @@ namespace cell {
             _master_renderer.beginLightSubPass(_materials);
             _master_renderer.drawLight(_sun);
             _master_renderer.drawLights(_lights);
+            //_master_renderer.drawAmbientLight(glm::vec3(0.02, 0.02, 0.02));
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(25.0f);
 

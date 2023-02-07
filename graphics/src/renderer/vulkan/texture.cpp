@@ -15,6 +15,13 @@ namespace undicht {
 
         }
 
+        void Texture::setCubeMap(bool is_cube_map) {
+            // the texture has to have 6 layers
+
+            _is_cube_map = is_cube_map;
+            _layers = 6;
+        }
+
         void Texture::setFormat(VkFormat format) {
 
             _format = format;
@@ -25,7 +32,6 @@ namespace undicht {
 
             _enable_mip_maps = enable_mip_maps;
         }
-
 
         void Texture::init(const LogicalDevice& device) {
 

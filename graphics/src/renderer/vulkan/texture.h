@@ -25,6 +25,7 @@ namespace undicht {
             uint32_t _mip_levels = 1;
             
             bool _enable_mip_maps = false;
+            bool _is_cube_map = false;
 
             VkFormat _format = VK_FORMAT_R8G8B8A8_SRGB;
             VkImageLayout _layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -37,6 +38,7 @@ namespace undicht {
 
             // set the settings before initializing the texture
             void setExtent(uint32_t width, uint32_t height, uint32_t depth = 1, uint32_t layers = 1);
+            void setCubeMap(bool is_cube_map = true); // the texture has to have 6 layers
             void setFormat(VkFormat format);
             void setMipMaps(bool enable_mip_maps);
 

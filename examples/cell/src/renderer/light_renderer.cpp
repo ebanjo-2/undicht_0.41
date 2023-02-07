@@ -4,6 +4,8 @@
 #include "core/vulkan/formats.h"
 #include <random>
 #include "glm/glm.hpp"
+#include "IBL/ibl.h"
+#include "array"
 
 namespace cell {
 
@@ -55,6 +57,20 @@ namespace cell {
         _direct_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE);
         _direct_light_renderer.init(viewport, render_pass, subpass);
 
+        // setting up the ambient light renderer
+        _ambient_light_renderer.setDeviceHandle(gpu);
+        _ambient_light_renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.frag.spv");
+        _ambient_light_renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global descriptors
+        _ambient_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
+        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 2, 1); // light specific descriptors
+        _ambient_light_renderer.setVertexInputLayout(SCREEN_QUAD_VERTEX_LAYOUT);
+        _ambient_light_renderer.setDepthStencilTest(false, false);
+        _ambient_light_renderer.setRasterizer(false);
+        _ambient_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+         // hdr buffer, just add the light intensities (multiplied by the shadow effect determined by the world renderer)
+        _ambient_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE);
+        _ambient_light_renderer.init(viewport, render_pass, subpass);
+
         // Sampler
         _tile_map_sampler.setMinFilter(VK_FILTER_NEAREST);
         _tile_map_sampler.setMaxFilter(VK_FILTER_NEAREST);
@@ -77,18 +93,25 @@ namespace cell {
         _shadow_sampler_offsets.init(gpu);
         _shadow_sampler_offsets.setData((const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
 
+        // environment cube map
+        _env_cube_map.setExtent(_env_cube_map_size, _env_cube_map_size, 1, 6);
+        _env_cube_map.setFormat(translate(UND_VEC4F)); // hdr
+        _env_cube_map.setCubeMap(true);
+        _env_cube_map.init(gpu);
+
         // local uniform buffer
         // tile map tile size
         // shadow map offset textures size
         // shadow offset filter size;
         _local_ubo.init(gpu, BufferLayout({UND_VEC2F, UND_VEC2I, UND_VEC2I}));
 
-        // per light ubo (only used by the direct lights at the moment)
-
         // light color
         // light direction
         // shadow map unit
-        _light_ubo.init(gpu, BufferLayout({UND_VEC3F, UND_VEC3F, UND_VEC2F}));
+        _direct_light_ubo.init(gpu, BufferLayout({UND_VEC3F, UND_VEC3F, UND_VEC2F}));
+
+        // ambient light color (includes intensity)
+        _ambient_light_ubo.init(gpu, BufferLayout({UND_VEC3F}));
 
     }
 
@@ -96,20 +119,41 @@ namespace cell {
         
         _screen_quad.cleanUp();
         _local_ubo.cleanUp();
-        _light_ubo.cleanUp();
+        _direct_light_ubo.cleanUp();
+        _ambient_light_ubo.cleanUp();
         _local_descriptor_layout.cleanUp();
         _descriptor_cache.cleanUp();
         _tile_map_sampler.cleanUp();
         _shadow_map_sampler.cleanUp();
         _shadow_sampler_offsets.cleanUp();
+        _env_cube_map.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
+        _ambient_light_renderer.cleanUp();
     }
 
     void LightRenderer::onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
         
         _point_light_renderer.resizeViewport(viewport);
         _direct_light_renderer.resizeViewport(viewport);
+        _ambient_light_renderer.resizeViewport(viewport);
+    }
+
+    void LightRenderer::loadEnvironment(const std::string& file_name) {
+
+        HDRImageData hdr_sphere;
+        ImageFile(file_name, hdr_sphere);
+        
+        std::array<HDRImageData, 6> faces;
+        convertEquirectangularToCubemap(hdr_sphere, faces, _env_cube_map_size);
+
+        /*for(int i = 0; i < 6; i++) {
+
+            const HDRImageData& face = faces.at(i);
+            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
+
+        }*/
+
     }
 
     void LightRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView material, VkImageView normal, VkImageView shadow_map_pos){
@@ -118,6 +162,7 @@ namespace cell {
         _local_descriptor_set = _descriptor_cache.accquire(1);
 
         _direct_light_renderer.resetDescriptorCache(2);
+        _ambient_light_renderer.resetDescriptorCache(2);
 
         // storing the material tile maps dimensions in the local ubo
         float tile_map_unit[2];
@@ -148,7 +193,8 @@ namespace cell {
         _point_light_renderer.bindDescriptorSet(cmd, _local_descriptor_set, 1);
         _direct_light_renderer.bindDescriptorSet(cmd, global_descriptor_set, 0); // this shouldnt do anything, and if it did, it wouldnt be good
         _direct_light_renderer.bindDescriptorSet(cmd, _local_descriptor_set, 1); 
-
+        _ambient_light_renderer.bindDescriptorSet(cmd, global_descriptor_set, 0); // this shouldnt do anything, and if it did, it wouldnt be good
+        _ambient_light_renderer.bindDescriptorSet(cmd, _local_descriptor_set, 1);
     }
 
     void LightRenderer::draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd){
@@ -164,12 +210,12 @@ namespace cell {
         float shadow_map_unit[2];
         shadow_map_unit[0] = 1.0f / shadow_map_width;
         shadow_map_unit[1] = 1.0f / shadow_map_height;
-        _light_ubo.setAttribute(0, glm::value_ptr(light.getColor()), 3 * sizeof(float));
-        _light_ubo.setAttribute(1, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
-        _light_ubo.setAttribute(2, shadow_map_unit, 2 * sizeof(float));
+        _direct_light_ubo.setAttribute(0, glm::value_ptr(light.getColor()), 3 * sizeof(float));
+        _direct_light_ubo.setAttribute(1, glm::value_ptr(light.getDirection()), 3 * sizeof(float));
+        _direct_light_ubo.setAttribute(2, shadow_map_unit, 2 * sizeof(float));
 
         _direct_light_renderer.accquireDescriptorSet(2);
-        _direct_light_renderer.bindUniformBuffer(2, 0, _light_ubo.getBuffer());
+        _direct_light_renderer.bindUniformBuffer(2, 0, _direct_light_ubo.getBuffer());
         _direct_light_renderer.bindImage(2, 1, shadow_map, shadow_map_layout, _shadow_map_sampler.getSampler());
         _direct_light_renderer.bindDescriptorSet(cmd, 2);
 
@@ -178,6 +224,19 @@ namespace cell {
         _direct_light_renderer.draw(cmd, 6);
 
     }
+
+    void LightRenderer::draw(const glm::vec3& ambient_color, undicht::vulkan::CommandBuffer& cmd) {
+
+        _ambient_light_ubo.setAttribute(0, glm::value_ptr(ambient_color), 3 * sizeof(float));
+        _ambient_light_renderer.accquireDescriptorSet(2);
+        _ambient_light_renderer.bindUniformBuffer(2, 0, _ambient_light_ubo.getBuffer());
+        _ambient_light_renderer.bindDescriptorSet(cmd, 2);
+
+        _ambient_light_renderer.bindPipeline(cmd);
+        _ambient_light_renderer.bindVertexBuffer(cmd, _screen_quad);
+        _ambient_light_renderer.draw(cmd, 6);
+    }
+
 
     ////////////////////////////////////////////// protected LightRenderer functions //////////////////////////////////////////////
 

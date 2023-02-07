@@ -41,7 +41,7 @@ namespace cell {
         uint32_t _swap_image_id = -1;
 
         // used by all stages
-        undicht::vulkan::DescriptorSetLayout _global_descriptor_layout; // to bind the global uniform buffer
+        undicht::vulkan::DescriptorSetLayout _global_descriptor_layout; // used to bind the global uniform buffer
         undicht::vulkan::DescriptorSetCache _global_descriptor_cache;
         undicht::vulkan::DescriptorSet _global_descriptor_set;
         undicht::vulkan::CommandBuffer _draw_cmd;
@@ -49,7 +49,7 @@ namespace cell {
         undicht::vulkan::Semaphore _render_finished_semaphore;
         undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
-        // keeping track of which pass were currently in
+        // keeping track of which pass we are currently in
         Pass _current_pass = NO_PASS;
 
         // shadow pass
@@ -76,6 +76,7 @@ namespace cell {
 
         // do before starting to render
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
+        void loadEnvironment(const std::string& file_name);
 
         // shadow pass
         void beginShadowPass(const DirectLight& global_shadow_source); // only one shadow source for now
@@ -88,6 +89,7 @@ namespace cell {
         void beginLightSubPass(const MaterialAtlas& materials);
         void drawLights(const LightBuffer& lights);
         void drawLight(const DirectLight& light);
+        void drawAmbientLight(const glm::vec3& ambient_light);
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);
 

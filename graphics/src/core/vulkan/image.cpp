@@ -5,10 +5,11 @@ namespace undicht {
 
     namespace vulkan {
 
-        void Image::init(const VkDevice& device) {
+        void Image::init(const VkDevice& device, bool is_cube_map) {
 
             _device_handle = device;
 
+            _is_cube_map = is_cube_map;
             _mem_properties |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         }
@@ -24,7 +25,7 @@ namespace undicht {
             _layers = 1;
 
             // creating the image view
-            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, false, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &info, {}, &_image_view);
 
         }
@@ -75,7 +76,8 @@ namespace undicht {
             _own_image = true;
 
             // creating the image
-            VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format));
+            VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : NULL; 
+            VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
             vkCreateImage(_device_handle, &info, {}, &_image);
 
             // getting the drivers? requirements needed for the texture
@@ -96,14 +98,14 @@ namespace undicht {
             vkBindImageMemory(_device_handle, _image, _memory, 0);
 
             // creating the image view
-            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _format, chooseImageAspectFlags(_format));
+            VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _is_cube_map, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &image_view_info, {}, &_image_view);
 
         }
 
         //////////////////////////// creating image related structs ////////////////////////////
 
-        VkImageCreateInfo Image::createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage) {
+        VkImageCreateInfo Image::createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage, VkImageCreateFlags flags) {
 
             VkImageCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -117,16 +119,18 @@ namespace undicht {
             info.usage = usage;
             info.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // used exclusively by the graphics queue
             info.samples = VK_SAMPLE_COUNT_1_BIT; // used for multisampling
+            info.flags = flags;
 
             return info;
         }
 
-        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, const VkFormat& format, VkImageAspectFlags flags) {
-
+        VkImageViewCreateInfo Image::createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, bool cube_map, const VkFormat& format, VkImageAspectFlags flags) {
+            
+            // choosing the view type
             VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_2D;
-
             if(extent.depth > 1) view_type = VK_IMAGE_VIEW_TYPE_3D;
             if(layer_count > 1) view_type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+            if(cube_map) view_type = VK_IMAGE_VIEW_TYPE_CUBE;
 
             VkImageViewCreateInfo info{};
             info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

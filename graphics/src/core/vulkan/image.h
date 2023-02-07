@@ -23,12 +23,13 @@ namespace undicht {
             VkExtent3D _extent;
             uint32_t _layers;
             uint32_t _mip_levels;
+            bool _is_cube_map = false;
 
             bool _own_image = true;
 
         public:
 
-            void init(const VkDevice& device);
+            void init(const VkDevice& device, bool is_cube_map = false);
             void initWithExternalImage(const VkDevice& device, const VkImage& image, const VkFormat& format); // i.e. with an image that is owned by the swap chain
             void cleanUp();
 
@@ -42,8 +43,8 @@ namespace undicht {
         protected:
             // creating image related structs
 
-            VkImageCreateInfo static createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage);
-            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, const VkFormat& format, VkImageAspectFlags flags);
+            VkImageCreateInfo static createImageCreateInfo(VkExtent3D extent, uint32_t layers, uint32_t mip_levels, VkFormat format, VkImageUsageFlags usage, VkImageCreateFlags flags);
+            VkImageViewCreateInfo static createImageViewCreateInfo(const VkImage& image, uint32_t mip_levels, uint32_t layer_count, VkExtent3D extent, bool cube_map, const VkFormat& format, VkImageAspectFlags flags);
             VkMemoryAllocateInfo static createMemoryAllocateInfo(uint32_t byte_size, uint32_t mem_type_index);
 
         public:

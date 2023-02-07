@@ -35,6 +35,9 @@ add_library("tools"
 	src/file_tools.h
 	src/file_tools.cpp
 	
+	src/IBL/ibl.h
+	src/IBL/ibl.cpp
+	
 	extern/stb_implementation.cpp
 )
 
