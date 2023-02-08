@@ -48,8 +48,6 @@ namespace undicht {
 
             for(int face = 0; face < 6; face++) { // six faces of the cubemap
 
-                UND_LOG << "processing face " << face << "\n";
-
                 // resize the face
                 dst.at(face)._width = cube_map_size;
                 dst.at(face)._height = cube_map_size;
@@ -69,7 +67,10 @@ namespace undicht {
                         // store the pixel in the cubemap face
                         const PIXEL_TYPE* pixel = equirectangularLookup(source, sample_dir);
                         typename std::vector<PIXEL_TYPE>::iterator insert_pos = dst.at(face)._pixels.begin() + (y * cube_map_size + x) * source._nr_channels;
-                        dst.at(face)._pixels.insert(insert_pos, pixel, pixel + source._nr_channels);
+                        
+                        for (int i = 0; i < source._nr_channels; i++)
+                            *(insert_pos + i) = *(pixel + i);
+
                     }
                 }
             }

@@ -1,5 +1,9 @@
 #include "cell.h"
 
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN
+#endif
+
 namespace cell {
 
     using namespace undicht;

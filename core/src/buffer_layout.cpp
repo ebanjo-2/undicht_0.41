@@ -29,7 +29,7 @@ namespace undicht {
     uint32_t BufferLayout::getOffset(uint32_t index) const {
 
         uint32_t offset = 0;
-        for(int i = 0; i < index; i++) {
+        for(uint32_t i = 0; i < index; i++) {
             offset += m_types.at(i).getSize();
         }
 

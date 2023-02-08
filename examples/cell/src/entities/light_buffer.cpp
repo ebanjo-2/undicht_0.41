@@ -45,10 +45,10 @@ namespace cell {
             _lights_in_use.resize(id + 1);
         
         // storing the point light data
-        char tmp[POINT_LIGHT_SIZE];
-        light.fillBuffer((float*)tmp);
+        std::vector<char> tmp(POINT_LIGHT_SIZE);
+        light.fillBuffer((float*)tmp.data());
 
-        _point_light_buffer.setInstanceData(tmp, POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
+        _point_light_buffer.setInstanceData(tmp.data(), POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
         _lights_in_use.at(id) = true;
 
         return id;
@@ -64,10 +64,10 @@ namespace cell {
         const uint32_t POINT_LIGHT_SIZE = POINT_LIGHT_LAYOUT.getTotalSize();
 
         // storing the point light data
-        char tmp[POINT_LIGHT_SIZE];
-        light.fillBuffer((float*)tmp);
+        std::vector<char> tmp(POINT_LIGHT_SIZE);
+        light.fillBuffer((float*)tmp.data());
 
-        _point_light_buffer.setInstanceData(tmp, POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
+        _point_light_buffer.setInstanceData(tmp.data(), POINT_LIGHT_SIZE, POINT_LIGHT_SIZE * id);
         _lights_in_use.at(id) = true;
     }
 

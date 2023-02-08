@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES // for M_PI
+#include <math.h>
+
 #include "light_renderer.h"
 #include "file_tools.h"
 #include "debug.h"

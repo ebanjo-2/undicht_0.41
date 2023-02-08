@@ -31,5 +31,5 @@ target_include_directories(tonk_game PUBLIC src)
 add_custom_target(run_tonk_game COMMAND gnome-terminal -- ${PROJECT_SOURCE_DIR}/build/examples/tonk_game/tonk_game)
 
 # adding a custom target for building the shaders
-add_custom_target(tonk_shader COMMAND bash ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/examples/tonk_game/src/shader")
+add_custom_target(tonk_shader COMMAND python3 ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/examples/tonk_game/src/shader")
 add_dependencies(tonk_game tonk_shader)

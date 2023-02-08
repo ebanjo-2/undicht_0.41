@@ -2,6 +2,7 @@
 #include "vector"
 #include "algorithm"
 #include "world/cell.h"
+#include "debug.h"
 
 namespace cell {
 

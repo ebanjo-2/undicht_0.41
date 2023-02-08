@@ -8,7 +8,7 @@ namespace cell {
     using namespace tools;
 
     void App::init() {
-
+        
         undicht::Engine::init(true, true);
 
         _master_renderer.init(_gpu, _swap_chain);

@@ -107,7 +107,7 @@ add_library(graphics
 target_include_directories(graphics PUBLIC src)
 
 # setting the shader compile script path
-set(SHADER_COMPILE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/shader/compile.sh CACHE STRING "SHADER_COMPILE_SCRIPT") 
+set(SHADER_COMPILE_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/shader/compile.py CACHE STRING "SHADER_COMPILE_SCRIPT") 
 
 
 # linking undicht core
@@ -125,7 +125,7 @@ set(IMGUI_PATH  "extern/imgui")
 file(GLOB IMGUI_SOURCES ${IMGUI_PATH}/*.cpp) 
 file(GLOB IMGUI_BACKEND ${IMGUI_PATH}/backends/imgui_impl_glfw.cpp ${IMGUI_PATH}/backends/imgui_impl_vulkan.cpp) 
 add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUI_BACKEND})
-target_include_directories(imgui PUBLIC extern/imgui)
+target_include_directories(imgui PUBLIC extern/imgui ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(imgui ${Vulkan_LIBRARIES} glfw)
 
 target_link_libraries(graphics imgui)
@@ -135,6 +135,5 @@ target_include_directories(graphics PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(graphics ${Vulkan_LIBRARIES})
 
 # adding a custom target for building the engines shaders
-# add_custom_target(shader COMMAND bash ${PROJECT_SOURCE_DIR}/graphics/src/shader/compile.sh)
-add_custom_target(shader COMMAND bash ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/graphics/src/shader")
+add_custom_target(shader COMMAND python3 ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/graphics/src/shader")
 add_dependencies(graphics shader)

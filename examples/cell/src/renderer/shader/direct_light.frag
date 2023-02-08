@@ -98,6 +98,7 @@ void main() {
     float NdotL = max(dot(N, L), 0.0);
     out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f) * isInLight(N, L);
     //out_color = subpassLoad(input_shadow_map_pos);
+	//out_color = vec4(subpassLoad(input_material).zw, 0,0);
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////

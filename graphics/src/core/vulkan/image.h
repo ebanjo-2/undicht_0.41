@@ -12,17 +12,17 @@ namespace undicht {
 
         protected:
 
-            VkDevice _device_handle;
+            VkDevice _device_handle = VK_NULL_HANDLE;
 
             VkImage _image = VK_NULL_HANDLE;
             VkDeviceMemory _memory = VK_NULL_HANDLE;
             VkMemoryPropertyFlags _mem_properties{};
             VkImageView _image_view = VK_NULL_HANDLE;
 
-            VkFormat _format;
-            VkExtent3D _extent;
-            uint32_t _layers;
-            uint32_t _mip_levels;
+            VkFormat _format = VK_FORMAT_UNDEFINED;
+            VkExtent3D _extent = {};
+            uint32_t _layers = 1;
+            uint32_t _mip_levels = 1;
             bool _is_cube_map = false;
 
             bool _own_image = true;

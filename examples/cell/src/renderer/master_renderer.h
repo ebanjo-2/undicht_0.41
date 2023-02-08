@@ -53,8 +53,8 @@ namespace cell {
         Pass _current_pass = NO_PASS;
 
         // shadow pass
-        const uint32_t _SHADOW_MAP_WIDTH = 512;
-        const uint32_t _SHADOW_MAP_HEIGHT = 512;
+        const uint32_t _SHADOW_MAP_WIDTH = 1024;
+        const uint32_t _SHADOW_MAP_HEIGHT = 1024;
         undicht::vulkan::RenderTarget _shadow_map_target;
         ShadowRenderer _shadow_renderer;
 

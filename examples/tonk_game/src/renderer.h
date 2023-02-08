@@ -65,7 +65,7 @@ namespace tonk {
 
         void onWindowResize(VkExtent2D new_viewport);
 
-        ImTextureID createImGuiTexture(const undicht::vulkan::Texture& texture);
+        VkDescriptorSet createImGuiTexture(const undicht::vulkan::Texture& texture);
 
     protected:
         // private functions

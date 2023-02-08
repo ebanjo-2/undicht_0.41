@@ -123,7 +123,7 @@ namespace tonk {
 
     }
 
-    ImTextureID Renderer::createImGuiTexture(const undicht::vulkan::Texture& texture) {
+    VkDescriptorSet Renderer::createImGuiTexture(const undicht::vulkan::Texture& texture) {
 
         return ImGui_ImplVulkan_AddTexture(_sampler.getSampler(), texture.getImage().getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }

@@ -15,11 +15,11 @@ namespace undicht {
 			float m_near_plane = 0.1f; // which z coordinate should be mapped to a depth of 0
 			float m_far_plane = 1000.0f; // which z coordinate should be mapped to a depth of 1
 
-			float m_field_of_view = 1.2;//1.75; // about 100 degrees of vision
+			float m_field_of_view = 1.2f;//1.75; // about 100 degrees of vision
 
 			// captured width / height
 			// i have a resolution of 1680 / 1050, so default aspect ratio is 1.6
-			float m_aspect_ratio = 1.6;
+			float m_aspect_ratio = 1.6f;
 
 			// whether to update the projection matrix
 			bool m_update_proj = true;

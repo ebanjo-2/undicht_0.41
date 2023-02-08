@@ -105,7 +105,7 @@ namespace undicht {
             if(store_result)
                 attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             else
-                attachment.storeOp = VK_ATTACHMENT_STORE_OP_NONE;
+                attachment.storeOp = VK_ATTACHMENT_STORE_OP_NONE_KHR;
 
             attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

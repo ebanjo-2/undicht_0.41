@@ -39,7 +39,7 @@ void HelloWorldApp::init() {
 
     // init frame objects
     _frames.resize(_swap_chain.getSwapImageCount());
-    for(int i = 0; i < _frames.size(); i++) {
+    for(uint32_t i = 0; i < _frames.size(); i++) {
         _frames[i].init(_gpu, {_descriptor_set_layout});
     } 
 
@@ -59,7 +59,6 @@ void HelloWorldApp::init() {
     _camera.setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
     _camera.setAxesRotation({0,0,90});
     
-
 }
 
 void HelloWorldApp::mainLoop() {

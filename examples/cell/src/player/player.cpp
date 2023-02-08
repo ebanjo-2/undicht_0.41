@@ -23,7 +23,7 @@ namespace cell {
         /// @brief move the player
         /// @param delta_t time since last call in milliseconds
 
-        float step = delta_t * 0.02;
+        float step = float(delta_t) * 0.02f;
 
         // keyboard input
         if (input_window.isKeyPressed(GLFW_KEY_W))
@@ -40,7 +40,7 @@ namespace cell {
 
         // mouse input
         if (_use_mouse_input) {
-            const float mouse_speed = 0.1;
+            const float mouse_speed = 0.1f;
             float cursor_offset_x = 0, cursor_offset_y = 0;
             double cursor_x, cursor_y;
             input_window.getCursorPos(cursor_x, cursor_y);

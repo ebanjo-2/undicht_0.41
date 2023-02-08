@@ -8,6 +8,7 @@ cmake-build-debug/
 *.swp
 .color_coded
 .vscode/
+.vs/
 
 # .bak files
 *.bak
@@ -45,3 +46,4 @@ cmake-build-debug/
 *.out
 *.app
 *.spv
+CMakeSettings.json

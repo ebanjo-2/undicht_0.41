@@ -68,7 +68,7 @@ namespace undicht {
                 return;
             }
 
-            _used_mem_size = byte_size + offset;
+            _used_mem_size = std::max(_used_mem_size, byte_size + offset);
 
             void* mem_handle;
             vkMapMemory(_device_handle, _memory, offset, byte_size, {}, &mem_handle);
