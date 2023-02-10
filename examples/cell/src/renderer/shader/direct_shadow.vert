@@ -34,5 +34,4 @@ void main() {
 	vec4 world_pos = vec4(vertex_pos + chunk.pos, 1.0f);
 
 	gl_Position = global.shadow_proj * global.shadow_view * world_pos;
-	//gl_Position.y = -gl_Position.y; // positive y is up, change my mind
 }

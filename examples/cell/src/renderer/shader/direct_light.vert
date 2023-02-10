@@ -25,7 +25,4 @@ void main() {
 	light_dir_rel_cam = normalize(mat3(global.view) * light.direction);
 
 	gl_Position = vec4(aPos, 1.0f);
-	
-	// positive y is up, change my mind
-	gl_Position.y = -gl_Position.y;
 }

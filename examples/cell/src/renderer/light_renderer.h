@@ -24,6 +24,7 @@ namespace cell {
       protected:
       
         undicht::vulkan::VertexBuffer _screen_quad;
+        undicht::vulkan::VertexBuffer _sky_box; // for using cube maps
 
         // renderer
         undicht::vulkan::Renderer _point_light_renderer;
@@ -31,6 +32,7 @@ namespace cell {
         undicht::vulkan::Renderer _ambient_light_renderer;
         undicht::vulkan::Sampler _tile_map_sampler;
         undicht::vulkan::Sampler _shadow_map_sampler;
+        undicht::vulkan::Sampler _cube_map_sampler;
         undicht::vulkan::DescriptorSetCache _descriptor_cache;
 
         // shadow map sampling
@@ -39,7 +41,7 @@ namespace cell {
         undicht::vulkan::Texture _shadow_sampler_offsets;
 
         // environment cubemap
-        const int _env_cube_map_size = 256; // width and height of the cubemap faces
+        const int _env_cube_map_size = 1024; // width and height of the cubemap faces
         undicht::vulkan::Texture _env_cube_map;
 
         undicht::vulkan::UniformBuffer _local_ubo;

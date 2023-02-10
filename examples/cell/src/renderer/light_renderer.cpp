@@ -21,6 +21,10 @@ namespace cell {
         // init the screen quad
         _screen_quad.init(gpu);
         _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0);
+
+        // init the sky box
+        _sky_box.init(gpu);
+        _sky_box.setVertexData(SKY_BOX_VERTICES.data(), SKY_BOX_VERTICES.size() * sizeof(float), 0);
         
         // descriptor layout for renderer local descriptors
         _local_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // local uniform buffer
@@ -40,7 +44,7 @@ namespace cell {
         _point_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
         _point_light_renderer.setVertexInputLayout(LIGHT_VERTEX_LAYOUT, POINT_LIGHT_LAYOUT);
         _point_light_renderer.setDepthStencilTest(true, false, VK_COMPARE_OP_GREATER);
-        _point_light_renderer.setRasterizer(true, true);
+        _point_light_renderer.setRasterizer(false, true);
         _point_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         // hdr buffer, just add the light intensities
         _point_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); 
@@ -65,8 +69,8 @@ namespace cell {
         _ambient_light_renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.frag.spv");
         _ambient_light_renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global descriptors
         _ambient_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
-        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 2, 1); // light specific descriptors
-        _ambient_light_renderer.setVertexInputLayout(SCREEN_QUAD_VERTEX_LAYOUT);
+        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER}, 2, 1); // light specific descriptors
+        _ambient_light_renderer.setVertexInputLayout(SKY_BOX_VERTEX_LAYOUT);
         _ambient_light_renderer.setDepthStencilTest(false, false);
         _ambient_light_renderer.setRasterizer(false);
         _ambient_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
@@ -83,9 +87,13 @@ namespace cell {
         _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
         _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
         _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER);
-        _shadow_map_sampler.setBorderColor(VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE);
-        _shadow_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _shadow_map_sampler.setBorderColor(VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE); // to make sure that areas outside the shadow map are not covered in shadow
         _shadow_map_sampler.init(gpu.getDevice());
+
+        _cube_map_sampler.setMinFilter(VK_FILTER_LINEAR);
+        _cube_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
+        _cube_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
+        _cube_map_sampler.init(gpu.getDevice());
 
         // create texture with random offsets for shadow sampling
         int num_filter_samples = _shadow_sampler_filter_size * _shadow_sampler_filter_size;
@@ -121,6 +129,7 @@ namespace cell {
     void LightRenderer::cleanUp() {
         
         _screen_quad.cleanUp();
+        _sky_box.cleanUp();
         _local_ubo.cleanUp();
         _direct_light_ubo.cleanUp();
         _ambient_light_ubo.cleanUp();
@@ -128,6 +137,7 @@ namespace cell {
         _descriptor_cache.cleanUp();
         _tile_map_sampler.cleanUp();
         _shadow_map_sampler.cleanUp();
+        _cube_map_sampler.cleanUp();
         _shadow_sampler_offsets.cleanUp();
         _env_cube_map.cleanUp();
         _point_light_renderer.cleanUp();
@@ -147,15 +157,22 @@ namespace cell {
         HDRImageData hdr_sphere;
         ImageFile(file_name, hdr_sphere);
         
+        // generate cubemap faces from the loaded environment map
         std::array<HDRImageData, 6> faces;
-        convertEquirectangularToCubemap(hdr_sphere, faces, _env_cube_map_size);
+        convertEquirectangularToCubeMap(hdr_sphere, faces, _env_cube_map_size);
 
-        /*for(int i = 0; i < 6; i++) {
+        // store the faces in the cubemap
+        for(int i = 0; i < 6; i++) {
+
+            // 
+            // vulkan thinks -y is up, so swapping +y and -y faces
+            int layer = i;
+            if(i == 2) layer = 3; // storing +y in layer 3
+            if(i == 3) layer = 2; // storing -y in layer 2
 
             const HDRImageData& face = faces.at(i);
-            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
-
-        }*/
+            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), layer);
+        }
 
     }
 
@@ -233,11 +250,12 @@ namespace cell {
         _ambient_light_ubo.setAttribute(0, glm::value_ptr(ambient_color), 3 * sizeof(float));
         _ambient_light_renderer.accquireDescriptorSet(2);
         _ambient_light_renderer.bindUniformBuffer(2, 0, _ambient_light_ubo.getBuffer());
+        _ambient_light_renderer.bindImage(2, 1, _env_cube_map.getImage().getImageView(), _env_cube_map.getLayout(), _cube_map_sampler.getSampler());
         _ambient_light_renderer.bindDescriptorSet(cmd, 2);
 
         _ambient_light_renderer.bindPipeline(cmd);
-        _ambient_light_renderer.bindVertexBuffer(cmd, _screen_quad);
-        _ambient_light_renderer.draw(cmd, 6);
+        _ambient_light_renderer.bindVertexBuffer(cmd, _sky_box);
+        _ambient_light_renderer.draw(cmd, 36);
     }
 
 

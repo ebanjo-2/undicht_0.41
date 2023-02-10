@@ -19,6 +19,8 @@ namespace undicht {
 
         const extern BufferLayout SCREEN_QUAD_VERTEX_LAYOUT;
         const extern std::vector<float> SCREEN_QUAD_VERTICES;
+        const extern BufferLayout SKY_BOX_VERTEX_LAYOUT;
+        const extern std::vector<float> SKY_BOX_VERTICES;
 
         class Renderer {
         /// @brief class that combines a pipeline, a shader and a descriptor cache

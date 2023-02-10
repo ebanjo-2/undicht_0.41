@@ -28,8 +28,4 @@ void main() {
 	light_pos_rel_cam = (global.view * vec4(aLightPos, 1.0f)).xyz;
 
 	gl_Position = global.proj * global.view * vec4(aPos * aRange * 1.2f + aLightPos, 1.0f);
-	
-	// positive y is up, change my mind
-	gl_Position.y = -gl_Position.y;
-
 }

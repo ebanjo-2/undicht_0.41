@@ -10,5 +10,4 @@ void main() {
 	
 	uv = aUv;
 	gl_Position = vec4(aPos, 1.0f, 1.0f);
-	gl_Position.y = -gl_Position.y;
 }

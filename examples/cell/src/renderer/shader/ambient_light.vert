@@ -3,7 +3,7 @@
 // per vertex data
 layout(location = 0) in vec3 aPos;
 
-layout(location = 0) out vec3 light_dir_rel_cam;
+layout(location = 0) out vec3 sample_dir; // direction in which to sample the cubemap
 
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
@@ -16,16 +16,13 @@ layout(set = 0, binding = 0) uniform GlobalUBO {
 
 // inputs specific to this type of light renderer
 layout(set = 2, binding = 0) uniform LightUBO {
-	vec3 color;
-    vec3 direction;
+	vec3 ambient_color;
 } light;
 
 void main() {
 
-	light_dir_rel_cam = normalize(mat3(global.view) * light.direction);
-
-	gl_Position = vec4(aPos, 1.0f);
+	sample_dir = aPos;
+	mat4 rot = mat4(mat3(global.view));
+	gl_Position = global.proj * rot * vec4(aPos, 1.0f);
 	
-	// positive y is up, change my mind
-	gl_Position.y = -gl_Position.y;
 }

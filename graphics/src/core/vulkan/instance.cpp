@@ -147,6 +147,7 @@ namespace undicht {
             info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
             info.pEngineName = engine_name.c_str();
             info.pApplicationName = app_name.c_str();
+            info.apiVersion = VK_API_VERSION_1_1; // allows the use of negative viewport heights, to make +y the up direction, just like in opengl
 
             return info;
         }

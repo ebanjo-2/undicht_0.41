@@ -85,6 +85,7 @@ void main() {
     float NdotL = max(dot(N, L), 0.0);
     out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f); 
 
+    //out_color = vec4(frag_normal_rel_cam,0);
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -100,7 +101,7 @@ vec3 calcFragPosRelCam(float depth) {
     // thanks for the math 
     // https://stackoverflow.com/questions/32227283/getting-world-position-from-depth-buffer-value
     vec4 clipSpacePosition = vec4(screen_pos, depth, 1.0);
-	clipSpacePosition.y = -clipSpacePosition.y;
+	//clipSpacePosition.y = -clipSpacePosition.y;
     vec4 viewSpacePosition = global.inv_proj * clipSpacePosition;
 
     // Perspective division

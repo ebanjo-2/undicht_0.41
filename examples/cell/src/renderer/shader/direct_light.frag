@@ -99,6 +99,8 @@ void main() {
     out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f) * isInLight(N, L);
     //out_color = subpassLoad(input_shadow_map_pos);
 	//out_color = vec4(subpassLoad(input_material).zw, 0,0);
+    //vec4 pos_on_shadow_map = subpassLoad(input_shadow_map_pos);
+    //out_color = texture(shadow_map, pos_on_shadow_map.xy).xxxx;
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -114,7 +116,7 @@ vec3 calcFragPosRelCam(float depth) {
     // thanks for the math 
     // https://stackoverflow.com/questions/32227283/getting-world-position-from-depth-buffer-value
     vec4 clipSpacePosition = vec4(screen_pos, depth, 1.0);
-	clipSpacePosition.y = -clipSpacePosition.y;
+	//clipSpacePosition.y = -clipSpacePosition.y;
     vec4 viewSpacePosition = global.inv_proj * clipSpacePosition;
 
     // Perspective division
@@ -139,8 +141,8 @@ float isInLight(vec3 N, vec3 L) {
     ivec2 current_filter = ivec2(mod(gl_FragCoord.xy, vec2(local.shadow_offset_texture_size))); // filter for the current fragment
     ivec3 offset_coord = ivec3(0, current_filter); // going to be used to access a offset from the 3D offset texture
 
-    float random_sample_radius = 1.0f;
-    float bias = mix(0.005, 0.0, dot(N, L));
+    float random_sample_radius = 2.0f;
+    float bias = 0.0; // mix(0.00005, 0.0, dot(N, L));
     int shadow_sum = 0;
 
     // ring 0 contains the offsets that are the furthest from the fragment

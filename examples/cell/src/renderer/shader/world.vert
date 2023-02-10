@@ -54,7 +54,6 @@ void main() {
 	pos_on_shadow_map.xy = pos_on_shadow_map.xy * 0.5 + 0.5; // convert to [0,1] range (uv's)
 
 	gl_Position = global.proj * global.view * world_pos;
-	gl_Position.y = -gl_Position.y; // positive y is up, change my mind
 }
 
 vec2 calcCellUv(vec3 vertex_pos, uint face) {
@@ -71,9 +70,9 @@ vec3 calcCellNormal(uint face) {
 
 	switch(face) {
 	case 0x01:
-		return vec3(0,1,0);
-	case 0x02:
 		return vec3(0,-1,0);
+	case 0x02:
+		return vec3(0,1,0);
 	case 0x04:
 		return vec3(1,0,0);
 	case 0x08:

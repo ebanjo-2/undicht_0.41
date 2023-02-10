@@ -8,7 +8,7 @@ namespace cell {
 
     void Player::init() {
 
-        setPosition(glm::vec3(0, 2, 2));
+        setPosition(glm::vec3(0, -2, 2));
     }
 
     void Player::cleanUp() {
@@ -51,7 +51,7 @@ namespace cell {
             }
 
             _yaw -= cursor_offset_x * mouse_speed;
-            _pitch -= cursor_offset_y * mouse_speed;
+            _pitch += cursor_offset_y * mouse_speed;
 
             setAxesRotation({0, _pitch, _yaw}, {UND_Z_AXIS, UND_X_AXIS, UND_Y_AXIS});
 

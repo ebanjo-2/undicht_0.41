@@ -18,6 +18,4 @@ void main() {
 	//output the position of each vertex
 	gl_Position = ubo.proj * ubo.view * vec4(aPos, 1.0f);
 	
-	// positive y is up, change my mind
-	gl_Position.y = -gl_Position.y;	
 }

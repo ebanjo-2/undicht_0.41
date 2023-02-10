@@ -41,7 +41,7 @@ namespace undicht {
             _mip_levels = _enable_mip_maps ? calcMipLevelCount(_width, _height) : 1;
 
             // init the image
-            _image.init(device.getDevice());
+            _image.init(device.getDevice(), _is_cube_map);
             _image.allocate(device, _width, _height, _depth, _layers, _mip_levels, _format);
 
             // init the transfer buffer
