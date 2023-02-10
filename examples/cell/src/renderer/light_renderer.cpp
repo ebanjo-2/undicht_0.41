@@ -69,7 +69,7 @@ namespace cell {
         _ambient_light_renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.frag.spv");
         _ambient_light_renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global descriptors
         _ambient_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
-        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER}, 2, 1); // light specific descriptors
+        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*environment sky box*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*irradiance*/}, 2, 1); // light specific descriptors
         _ambient_light_renderer.setVertexInputLayout(SKY_BOX_VERTEX_LAYOUT);
         _ambient_light_renderer.setDepthStencilTest(false, false);
         _ambient_light_renderer.setRasterizer(false);
@@ -110,6 +110,11 @@ namespace cell {
         _env_cube_map.setCubeMap(true);
         _env_cube_map.init(gpu);
 
+        _irradiance_map.setExtent(_irradiance_map_size, _irradiance_map_size, 1, 6);
+        _irradiance_map.setFormat(translate(UND_VEC4F)); // hdr
+        _irradiance_map.setCubeMap(true);
+        _irradiance_map.init(gpu);
+
         // local uniform buffer
         // tile map tile size
         // shadow map offset textures size
@@ -140,6 +145,7 @@ namespace cell {
         _cube_map_sampler.cleanUp();
         _shadow_sampler_offsets.cleanUp();
         _env_cube_map.cleanUp();
+        _irradiance_map.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
         _ambient_light_renderer.cleanUp();
@@ -153,6 +159,7 @@ namespace cell {
     }
 
     void LightRenderer::loadEnvironment(const std::string& file_name) {
+        // load an environment that is used for image based lighting
 
         HDRImageData hdr_sphere;
         ImageFile(file_name, hdr_sphere);
@@ -163,15 +170,18 @@ namespace cell {
 
         // store the faces in the cubemap
         for(int i = 0; i < 6; i++) {
-
-            // 
-            // vulkan thinks -y is up, so swapping +y and -y faces
-            int layer = i;
-            if(i == 2) layer = 3; // storing +y in layer 3
-            if(i == 3) layer = 2; // storing -y in layer 2
-
             const HDRImageData& face = faces.at(i);
-            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), layer);
+            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
+        }
+
+        // generate convoluted environment map (irradiance map)
+        std::array<HDRImageData, 6> irradiance_faces;
+        convoluteCubeMap(faces, irradiance_faces, _irradiance_map_size);
+
+        // store the faces in the irradiance cubemap
+        for(int i = 0; i < 6; i++) {
+            const HDRImageData& face = irradiance_faces.at(i);
+            _irradiance_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
         }
 
     }
@@ -251,6 +261,7 @@ namespace cell {
         _ambient_light_renderer.accquireDescriptorSet(2);
         _ambient_light_renderer.bindUniformBuffer(2, 0, _ambient_light_ubo.getBuffer());
         _ambient_light_renderer.bindImage(2, 1, _env_cube_map.getImage().getImageView(), _env_cube_map.getLayout(), _cube_map_sampler.getSampler());
+        _ambient_light_renderer.bindImage(2, 2, _irradiance_map.getImage().getImageView(), _irradiance_map.getLayout(), _cube_map_sampler.getSampler());
         _ambient_light_renderer.bindDescriptorSet(cmd, 2);
 
         _ambient_light_renderer.bindPipeline(cmd);

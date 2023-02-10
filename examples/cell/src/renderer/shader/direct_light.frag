@@ -101,6 +101,8 @@ void main() {
 	//out_color = vec4(subpassLoad(input_material).zw, 0,0);
     //vec4 pos_on_shadow_map = subpassLoad(input_shadow_map_pos);
     //out_color = texture(shadow_map, pos_on_shadow_map.xy).xxxx;
+    //out_color = vec4(metallic);
+
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////

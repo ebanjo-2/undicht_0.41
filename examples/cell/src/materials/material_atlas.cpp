@@ -156,7 +156,7 @@ namespace cell {
                     data._pixels.at(4 * (x * 16 + y) + 0) = 0; // normal
                     data._pixels.at(4 * (x * 16 + y) + 1) = 255;
                     data._pixels.at(4 * (x * 16 + y) + 2) = 0;
-                    data._pixels.at(4 * (x * 16 + y) + 3) = 255; // metalness
+                    data._pixels.at(4 * (x * 16 + y) + 3) = 0; // metalness
                 }
             }
 

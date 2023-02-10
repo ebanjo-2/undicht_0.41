@@ -117,7 +117,7 @@ namespace cell {
             _master_renderer.drawLights(_lights);
             _master_renderer.drawAmbientLight(glm::vec3(0.02, 0.02, 0.02));
             _master_renderer.beginFinalSubPass();
-            _master_renderer.drawFinal(1.0f);
+            _master_renderer.drawFinal(2.0f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {
