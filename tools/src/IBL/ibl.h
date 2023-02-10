@@ -12,15 +12,15 @@ namespace undicht {
         /// @param source the equirectangular map
         /// @param dir the direction
         /// @return a pointer to the pixel for the given direction
-        const char* equirectangularLookup(const ImageData& source, const glm::highp_vec3& dir);
-        const float* equirectangularLookup(const HDRImageData& source, const glm::highp_vec3& dir);
+        char* equirectangularLookup(const ImageData& source, const glm::vec3& dir);
+        float* equirectangularLookup(const HDRImageData& source, const glm::vec3& dir);
 
         /// @brief sample the cubemap for a given direction
         /// @param source the six faces of the cubemap (+x, -x, +y(down), -y(up), +z, -z)
         /// @param dir the direction in which to sample the cube-map
         /// @return a pointer to the pixel for the given direction
-        const char* cubeMapLookup(const std::array<ImageData, 6>& source, const glm::highp_vec3& dir);
-        const float* cubeMapLookup(const std::array<HDRImageData, 6>& source, const glm::highp_vec3& dir);
+        char* cubeMapLookup(const std::array<ImageData, 6>& source, const glm::vec3& dir);
+        float* cubeMapLookup(const std::array<HDRImageData, 6>& source, const glm::vec3& dir);
 
         /// @brief convert an equirectangular map to a cubemap (both can describe 360 degrees of an environment)
         /// @param source the equirectangular map

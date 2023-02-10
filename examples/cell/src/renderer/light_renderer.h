@@ -43,7 +43,7 @@ namespace cell {
         // environment cubemap
         const int _env_cube_map_size = 256; // width and height of the cubemap faces
         undicht::vulkan::Texture _env_cube_map; // "sky box" (the environment map that the image based lighting is based on)
-        const int _irradiance_map_size = 32; // small size should be enough
+        const int _irradiance_map_size = 16; // small size should be enough
         undicht::vulkan::Texture _irradiance_map; // a cube map that contains the diffuse light for every surface normal direction
 
         undicht::vulkan::UniformBuffer _local_ubo;

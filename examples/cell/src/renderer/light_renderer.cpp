@@ -174,6 +174,8 @@ namespace cell {
             _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
         }
 
+        UND_LOG << "finished loading the skybox\n";
+
         // generate convoluted environment map (irradiance map)
         std::array<HDRImageData, 6> irradiance_faces;
         convoluteCubeMap(faces, irradiance_faces, _irradiance_map_size);
@@ -183,6 +185,8 @@ namespace cell {
             const HDRImageData& face = irradiance_faces.at(i);
             _irradiance_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
         }
+
+        UND_LOG << "finished calculating the diffuse lighting from the environment\n";
 
     }
 

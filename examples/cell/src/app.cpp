@@ -9,8 +9,12 @@ namespace cell {
     using namespace tools;
 
     void App::init() {
+
+        UND_LOG << "App::init() gets called\n";
         
         undicht::Engine::init(true, true);
+
+        UND_LOG << "initialized the engine\n";
 
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
@@ -59,7 +63,7 @@ namespace cell {
         _sun.setDirection(glm::vec3(1, 1, -1)); // will get normalized
         _sun.setShadowOrigin(glm::vec3(5, -50, 50));
 
-        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_Ref.hdr");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
 
     }
