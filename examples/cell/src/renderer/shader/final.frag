@@ -24,6 +24,6 @@ void main() {
   
     //out_color = vec4(subpassLoad(input_light));
     //out_color = vec4(hdr_color, 1.0);
-	out_color = vec4(mapped, 1.0);
-	//out_color = vec4(hdr_color, 0);
+	//out_color = vec4(mapped, 1.0);
+	out_color = vec4(hdr_color, 0);
 }

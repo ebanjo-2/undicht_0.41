@@ -31,6 +31,8 @@ layout(set = 2, binding = 0) uniform LightUBO {
 
 layout (set = 2, binding = 1) uniform samplerCube env_cube_map;
 layout (set = 2, binding = 2) uniform samplerCube irradiance_map;
+layout (set = 2, binding = 3) uniform samplerCube specular_prefilter_map;
+layout (set = 2, binding = 4) uniform sampler2D brdf_lut; // lut = look up texture
 
 // reading the inputs
 vec3 calcFragPosRelCam(float depth);
@@ -50,10 +52,10 @@ void main() {
 
     if((material.x == 255) && (material.y == 255)) {
 		// display the sky box
-        out_color = texture(env_cube_map, sample_dir);
+        //out_color = texture(env_cube_map, sample_dir);
+		out_color = textureLod(env_cube_map, sample_dir, 1.0);
 		return;
     }
-
 
 	// do image based lighting
 
@@ -61,7 +63,7 @@ void main() {
     vec4 normal_depth = subpassLoad(input_normal);
 	vec3 frag_pos_rel_cam = calcFragPosRelCam(normal_depth.a);
 	vec3 frag_normal_rel_cam = normal_depth.xyz;
-	vec3 N = normalize(frag_normal_rel_cam);
+	vec3 N = mat3(global.inv_view) * normalize(frag_normal_rel_cam); // the environment lookups require world space directions, not view space
 
 	// reading the material properties
 	vec2 tile_map_uv = getTileMapUV();
@@ -72,21 +74,32 @@ void main() {
 	float metallic = normal_metal.a;
 
 	// frequently used vectors
-	vec3 V = normalize(-frag_pos_rel_cam); // cam sits at (0,0,0) in the view space
+	vec3 V = mat3(global.inv_view) * normalize(-frag_pos_rel_cam); // cam sits at (0,0,0) in the view space
 
 	vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
-	vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
 	kD *= (1.0 - metallic);
-
+	
+	// sample irradiance map
 	vec3 irradiance = texture(irradiance_map, N).rgb;
 	vec3 diffuse    = irradiance * albedo;
-	vec3 ambient    = kD * diffuse;
 
+	// sample specular prefilter map
+	vec3 R = reflect(-V, N);
+    const float MAX_REFLECTION_LOD = 4.0; // number of mip levels in the prefiltered specular map minus 1
+    vec3 prefilteredColor = textureLod(specular_prefilter_map, R,  roughness * MAX_REFLECTION_LOD).rgb;
+
+	// sample BRDF lookup texture
+	vec2 envBRDF  = texture(brdf_lut, vec2(max(dot(N, V), 0.0), roughness)).rg;
+	vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+	vec3 ambient    = kD * diffuse + specular;
 	out_color = vec4(ambient, 0.0);
-
+	//out_color = texture(brdf_lut, gl_FragCoord.xy * global.inv_viewport);
 }
 
 //////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
@@ -99,7 +112,7 @@ vec3 calcFragPosRelCam(float depth) {
 	// float depth = subpassLoad(input_depth).r;
 	vec2 screen_pos = gl_FragCoord.xy * global.inv_viewport * 2.0 - 1.0;
 
-    // thanks for the math 
+    // thanks for the math
     // https://stackoverflow.com/questions/32227283/getting-world-position-from-depth-buffer-value
     vec4 clipSpacePosition = vec4(screen_pos, depth, 1.0);
 	//clipSpacePosition.y = -clipSpacePosition.y;

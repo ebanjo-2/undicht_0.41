@@ -33,6 +33,7 @@ namespace cell {
         undicht::vulkan::Sampler _tile_map_sampler;
         undicht::vulkan::Sampler _shadow_map_sampler;
         undicht::vulkan::Sampler _cube_map_sampler;
+        undicht::vulkan::Sampler _brdf_map_sampler;
         undicht::vulkan::DescriptorSetCache _descriptor_cache;
 
         // shadow map sampling
@@ -40,11 +41,16 @@ namespace cell {
         const int _shadow_sampler_filter_size = 4; // num of samples per ring and num of rings (only even numbers work)
         undicht::vulkan::Texture _shadow_sampler_offsets;
 
-        // environment cubemap
-        const int _env_cube_map_size = 256; // width and height of the cubemap faces
+        // image based lighting
+        const int _env_cube_map_size = 1024; // width and height of the cubemap faces
         undicht::vulkan::Texture _env_cube_map; // "sky box" (the environment map that the image based lighting is based on)
         const int _irradiance_map_size = 16; // small size should be enough
         undicht::vulkan::Texture _irradiance_map; // a cube map that contains the diffuse light for every surface normal direction
+        const int _specular_prefilter_map_size = 512; // size of the highest mip level (reflections for the smoothest surface)
+        const int _specular_prefilter_mip_levels = 5;
+        undicht::vulkan::Texture _specular_prefilter_map;
+        const int _brdf_integration_map_size = 512;
+        undicht::vulkan::Texture _brdf_integration_map;
 
         undicht::vulkan::UniformBuffer _local_ubo;
         undicht::vulkan::DescriptorSetLayout _local_descriptor_layout;

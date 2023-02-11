@@ -73,8 +73,8 @@ namespace cell {
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _tile_map.setData(diffuse_data._pixels.data(), diffuse_data._pixels.size(), 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
-        _tile_map.setData(specular_data._pixels.data(), specular_data._pixels.size(), 1, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(diffuse_data._pixels.data(), diffuse_data._pixels.size(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(specular_data._pixels.data(), specular_data._pixels.size(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
     }
 
     const Material* MaterialAtlas::getMaterial(const std::string& mat_name) const {
@@ -126,7 +126,7 @@ namespace cell {
                     data._pixels.at(4 * (x * 16 + y) + 0) = 0;
                     data._pixels.at(4 * (x * 16 + y) + 1) = 100;
                     data._pixels.at(4 * (x * 16 + y) + 2) = 200;
-                    data._pixels.at(4 * (x * 16 + y) + 3) = 0; // roughness
+                    data._pixels.at(4 * (x * 16 + y) + 3) = 20; // roughness
                 }
             }
 

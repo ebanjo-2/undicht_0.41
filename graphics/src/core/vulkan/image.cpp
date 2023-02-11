@@ -76,7 +76,7 @@ namespace undicht {
             _own_image = true;
 
             // creating the image
-            VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : NULL; 
+            VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : NULL;
             VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
             vkCreateImage(_device_handle, &info, {}, &_image);
 
@@ -161,13 +161,13 @@ namespace undicht {
             return info;
         }
 
-        VkImageSubresourceRange Image::createImageSubresourceRange(VkImageAspectFlags flags, uint32_t mip_levels, uint32_t layer_count) {
+        VkImageSubresourceRange Image::createImageSubresourceRange(VkImageAspectFlags flags, uint32_t base_mip_level, uint32_t num_mip_levels, uint32_t base_layer, uint32_t layer_count) {
 
             VkImageSubresourceRange range{};
 		    range.aspectMask = flags;
-		    range.baseMipLevel = 0;
-		    range.levelCount = mip_levels;
-		    range.baseArrayLayer = 0;
+		    range.baseMipLevel = base_mip_level;
+		    range.levelCount = num_mip_levels;
+		    range.baseArrayLayer = base_layer;
 		    range.layerCount = layer_count;
 
             return range;
@@ -188,7 +188,7 @@ namespace undicht {
             return barrier;
         }
 
-        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer) {
+        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer, uint32_t mip_level) {
 
             VkBufferImageCopy region{};
             region.bufferOffset = 0; // layout of the data in the buffer
@@ -196,7 +196,7 @@ namespace undicht {
             region.bufferImageHeight = 0;
 
             region.imageSubresource.aspectMask = flags;
-            region.imageSubresource.mipLevel = 0;
+            region.imageSubresource.mipLevel = mip_level;
             region.imageSubresource.baseArrayLayer = layer;
             region.imageSubresource.layerCount = 1;
 

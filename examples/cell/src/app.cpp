@@ -38,6 +38,11 @@ namespace cell {
             UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_metal.png"
         ));
 
+        uint32_t iron = _materials.setMaterial(Material("Iron",
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/iron_albedo.png",
+            UND_ENGINE_SOURCE_DIR + "examples/cell/res/iron_metal.png"
+        ));
+
         // setting some cells for testing
         std::vector<Cell> cells = {
             Cell(0, 255, 0, 255, 254, 255, sand),
@@ -46,6 +51,7 @@ namespace cell {
             Cell(5, 250, 5, 6, 248, 6, grass),
             Cell(20, 251, 10, 44, 247, 34, gold),
             Cell(0, 254, 30, 1, 244, 31, gold),
+            Cell(5, 254, 60, 10, 244, 65, iron),
         };
 
         _world.loadChunk(glm::ivec3(0,-255,0), cells);
@@ -63,7 +69,7 @@ namespace cell {
         _sun.setDirection(glm::vec3(1, 1, -1)); // will get normalized
         _sun.setShadowOrigin(glm::vec3(5, -50, 50));
 
-        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_Ref.hdr");
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
 
     }

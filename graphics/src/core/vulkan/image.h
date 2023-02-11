@@ -49,9 +49,9 @@ namespace undicht {
 
         public:
 
-            VkImageSubresourceRange static createImageSubresourceRange(VkImageAspectFlags flags, uint32_t mip_levels, uint32_t layer_count);
+            VkImageSubresourceRange static createImageSubresourceRange(VkImageAspectFlags flags, uint32_t base_mip_level, uint32_t num_mip_levels, uint32_t base_layer, uint32_t layer_count);
             VkImageMemoryBarrier static createImageMemoryBarrier(VkImage image, VkImageSubresourceRange range, VkImageLayout old_layout, VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access);
-            VkBufferImageCopy static createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer = 0);
+            VkBufferImageCopy static createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer = 0, uint32_t mip_level = 0);
             VkImageBlit static createImageBlit(int src_width, int src_height, uint32_t src_mip_level, uint32_t dst_mip_level);
 
             VkImageAspectFlags static chooseImageAspectFlags(const VkFormat& format);

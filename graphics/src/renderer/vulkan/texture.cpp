@@ -28,9 +28,11 @@ namespace undicht {
 
         }
 
-        void Texture::setMipMaps(bool enable_mip_maps) {
+        void Texture::setMipMaps(bool enable_mip_maps, bool auto_generate, uint32_t mip_levels) {
 
             _enable_mip_maps = enable_mip_maps;
+            _auto_gen_mip_maps = auto_generate;
+            _mip_levels = mip_levels;
         }
 
         void Texture::init(const LogicalDevice& device) {
@@ -38,7 +40,7 @@ namespace undicht {
             _device_handle = &device;
 
             // calc number of mip levels
-            _mip_levels = _enable_mip_maps ? calcMipLevelCount(_width, _height) : 1;
+            _mip_levels = _enable_mip_maps ? std::min(calcMipLevelCount(_width, _height), _mip_levels) : 1;
 
             // init the image
             _image.init(device.getDevice(), _is_cube_map);
@@ -73,10 +75,13 @@ namespace undicht {
         }
 
 
-        void Texture::setData(const char* data, uint32_t byte_size, uint32_t layer, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
+        void Texture::setData(const char* data, uint32_t byte_size, uint32_t layer, uint32_t mip_level, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
 
-            if(data_image_extent.width == 0 && data_image_extent.height == 0)
+            if(data_image_extent.width == 0 && data_image_extent.height == 0){
                 data_image_extent = _image.getExtent();
+                data_image_extent.width /= (1 << mip_level);
+                data_image_extent.height /= (1 << mip_level);
+            }
             
             // transition to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
             transitionToLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
@@ -86,14 +91,14 @@ namespace undicht {
             _transfer_buffer.setData(byte_size, 0, data);
 
             // copy data from transfer buffer to texture
-            VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer);
+            VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer, mip_level);
             _copy_cmd.beginCommandBuffer(true);
             _copy_cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
             _copy_cmd.endCommandBuffer();
             _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
             _device_handle->waitTransferQueueIdle();
 
-            if(_enable_mip_maps) {
+            if(_enable_mip_maps && _auto_gen_mip_maps) {
                 // generate MipMaps
 
                 genMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
@@ -102,6 +107,7 @@ namespace undicht {
 
                 transitionToLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
             }
+
         }
 
 
@@ -110,7 +116,7 @@ namespace undicht {
 
         void Texture::transitionToLayout(VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
 
-            VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, _mip_levels, _layers);
+            VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0, _mip_levels, 0, _layers);
             VkImageMemoryBarrier barrier = Image::createImageMemoryBarrier(_image.getImage(), range, _layout, new_layout, src_access, dst_access);
             
             _layout_cmd.beginCommandBuffer(true);
@@ -129,7 +135,7 @@ namespace undicht {
 
             _layout_cmd.beginCommandBuffer(true); // generating mip maps takes place on the graphics queue
 
-            VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 1, 1);
+            VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
             VkImageMemoryBarrier barrier;
 
             int32_t mip_width = _width;
