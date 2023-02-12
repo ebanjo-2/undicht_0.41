@@ -46,7 +46,7 @@ namespace cell {
         undicht::vulkan::Texture _env_cube_map; // "sky box" (the environment map that the image based lighting is based on)
         const int _irradiance_map_size = 16; // small size should be enough
         undicht::vulkan::Texture _irradiance_map; // a cube map that contains the diffuse light for every surface normal direction
-        const int _specular_prefilter_map_size = 512; // size of the highest mip level (reflections for the smoothest surface)
+        const int _specular_prefilter_map_size = 128; // size of the highest mip level (reflections for the smoothest surface)
         const int _specular_prefilter_mip_levels = 5;
         undicht::vulkan::Texture _specular_prefilter_map;
         const int _brdf_integration_map_size = 512;
@@ -68,10 +68,10 @@ namespace cell {
 
         void loadEnvironment(const std::string& file_name);
 
-        void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView material, VkImageView normal, VkImageView shadow_map_pos);
+        void beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos);
         void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
         void draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height);
-        void draw(const glm::vec3& ambient_color, undicht::vulkan::CommandBuffer& cmd);
+        void draw(undicht::vulkan::CommandBuffer& cmd); // ambient light / light from the environment map
 
       protected:
         // protected LightRenderer functions

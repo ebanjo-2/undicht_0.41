@@ -86,10 +86,10 @@ namespace cell {
         void beginMainRenderPass();
         void beginGeometrySubPass(const MaterialAtlas& materials);
         void drawWorld(const WorldBuffer& world);
-        void beginLightSubPass(const MaterialAtlas& materials);
+        void beginLightSubPass();
         void drawLights(const LightBuffer& lights);
         void drawLight(const DirectLight& light);
-        void drawAmbientLight(const glm::vec3& ambient_light);
+        void drawAmbientLight();
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);
 

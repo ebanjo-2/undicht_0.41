@@ -1,8 +1,9 @@
 #version 450
 
-layout(location = 0) out vec4 out_material;
-layout(location = 1) out vec4 out_normal;
-layout(location = 2) out vec4 out_shadow_pos;
+layout(location = 0) out vec4 out_albedo_roughness;
+layout(location = 1) out vec4 out_normal_metalness;
+layout(location = 2) out vec4 out_position_rel_cam;
+layout(location = 3) out vec4 out_shadow_pos;
 
 layout(location = 0) in flat uint face_id;
 layout(location = 1) in flat vec2 material;
@@ -34,8 +35,15 @@ layout(set = 2, binding = 0) uniform ChunkUBO {
 
 void main() {
 
-	out_material.xy = material;
+	vec2 tile_map_uv = (material + fract(cell_uv) * 0.99) * local.tile_map_unit;
+
+	out_albedo_roughness = texture(tile_map, vec3(tile_map_uv, 0));
+	out_normal_metalness = vec4(normal_rel_cam, texture(tile_map, vec3(tile_map_uv, 1)).a); // no normal mapping for now
+	out_position_rel_cam = vec4(pos_rel_cam, 0.0f);
+	out_shadow_pos = pos_on_shadow_map;
+
+	/*out_material.xy = material;
 	out_material.zw = fract(cell_uv);
 	out_normal = vec4(normal_rel_cam, gl_FragCoord.z);
-	out_shadow_pos = pos_on_shadow_map;
+	out_shadow_pos = pos_on_shadow_map;*/
 }

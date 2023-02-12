@@ -40,7 +40,7 @@ vec3 calcCellNormal(uint face);
 void main() {
 
 	face_id = aFaceID;
-	material = vec2(pos0.w, pos1.w) / 255.0f;
+	material = vec2(pos0.w, pos1.w);
 
 	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
 	vec4 world_pos = vec4(vertex_pos + chunk.pos, 1.0f);

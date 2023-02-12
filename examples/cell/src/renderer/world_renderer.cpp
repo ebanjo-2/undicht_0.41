@@ -27,9 +27,10 @@ namespace cell {
         _renderer.setDepthStencilTest(true, true);
         _renderer.setRasterizer(true, false);
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        _renderer.setBlending(0, false); // material output
-        _renderer.setBlending(1, false); // normal output
-        _renderer.setBlending(2, false); // shadow map pos
+        _renderer.setBlending(0, false); // albedo roughness output
+        _renderer.setBlending(1, false); // normal metalness output
+        _renderer.setBlending(2, false); // position rel cam output
+        _renderer.setBlending(3, false); // shadow map pos
 
         _renderer.init(viewport, render_pass, subpass);
 

@@ -28,10 +28,11 @@ namespace cell {
         
         // descriptor layout for renderer local descriptors
         _local_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // local uniform buffer
-        _local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // tile map
-        _local_descriptor_layout.setBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // shadow map offsets
-        _local_descriptor_layout.setBinding(3, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // material texture input
-        _local_descriptor_layout.setBinding(4, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // normal texture input
+        //_local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // tile map
+        _local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // shadow map offsets
+        _local_descriptor_layout.setBinding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // albedo roughness input
+        _local_descriptor_layout.setBinding(3, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // normal metalness input
+        _local_descriptor_layout.setBinding(4, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // position rel cam input
         _local_descriptor_layout.setBinding(5, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // shadow map pos input
         _local_descriptor_layout.init(gpu.getDevice());
 
@@ -69,7 +70,7 @@ namespace cell {
         _ambient_light_renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/ambient_light.frag.spv");
         _ambient_light_renderer.setDescriptorSetLayout(global_descriptor_layout, 0, 0); // global descriptors
         _ambient_light_renderer.setDescriptorSetLayout(_local_descriptor_layout, 1, 0); // renderer specific descriptors
-        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*environment sky box*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*irradiance*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*specular reflections*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*BRDF*/}, 2, 1); // light specific descriptors
+        _ambient_light_renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*environment sky box*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*irradiance*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*specular reflections*/, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER/*BRDF*/}, 2, 1); // light specific descriptors
         _ambient_light_renderer.setVertexInputLayout(SKY_BOX_VERTEX_LAYOUT);
         _ambient_light_renderer.setDepthStencilTest(false, false);
         _ambient_light_renderer.setRasterizer(false);
@@ -141,9 +142,6 @@ namespace cell {
         // shadow map unit
         _direct_light_ubo.init(gpu, BufferLayout({UND_VEC3F, UND_VEC3F, UND_VEC2F}));
 
-        // ambient light color (includes intensity)
-        _ambient_light_ubo.init(gpu, BufferLayout({UND_VEC3F}));
-
     }
 
     void LightRenderer::cleanUp() {
@@ -166,7 +164,6 @@ namespace cell {
         _brdf_integration_map.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
-        _ambient_light_renderer.cleanUp();
     }
 
     void LightRenderer::onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
@@ -228,7 +225,7 @@ namespace cell {
 
     }
 
-    void LightRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView material, VkImageView normal, VkImageView shadow_map_pos){
+    void LightRenderer::beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos){
         
         _descriptor_cache.reset({1});
         _local_descriptor_set = _descriptor_cache.accquire(1);
@@ -254,10 +251,11 @@ namespace cell {
 
         // updating + binding the local descriptor set
         _local_descriptor_set.bindUniformBuffer(0, _local_ubo.getBuffer());
-        _local_descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _tile_map_sampler.getSampler());
-        _local_descriptor_set.bindImage(2, _shadow_sampler_offsets.getImage().getImageView(), _shadow_sampler_offsets.getLayout(), _tile_map_sampler.getSampler());
-        _local_descriptor_set.bindInputAttachment(3, material);
-        _local_descriptor_set.bindInputAttachment(4, normal);
+        //_local_descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _tile_map_sampler.getSampler());
+        _local_descriptor_set.bindImage(1, _shadow_sampler_offsets.getImage().getImageView(), _shadow_sampler_offsets.getLayout(), _tile_map_sampler.getSampler());
+        _local_descriptor_set.bindInputAttachment(2, albedo_rough);
+        _local_descriptor_set.bindInputAttachment(3, normal_metal);
+        _local_descriptor_set.bindInputAttachment(4, position_rel_cam);
         _local_descriptor_set.bindInputAttachment(5, shadow_map_pos);
 
         // binding the global descriptor set
@@ -297,15 +295,13 @@ namespace cell {
 
     }
 
-    void LightRenderer::draw(const glm::vec3& ambient_color, undicht::vulkan::CommandBuffer& cmd) {
+    void LightRenderer::draw(undicht::vulkan::CommandBuffer& cmd) {
 
-        _ambient_light_ubo.setAttribute(0, glm::value_ptr(ambient_color), 3 * sizeof(float));
         _ambient_light_renderer.accquireDescriptorSet(2);
-        _ambient_light_renderer.bindUniformBuffer(2, 0, _ambient_light_ubo.getBuffer());
-        _ambient_light_renderer.bindImage(2, 1, _env_cube_map.getImage().getImageView(), _env_cube_map.getLayout(), _cube_map_sampler.getSampler()); 
-        _ambient_light_renderer.bindImage(2, 2, _irradiance_map.getImage().getImageView(), _irradiance_map.getLayout(), _cube_map_sampler.getSampler());
-        _ambient_light_renderer.bindImage(2, 3, _specular_prefilter_map.getImage().getImageView(), _specular_prefilter_map.getLayout(), _cube_map_sampler.getSampler()); 
-        _ambient_light_renderer.bindImage(2, 4, _brdf_integration_map.getImage().getImageView(), _brdf_integration_map.getLayout(), _brdf_map_sampler.getSampler());
+        _ambient_light_renderer.bindImage(2, 0, _env_cube_map.getImage().getImageView(), _env_cube_map.getLayout(), _cube_map_sampler.getSampler()); 
+        _ambient_light_renderer.bindImage(2, 1, _irradiance_map.getImage().getImageView(), _irradiance_map.getLayout(), _cube_map_sampler.getSampler());
+        _ambient_light_renderer.bindImage(2, 2, _specular_prefilter_map.getImage().getImageView(), _specular_prefilter_map.getLayout(), _cube_map_sampler.getSampler()); 
+        _ambient_light_renderer.bindImage(2, 3, _brdf_integration_map.getImage().getImageView(), _brdf_integration_map.getLayout(), _brdf_map_sampler.getSampler());
         _ambient_light_renderer.bindDescriptorSet(cmd, 2);
 
         _ambient_light_renderer.bindPipeline(cmd);

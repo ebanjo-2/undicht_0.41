@@ -160,17 +160,19 @@ namespace cell {
         undicht::vulkan::Framebuffer& frame_buffer = _main_render_target.getFramebuffer(_swap_image_id);
         VkClearValue visible_clear_value{0.01f, 0.01f, 0.01f, 1.0f};
         VkClearValue depth_clear_value{1.0f, 0};
-        VkClearValue material_clear_value{255, 255, 0, 0};
-        VkClearValue normal_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
         VkClearValue light_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+        VkClearValue albedo_roughness_clear_value{0, 0, 0, 0};
+        VkClearValue normal_metalness_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
+        VkClearValue position_rel_cam_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
         VkClearValue shadow_pos_clear_value{0.0f, 0.0f, 0.0f, 0.0f};
 
         std::vector<VkClearValue> clear_values = {
             visible_clear_value,
             depth_clear_value,
-            material_clear_value,
-            normal_clear_value,
             light_clear_value,
+            albedo_roughness_clear_value,
+            normal_metalness_clear_value,
+            position_rel_cam_clear_value,
             shadow_pos_clear_value
         };
 
@@ -189,15 +191,16 @@ namespace cell {
         _world_renderer.draw(world, _draw_cmd);
     }
 
-    void MasterRenderer::beginLightSubPass(const MaterialAtlas& materials) {
+    void MasterRenderer::beginLightSubPass() {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
-        const VkImageView& material = _main_render_target.getAttachment(_swap_image_id, 2);
-        const VkImageView& normal = _main_render_target.getAttachment(_swap_image_id, 3);
-        const VkImageView& shadow_map_pos = _main_render_target.getAttachment(_swap_image_id, 5);
+        const VkImageView& albedo_roughness = _main_render_target.getAttachment(_swap_image_id, 3);
+        const VkImageView& normal_metalness = _main_render_target.getAttachment(_swap_image_id, 4);
+        const VkImageView& position_rel_cam = _main_render_target.getAttachment(_swap_image_id, 5);
+        const VkImageView& shadow_map_pos = _main_render_target.getAttachment(_swap_image_id, 6);
 
-        _light_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd, material, normal, shadow_map_pos);
+        _light_renderer.beginFrame(_global_descriptor_set, _draw_cmd, albedo_roughness, normal_metalness, position_rel_cam, shadow_map_pos);
 
     }
 
@@ -214,9 +217,9 @@ namespace cell {
         _light_renderer.draw(light, _draw_cmd, shadow_map, shadow_map_layout, _SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT);
     }
 
-    void MasterRenderer::drawAmbientLight(const glm::vec3& ambient_light) {
+    void MasterRenderer::drawAmbientLight() {
 
-        _light_renderer.draw(ambient_light, _draw_cmd);
+        _light_renderer.draw(_draw_cmd);
     }
 
 
@@ -224,7 +227,7 @@ namespace cell {
 
         _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
-        const VkImageView& light_hdr = _main_render_target.getAttachment(_swap_image_id, 4);
+        const VkImageView& light_hdr = _main_render_target.getAttachment(_swap_image_id, 2);
 
         _final_renderer.beginFrame(_draw_cmd, light_hdr);
     }
@@ -282,30 +285,35 @@ namespace cell {
         // using https://learnopengl.com/Advanced-Lighting/Deferred-Shading as a reference for setting up the geometry buffer
 
         const VkFormat DEPTH_BUFFER_FORMAT = translate(UND_DEPTH32F);
-        const VkFormat MATERIAL_BUFFER_FORMAT = translate(UND_R8G8B8A8); // material + cell_uv
-        const VkFormat NORMAL_BUFFER_FORMAT = translate(UND_VEC4F); // normal (32 bit floats needed for the depth stored in the alpha)
         const VkFormat LIGHT_BUFFER_FORMAT = translate(UND_VEC4F16); // using 2 byte floats to store a higher range (hdr)
+        const VkFormat ALBEDO_ROUGHNESS_FORMAT = translate(UND_R8G8B8A8);
+        const VkFormat NORMAL_METALNESS_FORMAT = translate(UND_VEC4F16);
+        const VkFormat POSITION_REL_CAM_FORMAT = translate(UND_VEC4F16);
         const VkFormat SHADOW_MAP_POS_FORMAT = translate(UND_VEC4F16); // pos + depth on shadow map
+
 
         _main_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
         _main_render_target.addVisibleAttachment(swap_chain, true, true); // 0
         _main_render_target.addAttachment(DEPTH_BUFFER_FORMAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL); // 1
-        _main_render_target.addAttachment(MATERIAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
-        _main_render_target.addAttachment(NORMAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
-        _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 4
-        _main_render_target.addAttachment(SHADOW_MAP_POS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 5
+        //_main_render_target.addAttachment(MATERIAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
+        //_main_render_target.addAttachment(NORMAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
+        _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
+        _main_render_target.addAttachment(ALBEDO_ROUGHNESS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
+        _main_render_target.addAttachment(NORMAL_METALNESS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 4
+        _main_render_target.addAttachment(POSITION_REL_CAM_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 5
+        _main_render_target.addAttachment(SHADOW_MAP_POS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 6
 
         // geometry subpass
         _main_render_target.addSubPass(
-            {1, 2, 3, 5},
-            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
+            {1, 3, 4, 5, 6},
+            {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}
         );
         // lighting subpass
         _main_render_target.addSubPass(
-            {1, 4}, // uses the depth buffer as an "output", but doesnt write to it
+            {1, 2}, // uses the depth buffer as an "output", but doesnt write to it (used by point lights)
             {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {2, 3, 5},
-            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
+            {3, 4, 5, 6},
+            {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // lighting subpass waits for the geometry subpass at the fragment shader stage
         _main_render_target.addSubPassDependency(
@@ -320,7 +328,7 @@ namespace cell {
         _main_render_target.addSubPass(
             {0}, // outputs only to the visible attachment
             {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, 
-            {4},
+            {2},
             {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}
         );
         // final subpass waits for the lighting subpass at the fragment shader stage

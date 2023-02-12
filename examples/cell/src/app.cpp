@@ -12,7 +12,7 @@ namespace cell {
 
         UND_LOG << "App::init() gets called\n";
         
-        undicht::Engine::init(true, true);
+        undicht::Engine::init(false, true);
 
         UND_LOG << "initialized the engine\n";
 
@@ -69,8 +69,9 @@ namespace cell {
         _sun.setDirection(glm::vec3(1, 1, -1)); // will get normalized
         _sun.setShadowOrigin(glm::vec3(5, -50, 50));
 
-        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
-        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
+        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
+        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Milkyway/Milkyway_BG.jpg");
 
     }
 
@@ -122,12 +123,12 @@ namespace cell {
             _master_renderer.beginMainRenderPass();
             _master_renderer.beginGeometrySubPass(_materials);
             _master_renderer.drawWorld(_world.getWorldBuffer());
-            _master_renderer.beginLightSubPass(_materials);
+            _master_renderer.beginLightSubPass();
             _master_renderer.drawLight(_sun);
             _master_renderer.drawLights(_lights);
-            _master_renderer.drawAmbientLight(glm::vec3(0.02, 0.02, 0.02));
+            _master_renderer.drawAmbientLight();
             _master_renderer.beginFinalSubPass();
-            _master_renderer.drawFinal(2.0f);
+            _master_renderer.drawFinal(1.0f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

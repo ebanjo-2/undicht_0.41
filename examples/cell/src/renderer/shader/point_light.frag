@@ -21,14 +21,11 @@ layout(set = 1, binding = 0) uniform LocalUBO {
     ivec2 shadow_offset_texture_size;
 } local;
 
-layout (set = 1, binding = 1) uniform sampler2DArray tile_map;
-
-layout (set = 1, input_attachment_index = 0, binding = 3) uniform subpassInput input_material;
-layout (set = 1, input_attachment_index = 1, binding = 4) uniform subpassInput input_normal; // contains the normal data + depth
-
-// reading the inputs
-vec3 calcFragPosRelCam(float depth);
-vec2 getTileMapUV();
+// layout (set = 1, binding = 1) uniform sampler3D shadow_offsets; // unused in this shader
+layout (set = 1, input_attachment_index = 0, binding = 2) uniform subpassInput input_albedo_roughness;
+layout (set = 1, input_attachment_index = 1, binding = 3) uniform subpassInput input_normal_metalness; // contains the normal data + metalness
+layout (set = 1, input_attachment_index = 1, binding = 4) uniform subpassInput input_position_rel_cam; 
+// layout (set = 1, input_attachment_index = 2, binding = 5) uniform subpassInput input_shadow_map_pos; // position of the fragment on the shadow map
 
 // pbr math functions
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
@@ -40,23 +37,18 @@ const float PI = 3.14159265359;
 
 void main() {
 
-	// getting the position and normal of the fragment (in view space)
-    vec4 normal_depth = subpassLoad(input_normal);
-	vec3 frag_pos_rel_cam = calcFragPosRelCam(normal_depth.a);
-	vec3 frag_normal_rel_cam = normal_depth.xyz;
-	vec3 N = normalize(frag_normal_rel_cam);
+	// loading data from previous subpasses
+    vec4 albedo_roughness = subpassLoad(input_albedo_roughness);
+    vec4 normal_metalness = subpassLoad(input_normal_metalness);
+	vec3 frag_pos_rel_cam = subpassLoad(input_position_rel_cam).xyz; // calcFragPosRelCam(normal_depth.a);
 
-	// reading the material properties
-	vec2 tile_map_uv = getTileMapUV();
-	vec4 albedo_roughness = texture(tile_map, vec3(tile_map_uv, 0));
-	vec4 normal_metal = texture(tile_map, vec3(tile_map_uv, 1));
+	// material properties
 	vec3 albedo = albedo_roughness.rgb;
 	float roughness = albedo_roughness.a;
-	float metallic = normal_metal.a;
-	//float roughness = 0.1f;
-	//float metallic = 0.0f;
+	float metallic = normal_metalness.a;
 
 	// frequently used vectors
+    vec3 N = normalize(normal_metalness.xyz);
 	vec3 V = normalize(-frag_pos_rel_cam); // cam sits at (0,0,0) in the view space
 	vec3 L = normalize(light_pos_rel_cam - frag_pos_rel_cam);
 	vec3 H = normalize(V + L); // half vector between the direction to the light and to the cam
@@ -85,40 +77,7 @@ void main() {
     float NdotL = max(dot(N, L), 0.0);
     out_color = vec4((kD * albedo / PI + specular) * radiance * NdotL, 0.0f); 
 
-    //out_color = vec4(frag_normal_rel_cam,0);
 }
-
-//////////////////////////////////////////// reading the inputs ////////////////////////////////////////////
-
-vec3 calcFragPosRelCam(float depth) {
-	// reconstructing the fragments position in view space (relative to the camera)
-	// from the depth value read from the depth buffer
-
-	// reading the depth value from the depth input texture
-	// float depth = subpassLoad(input_depth).r;
-	vec2 screen_pos = gl_FragCoord.xy * global.inv_viewport * 2.0 - 1.0;
-
-    // thanks for the math 
-    // https://stackoverflow.com/questions/32227283/getting-world-position-from-depth-buffer-value
-    vec4 clipSpacePosition = vec4(screen_pos, depth, 1.0);
-	//clipSpacePosition.y = -clipSpacePosition.y;
-    vec4 viewSpacePosition = global.inv_proj * clipSpacePosition;
-
-    // Perspective division
-    viewSpacePosition /= viewSpacePosition.w;
-
-	return viewSpacePosition.xyz;
-}
-
-vec2 getTileMapUV() {
-
-	uvec2 material = uvec2(subpassLoad(input_material).xy * 255);
-	vec2 cell_uv = subpassLoad(input_material).zw;
-	vec2 tile_map_uv = (material + cell_uv * 0.99) * local.tile_map_unit;
-
-	return tile_map_uv;
-}
-
 
 //////////////////////////////////////////// pbr math functions ////////////////////////////////////////////
 
