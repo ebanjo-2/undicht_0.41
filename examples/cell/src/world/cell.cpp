@@ -1,5 +1,6 @@
 #include "cell.h"
 
+// seems like this only gets defined on some systems / compilers
 #ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN
 #endif
@@ -7,7 +8,7 @@
 namespace cell {
 
     using namespace undicht;
-    const BufferLayout CELL_LAYOUT = BufferLayout({UND_VEC4UI8, UND_VEC4UI8});
+    const BufferLayout CELL_LAYOUT = BufferLayout({UND_VEC4UI8, UND_VEC4UI8, UND_UINT32});
 
     const uint8_t CELL_FACE_YP = 0x01; // + y (00000001)
     const uint8_t CELL_FACE_YN = 0x02; // - y (00000010)
@@ -16,11 +17,12 @@ namespace cell {
     const uint8_t CELL_FACE_ZP = 0x10; // + z (00010000)
     const uint8_t CELL_FACE_ZN = 0x20; // - z (00100000)
 
-    Cell::Cell(uint32_t x0, uint32_t y0, uint32_t z0, uint32_t x1, uint32_t y1, uint32_t z1, uint32_t id) {
+    Cell::Cell(uint32_t x0, uint32_t y0, uint32_t z0, uint32_t x1, uint32_t y1, uint32_t z1, uint32_t id, uint32_t faces) {
 
         setPos0(x0, y0, z0);
         setPos1(x1, y1, z1);
         setID(id);
+        setVisibleFaces(faces);
     }
 
     void Cell::getPos0(uint32_t &x, uint32_t &y, uint32_t &z) const {
@@ -64,6 +66,10 @@ namespace cell {
         #else
             return ((_pos_0 & 0x000000FF) << 8) | (_pos_1 & 0x000000FF);
         #endif
+    }
+
+    uint32_t Cell::getVisibleFaces() const {
+        return _faces;
     }
 
     void Cell::setPos0(uint32_t x, uint32_t y, uint32_t z) {
@@ -116,6 +122,11 @@ namespace cell {
             setUV(((id & 0x0000FF00) >> 8), (id & 0x000000FF));
         #endif
     }
+
+    void Cell::setVisibleFaces(uint32_t faces) {
+        // combine the faces with bit wise ors: CELL_FACE_YP | CELL_FACE_YN | CELL_FACE_XP ...
+        _faces = faces;
+    } 
 
     ///////////////////////////////////////////// operator to print out cell data /////////////////////////////////////////
 

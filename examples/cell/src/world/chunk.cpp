@@ -170,6 +170,16 @@ namespace cell {
         return _cells.size() * CELL_LAYOUT.getTotalSize();
     }
 
+    void Chunk::loadFromBuffer(const Cell* buffer, uint32_t cell_count) {
+        // initializes the complete chunk from the cell data stored in the buffer
+
+        if (buffer && cell_count) {
+            _cells.resize(cell_count);
+            std::copy(buffer, buffer + cell_count, _cells.begin());
+        };
+
+    }
+
     bool Chunk::getWasEdited() const {
         
         return _has_changed;

@@ -9,13 +9,13 @@ namespace cell {
 
     ///////////////////////////////////////// loading chunks into ram /////////////////////////////////////////
 
-    const Chunk &World::loadChunk(const glm::ivec3 &chunk_pos, const std::vector<Cell> &cells) {
+    Chunk &World::loadChunk(const glm::ivec3 &chunk_pos, const std::vector<Cell> &cells) {
         // returns the loaded chunk
 
         return loadChunk(chunk_pos, cells.data(), cells.size() * sizeof(Cell));
     }
 
-    const Chunk &World::loadChunk(const glm::ivec3 &chunk_pos, const Cell *cell_buffer, uint32_t byte_size) {
+    Chunk &World::loadChunk(const glm::ivec3 &chunk_pos, const Cell *cell_buffer, uint32_t byte_size) {
 
         // checking if the chunk is already loaded
         Chunk* c = (Chunk*)getChunkAt(chunk_pos);
@@ -48,7 +48,7 @@ namespace cell {
 
     /////////////////////////////////////////////// accessing chunks //////////////////////////////////////////
 
-    const Chunk *World::getChunkAt(const glm::ivec3 &world_pos) const {
+    Chunk *World::getChunkAt(const glm::ivec3 &world_pos) const {
 
         // calculating the chunk-position of the requested world-position
         glm::ivec3 chunk_pos = calcChunkPosition(world_pos);
@@ -57,17 +57,17 @@ namespace cell {
 
             if (_chunk_positions.at(i) == chunk_pos) {
 
-                return &_loaded_chunks.at(i);
+                return (Chunk*)&_loaded_chunks.at(i);
             }
         }
 
         return nullptr;
     }
 
-    std::vector<const Chunk *> World::getChunksAt(const glm::ivec3 &world_pos0, const glm::ivec3 &world_pos1) const {
+    std::vector<Chunk *> World::getChunksAt(const glm::ivec3 &world_pos0, const glm::ivec3 &world_pos1) const {
         // rerturns all chunks within the volume between pos0 and pos1 (unloaded chunks will be added as nullptr)
 
-        std::vector<const Chunk *> chunks;
+        std::vector<Chunk *> chunks;
 
         for(int x = world_pos0.x; x <= world_pos1.x; x += 255) {
             for(int y = world_pos0.y; y <= world_pos1.y; y += 255) {
@@ -80,6 +80,16 @@ namespace cell {
         }
 
         return chunks;
+    }
+
+    const std::vector<Chunk>& World::getLoadedChunks() const {
+
+        return _loaded_chunks;
+    }
+
+    const std::vector<glm::ivec3>& World::getChunkPositions() const {
+
+        return _chunk_positions;
     }
 
     uint32_t World::getNumberOfLoadedChunks() const {

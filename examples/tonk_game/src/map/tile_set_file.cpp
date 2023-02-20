@@ -24,7 +24,7 @@ namespace tonk {
         const XmlElement* tonk_tile_set = getElement({"TONKTILESET"});
 
         // loading all groups
-        std::vector<const XmlElement*> tile_groups = tonk_tile_set->getAllElements({"group"});
+        std::vector<XmlElement*> tile_groups = tonk_tile_set->getAllElements({"group"});
         for(const XmlElement* group : tile_groups) {
 
             loadTileGroup(group, tile_set, tile_map);    
@@ -77,7 +77,7 @@ namespace tonk {
 
                 if(!feature) continue; // could be intentional (in the way that only one tile stores the other one as a possible neighbour)
 
-                feature->m_content = toStr(neighbour._xp_propability) + " " + toStr(neighbour._xn_propability) + " " + toStr(neighbour._yp_propability) + " " + toStr(neighbour._yn_propability);
+                feature->setContent(toStr(neighbour._xp_propability) + " " + toStr(neighbour._xn_propability) + " " + toStr(neighbour._yp_propability) + " " + toStr(neighbour._yn_propability));
             }
 
         }
@@ -97,7 +97,7 @@ namespace tonk {
         }
 
         // loading the tiles from this group
-        std::vector<const XmlElement*> tiles = group_data->getAllElements({"tile"});
+        std::vector<XmlElement*> tiles = group_data->getAllElements({"tile"});
         for(const XmlElement* tile : tiles) {
 
             uint32_t next_tile_id = tile_set.getTileCount();
@@ -127,7 +127,7 @@ namespace tonk {
         tile.setName(group_name + "::" + name->m_value);
 
         // loading the tiles neighbours
-        std::vector<const XmlElement*> features = tile_data->getAllElements({"feature"});
+        std::vector<XmlElement*> features = tile_data->getAllElements({"feature"});
         for(const XmlElement* feature : features) {
 
             const XmlTagAttrib* neighbour = feature->getAttribute("neighbour");

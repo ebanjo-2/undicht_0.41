@@ -70,7 +70,7 @@ namespace undicht {
 		void XmlFile::write(const std::string& file_name) {
 			// writes the contents stored in the root xml object into the file
 
-			std::ofstream file(file_name, std::ios::trunc);
+			std::fstream file(file_name, std::fstream::trunc | std::fstream::out);
 
 			std::string file_content = getXmlStringRecursive(-2);
 

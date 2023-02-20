@@ -10,7 +10,8 @@
 #include "renderer/drawable_world.h"
 #include "materials/material_atlas.h"
 #include "player/player.h"
-#include "entities/light_buffer.h"
+#include "renderer/light_buffer.h"
+#include "files/world_file.h"
 
 namespace cell {
 
@@ -21,9 +22,10 @@ namespace cell {
 
         MasterRenderer _master_renderer;
         DrawableWorld _world;
-        LightBuffer _lights;
-        DirectLight _sun;
+        //LightBuffer _lights;
+        //DirectLight _sun;
         MaterialAtlas _materials;
+        WorldFile _world_file;
 
     public:
 

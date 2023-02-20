@@ -13,7 +13,7 @@ namespace cell {
     const extern undicht::BufferLayout LIGHT_VERTEX_LAYOUT; // per vertex data
 
     class LightBuffer {
-    
+        // contains the data of multiple point lights that can be used for instanced rendering
     protected:
 
         undicht::vulkan::VertexBuffer _point_light_buffer;

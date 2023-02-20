@@ -1,0 +1,9 @@
+<WORLD_FILE version=0.0.1>
+<MATERIALS>
+  <SOURCE>../res/default.txt</SOURCE>
+</MATERIALS>
+<WORLD>
+  <CHUNK chunk_pos=0_-255_0>0_-255_0_first_world.txt</CHUNK>
+  <CHUNK chunk_pos=255_-255_0>255_-255_0_first_world.txt</CHUNK>
+  <CHUNK chunk_pos=-255_-255_0>-255_-255_0_first_world.txt</CHUNK>
+</WORLD>

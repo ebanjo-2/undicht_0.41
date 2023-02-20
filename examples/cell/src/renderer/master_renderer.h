@@ -14,7 +14,7 @@
 #include "renderer/vulkan/texture.h"
 #include "renderer/vulkan/render_target.h"
 
-#include "entities/light_buffer.h"
+#include "renderer/light_buffer.h"
 #include "entities/lights/direct_light.h"
 
 #include "3D/camera/perspective_camera_3d.h"

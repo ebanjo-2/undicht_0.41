@@ -54,6 +54,9 @@ namespace cell {
         // v z0 y0 x0 u z1 y1 x1 (one byte each)
         uint32_t fillBuffer(const void* buffer) const;
 
+        // initializes the complete chunk from the cell data stored in the buffer
+        void loadFromBuffer(const Cell* buffer, uint32_t cell_count);
+
         bool getWasEdited() const;
         void markAsUnEdited();
 

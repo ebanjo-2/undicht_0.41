@@ -47,7 +47,7 @@ namespace undicht {
 			* @param id: to iterate through the meshes of the file */
 
 			// all geometries stored in the file
-			std::vector<const XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
+			std::vector<XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
 
 			if (geometries.size() <= id) return;
 			const XmlElement* geom_element = geometries.at(id);
@@ -56,7 +56,7 @@ namespace undicht {
 			loadGeometry(*geom_element, loadTo_mesh.vertices, loadTo_mesh.vertex_layout, load_positions, load_uvs, load_normals);
 
 			// finding the right textures for the model
-			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
+			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
 
 			const XmlElement* mesh = geom_element->getElement({ "mesh" });
 			std::string material_id;
@@ -93,7 +93,7 @@ namespace undicht {
 		void ColladaFile::getTexture(ImageData& loadTo_texture, int id) {
 			/** @param id: to iterate through the texture of the file */
 
-			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
+			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
 
 			loadMaterialTextures(materials.at(id), loadTo_texture);
 
@@ -104,10 +104,10 @@ namespace undicht {
 		void ColladaFile::loadAllMeshes(std::vector<MeshData>& loadTo_meshes, bool load_positions, bool load_uvs, bool load_normals) {
 
 			// all materials stored in the file
-			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
+			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
 
 			// all geometries stored in the file
-			std::vector<const XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
+			std::vector<XmlElement*> geometries = getAllElements({ "COLLADA", "library_geometries", "geometry" });
 
 
 			for (const XmlElement* e : geometries) {
@@ -147,7 +147,7 @@ namespace undicht {
 		void ColladaFile::loadAllTextures(std::vector<ImageData>& loadTo_textures) {
 
 			// all materials stored in the file
-			std::vector<const XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
+			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
 
 			for (const XmlElement* material : materials) {
 				loadTo_textures.emplace_back(ImageData());

@@ -14,7 +14,7 @@
 #include "renderer/vulkan/renderer.h"
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
-#include "entities/light_buffer.h"
+#include "renderer/light_buffer.h"
 #include "entities/lights/direct_light.h"
 
 namespace cell {
@@ -30,7 +30,7 @@ namespace cell {
         undicht::vulkan::Renderer _point_light_renderer;
         undicht::vulkan::Renderer _direct_light_renderer;
         undicht::vulkan::Renderer _ambient_light_renderer;
-        undicht::vulkan::Sampler _tile_map_sampler;
+        undicht::vulkan::Sampler _offset_sampler;
         undicht::vulkan::Sampler _shadow_map_sampler;
         undicht::vulkan::Sampler _cube_map_sampler;
         undicht::vulkan::Sampler _brdf_map_sampler;
@@ -57,7 +57,6 @@ namespace cell {
         undicht::vulkan::DescriptorSet _local_descriptor_set;
 
         undicht::vulkan::UniformBuffer _direct_light_ubo;
-        undicht::vulkan::UniformBuffer _ambient_light_ubo;
 
       public:
 

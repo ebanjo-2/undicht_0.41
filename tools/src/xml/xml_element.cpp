@@ -14,7 +14,7 @@ namespace undicht {
 
 		XmlElement::XmlElement(XmlElement* parent) {
 
-			m_parent_element = parent;
+			setParentElement(parent);
 		}
 
 
@@ -81,13 +81,13 @@ namespace undicht {
 			return m_content; // this one is easy
 		}
 
-		const XmlTagAttrib* XmlElement::getAttribute(const std::string& attr_name) const{
+		XmlTagAttrib* XmlElement::getAttribute(const std::string& attr_name) const{
 
 			for (const XmlTagAttrib& attr : m_tag_attributes) {
 
 				if (!attr.m_name.compare(attr_name)) {
 
-					return &attr;
+					return (XmlTagAttrib*)&attr;
 				}
 
 			}
@@ -95,7 +95,7 @@ namespace undicht {
 			return 0;
 		}
 
-		const XmlElement* XmlElement::getElement(const std::vector<std::string>& attribute_strings, int attrib_num) const {
+		XmlElement* XmlElement::getElement(const std::vector<std::string>& attribute_strings, int attrib_num) const {
 			/** searches the elements children for the first one which has the attributes stored in the attribute string at attrib_num
 			* if multiple attribute strings are provided, its children in return will be checked
 			* @param attrib_num: needed so that the function can be used recursivly (what attribute string to use)
@@ -113,7 +113,7 @@ namespace undicht {
 
 					if (attrib_num + 1 >= attribute_strings.size()) {
 						// last element of the search queue
-						return &elem;
+						return (XmlElement*)&elem;
 					}
 					else {
 						// the search continues
@@ -127,14 +127,14 @@ namespace undicht {
 			return 0;
 		}
 
-		std::vector<const XmlElement*> XmlElement::getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num) const {
+		std::vector<XmlElement*> XmlElement::getAllElements(const std::vector<std::string>& attribute_strings, int attrib_num) const {
 			/** @return all xml elements that have all the requested tag attributes */
 
 			// splitting the attributes
 			std::string elem_name;
 			std::vector<std::string> attributes = splitAttributeString(attribute_strings.at(attrib_num), elem_name);
 
-			std::vector<const XmlElement*> elements;
+			std::vector<XmlElement*> elements;
 
 			// searching for child elements
 			for (const XmlElement& elem : m_child_elements) {
@@ -144,12 +144,12 @@ namespace undicht {
 
 					if (attrib_num + 1 >= attribute_strings.size()) {
 						// at end of search queue
-						elements.push_back(&elem);
+						elements.push_back((XmlElement*)&elem);
 					}
 					else {
 						// the search continues
 
-						std::vector<const XmlElement*> new_elements = elem.getAllElements(attribute_strings, attrib_num + 1);
+						std::vector<XmlElement*> new_elements = elem.getAllElements(attribute_strings, attrib_num + 1);
 						elements.insert(elements.end(), new_elements.begin(), new_elements.end());
 					}
 
@@ -277,18 +277,43 @@ namespace undicht {
 
 		/////////////////////////////////////////////// functions to set the elements data ///////////////////////////////////////////////
 
-		XmlElement* XmlElement::addChildElement() {
+		XmlElement* XmlElement::addChildElement(const std::string& name, const std::vector<std::string>& attribs) {
 
 			m_child_elements.emplace_back(XmlElement(this));
+			m_child_elements.back().setName(name);
+
+			for(const std::string& s : attribs)
+				m_child_elements.back().addTagAttrib(s);
 
 			return &m_child_elements.back();
 		}
 
-		XmlElement* XmlElement::getParentElement() {
+		void XmlElement::setParentElement(XmlElement* parent) {
+			
+			m_parent_element = parent;
+		}
+
+		XmlElement* XmlElement::getParentElement() const {
 
 			return m_parent_element;
 		}
 
+		void XmlElement::setName(const std::string& name) {
+
+			m_tag_name = name;
+		}
+
+		void XmlElement::setContent(const std::string& content) {
+
+			m_content = content;
+		}
+
+		XmlTagAttrib* XmlElement::addTagAttrib(const std::string& data) {
+			
+			m_tag_attributes.emplace_back(XmlTagAttrib(data));
+
+			return &m_tag_attributes.back();
+		}
 
 		void XmlElement::setData(const std::string& line) {
 			/** extracts data from the line which can be read from a xml file

@@ -7,6 +7,7 @@ layout(location = 1) in uint aFaceID;
 // per cell data
 layout(location = 2) in uvec4 pos0;
 layout(location = 3) in uvec4 pos1;
+layout(location = 4) in uint faces;
 
 // global ubo (contains global shadow view + projection matrix)
 layout(set = 0, binding = 0) uniform GlobalUBO {
@@ -32,6 +33,7 @@ void main() {
 
 	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
 	vec4 world_pos = vec4(vertex_pos + chunk.pos, 1.0f);
+    bool draw_face = bool(aFaceID & faces); // 1 if the face should get drawn, 0 if not
 
-	gl_Position = global.shadow_proj * global.shadow_view * world_pos;
+	gl_Position = global.shadow_proj * global.shadow_view * world_pos * float(draw_face);
 }

@@ -80,10 +80,9 @@ namespace cell {
         _ambient_light_renderer.init(viewport, render_pass, subpass);
 
         // Sampler
-        _tile_map_sampler.setMinFilter(VK_FILTER_NEAREST);
-        _tile_map_sampler.setMaxFilter(VK_FILTER_NEAREST);
-        _tile_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
-        _tile_map_sampler.init(gpu.getDevice());
+        _offset_sampler.setMinFilter(VK_FILTER_NEAREST);
+        _offset_sampler.setMaxFilter(VK_FILTER_NEAREST);
+        _offset_sampler.init(gpu.getDevice());
 
         _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
         _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
@@ -150,10 +149,9 @@ namespace cell {
         _sky_box.cleanUp();
         _local_ubo.cleanUp();
         _direct_light_ubo.cleanUp();
-        _ambient_light_ubo.cleanUp();
         _local_descriptor_layout.cleanUp();
         _descriptor_cache.cleanUp();
-        _tile_map_sampler.cleanUp();
+        _offset_sampler.cleanUp();
         _shadow_map_sampler.cleanUp();
         _cube_map_sampler.cleanUp();
         _brdf_map_sampler.cleanUp();
@@ -164,6 +162,7 @@ namespace cell {
         _brdf_integration_map.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
+        _ambient_light_renderer.cleanUp();
     }
 
     void LightRenderer::onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
@@ -252,7 +251,7 @@ namespace cell {
         // updating + binding the local descriptor set
         _local_descriptor_set.bindUniformBuffer(0, _local_ubo.getBuffer());
         //_local_descriptor_set.bindImage(1, materials.getTileMap().getImage().getImageView(), materials.getTileMap().getLayout(), _tile_map_sampler.getSampler());
-        _local_descriptor_set.bindImage(1, _shadow_sampler_offsets.getImage().getImageView(), _shadow_sampler_offsets.getLayout(), _tile_map_sampler.getSampler());
+        _local_descriptor_set.bindImage(1, _shadow_sampler_offsets.getImage().getImageView(), _shadow_sampler_offsets.getLayout(), _offset_sampler.getSampler());
         _local_descriptor_set.bindInputAttachment(2, albedo_rough);
         _local_descriptor_set.bindInputAttachment(3, normal_metal);
         _local_descriptor_set.bindInputAttachment(4, position_rel_cam);

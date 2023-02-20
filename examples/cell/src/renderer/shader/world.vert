@@ -7,13 +7,13 @@ layout(location = 1) in uint aFaceID;
 // per cell data
 layout(location = 2) in uvec4 pos0;
 layout(location = 3) in uvec4 pos1;
+layout(location = 4) in uint faces;
 
-layout(location = 0) out flat uint face_id;
-layout(location = 1) out flat vec2 material;
-layout(location = 2) out vec3 pos_rel_cam;
-layout(location = 3) out vec3 normal_rel_cam;
-layout(location = 4) out vec2 cell_uv;
-layout(location = 5) out vec4 pos_on_shadow_map;
+layout(location = 0) out flat vec2 material;
+layout(location = 1) out vec3 pos_rel_cam;
+layout(location = 2) out vec3 normal_rel_cam;
+layout(location = 3) out vec2 cell_uv;
+layout(location = 4) out vec4 pos_on_shadow_map;
 
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 view;
@@ -39,7 +39,6 @@ vec3 calcCellNormal(uint face);
 
 void main() {
 
-	face_id = aFaceID;
 	material = vec2(pos0.w, pos1.w);
 
 	vec3 vertex_pos = (1-aPos) * pos0.xyz + aPos * pos1.xyz;
@@ -53,7 +52,9 @@ void main() {
 	pos_on_shadow_map = global.shadow_proj * global.shadow_view * world_pos;
 	pos_on_shadow_map.xy = pos_on_shadow_map.xy * 0.5 + 0.5; // convert to [0,1] range (uv's)
 
-	gl_Position = global.proj * global.view * world_pos;
+    bool draw_face = bool(aFaceID & faces); // 1 if the face should get drawn, 0 if not
+
+	gl_Position = global.proj * global.view * world_pos * float(draw_face);
 }
 
 vec2 calcCellUv(vec3 vertex_pos, uint face) {
@@ -70,9 +71,9 @@ vec3 calcCellNormal(uint face) {
 
 	switch(face) {
 	case 0x01:
-		return vec3(0,-1,0);
-	case 0x02:
 		return vec3(0,1,0);
+	case 0x02:
+		return vec3(0,-1,0);
 	case 0x04:
 		return vec3(1,0,0);
 	case 0x08:

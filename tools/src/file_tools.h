@@ -38,6 +38,9 @@ namespace undicht {
         * @param go_back: how many directories to cut at the end of the file path*/
         std::string getFilePath(std::string file_name, int go_back = 0);
 
+        /** removes the file path */
+        std::string getFileName(std::string file_name_and_path);
+
         /** @brief replace all chars with an other char */
         std::string replaceAllChars(std::string str, char to_be_replaced, char replace_with);
 

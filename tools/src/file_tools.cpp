@@ -38,7 +38,6 @@ namespace undicht {
         /** removes the file name (*.*), and returns the remaining path */
         std::string getFilePath(std::string file_name, int go_back) {
 
-
             // where the file path ends
             size_t path_end = file_name.size();
 
@@ -55,6 +54,13 @@ namespace undicht {
             }
 
             return file_name;
+        }
+
+        std::string getFileName(std::string file_name_and_path) {
+
+            size_t path_end = file_name_and_path.rfind("/");
+
+            return file_name_and_path.substr(path_end + 1, file_name_and_path.size() - path_end - 1);
         }
 
         std::string replaceAllChars(std::string str, char to_be_replaced, char replace_with) {
