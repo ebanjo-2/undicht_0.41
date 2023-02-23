@@ -1,8 +1,7 @@
 #include "renderer/world_renderer.h"
 #include "file_tools.h"
 #include "core/vulkan/formats.h"
-#include "world/cell.h"
-#include "renderer/world_buffer.h"
+#include "world/cells/cell.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "debug.h"
@@ -85,7 +84,7 @@ namespace cell {
 
     }
 
-    void WorldRenderer::draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd) {
+    void WorldRenderer::draw(const CellBuffer& world, undicht::vulkan::CommandBuffer& cmd) {
         
         _renderer.bindPipeline(cmd);
         _renderer.bindVertexBuffer(cmd, world.getBuffer(), false, true);
@@ -93,7 +92,7 @@ namespace cell {
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
         createPerChunkUBOs(world.getDrawAreas().size());
-        for(const WorldBuffer::BufferEntry& entry : world.getDrawAreas()) {
+        for(const CellBuffer::BufferEntry& entry : world.getDrawAreas()) {
 
             // loading the chunk position to the chunk ubo
             _last_used_chunk_ubo++;

@@ -28,7 +28,6 @@ namespace cell {
         
         // descriptor layout for renderer local descriptors
         _local_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // local uniform buffer
-        //_local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // tile map
         _local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // shadow map offsets
         _local_descriptor_layout.setBinding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // albedo roughness input
         _local_descriptor_layout.setBinding(3, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // normal metalness input
@@ -84,8 +83,8 @@ namespace cell {
         _offset_sampler.setMaxFilter(VK_FILTER_NEAREST);
         _offset_sampler.init(gpu.getDevice());
 
-        _shadow_map_sampler.setMinFilter(VK_FILTER_LINEAR);
-        _shadow_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
+        _shadow_map_sampler.setMinFilter(VK_FILTER_NEAREST);
+        _shadow_map_sampler.setMaxFilter(VK_FILTER_NEAREST);
         _shadow_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER);
         _shadow_map_sampler.setBorderColor(VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE); // to make sure that areas outside the shadow map are not covered in shadow
         _shadow_map_sampler.init(gpu.getDevice());
@@ -269,11 +268,19 @@ namespace cell {
     void LightRenderer::draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd){
 
         _point_light_renderer.bindPipeline(cmd);
-        _point_light_renderer.bindVertexBuffer(cmd, lights.getPointLightBuffer(), false, true);
-        _point_light_renderer.draw(cmd, lights.getPointLightModelVertexCount(), false, lights.getPointLightCount());
+        _point_light_renderer.bindVertexBuffer(cmd, lights.getBuffer(), false, true);
+
+        uint32_t light_byte_size = POINT_LIGHT_LAYOUT.getTotalSize();
+        for(const LightBuffer::BufferEntry& entry : lights.getDrawAreas()) {
+
+            // draw command
+            uint32_t light_count = entry.byte_size / light_byte_size;
+            uint32_t current_offset = entry.offset / light_byte_size;
+            _point_light_renderer.draw(cmd, lights.getPointLightModelVertexCount(), false, light_count, current_offset);
+        }
     }
 
-    void LightRenderer::draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height) {
+    void LightRenderer::draw(const Light& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height) {
         
         // storing the lights data in the ubo
         float shadow_map_unit[2];

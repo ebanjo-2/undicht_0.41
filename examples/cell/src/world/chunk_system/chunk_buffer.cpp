@@ -1,75 +1,49 @@
-#include "world_buffer.h"
+#include "chunk_buffer.h"
 #include "vector"
 #include "algorithm"
-#include "world/cell.h"
 #include "debug.h"
+
+#include "world/lights/light.h"
+#include "world/cells/cell.h"
 
 namespace cell {
 
-    using namespace undicht;
+    // to avoid linker errors
+    // Tell the C++ compiler which instantiations to make while it is compiling the template class’s .cpp file.
+    // https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+    template class ChunkBuffer<Cell>;
+    template class ChunkBuffer<Light>;
 
-    // cube vertices
-    const BufferLayout CUBE_VERTEX_LAYOUT({UND_VEC3UI8, UND_UINT8});
-
-    // position, FACE
-    const std::vector<uint8_t> cube_vertices = {
-        0,1,0,  CELL_FACE_XN, // x = 0
-        0,1,1,  CELL_FACE_XN,
-        0,0,1,  CELL_FACE_XN,
-        0,1,0,  CELL_FACE_XN,
-        0,0,1,  CELL_FACE_XN,
-        0,0,0,  CELL_FACE_XN,
-
-        1,1,0,  CELL_FACE_XP, // x = 1
-        1,0,0,  CELL_FACE_XP,
-        1,0,1,  CELL_FACE_XP,
-        1,1,0,  CELL_FACE_XP,
-        1,0,1,  CELL_FACE_XP,
-        1,1,1,  CELL_FACE_XP,
-        
-        0,0,0,  CELL_FACE_YN, // y = 0
-        0,0,1,  CELL_FACE_YN,
-        1,0,1,  CELL_FACE_YN,
-        0,0,0,  CELL_FACE_YN,
-        1,0,1,  CELL_FACE_YN,
-        1,0,0,  CELL_FACE_YN,
-
-        0,1,0,  CELL_FACE_YP, // y = 1
-        1,1,1,  CELL_FACE_YP,
-        0,1,1,  CELL_FACE_YP,
-        0,1,0,  CELL_FACE_YP,
-        1,1,0,  CELL_FACE_YP,
-        1,1,1,  CELL_FACE_YP,
-
-        0,1,0,  CELL_FACE_ZN, // z = 0
-        0,0,0,  CELL_FACE_ZN,
-        1,0,0,  CELL_FACE_ZN,
-        0,1,0,  CELL_FACE_ZN,
-        1,0,0,  CELL_FACE_ZN,
-        1,1,0,  CELL_FACE_ZN,
-
-        0,1,1,  CELL_FACE_ZP, // z = 1
-        1,0,1,  CELL_FACE_ZP,
-        0,0,1,  CELL_FACE_ZP,
-        0,1,1,  CELL_FACE_ZP,
-        1,1,1,  CELL_FACE_ZP,
-        1,0,1,  CELL_FACE_ZP,
-    };
-        
-    void WorldBuffer::init(const undicht::vulkan::LogicalDevice& device) {
+    template<typename T>
+    void ChunkBuffer<T>::init(const undicht::vulkan::LogicalDevice& device) {
 
         _buffer.init(device);
-        _buffer.setVertexData(cube_vertices.data(), cube_vertices.size() * sizeof(float), 0);
     }
 
-    void WorldBuffer::cleanUp() {
+    template<typename T>
+    void ChunkBuffer<T>::cleanUp() {
 
         _buffer.cleanUp();
     }
 
+    //////////////////////////////// setting the base model //////////////////////////////////
+
+    template<typename T>
+    void ChunkBuffer<T>::setBaseModel(const std::vector<float>& vertices) {
+
+        _buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0);
+    }
+
+    template<typename T>
+    void ChunkBuffer<T>::setBaseModel(const char* vertices, uint32_t byte_size) {
+
+        _buffer.setVertexData(vertices, byte_size, 0);
+    }
+
     //////////////////////////////// storing data in the buffer ///////////////////////////////
 
-    void WorldBuffer::addChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
+    template<typename T>
+    void ChunkBuffer<T>::addChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
 
         BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry != nullptr) {
@@ -95,7 +69,8 @@ namespace cell {
         sortBufferEntries();
     }
 
-    void WorldBuffer::updateChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
+    template<typename T>
+    void ChunkBuffer<T>::updateChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
         
         BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry == nullptr) {
@@ -109,8 +84,9 @@ namespace cell {
         addChunk(c, chunk_pos);
 
     }
-    
-    void WorldBuffer::freeChunk(const Chunk &c, const glm::ivec3& chunk_pos) {
+
+    template<typename T>
+    void ChunkBuffer<T>::freeChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
 
         BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry != nullptr) {
@@ -124,20 +100,23 @@ namespace cell {
 
     /////////////////////////////// accessing the vertex buffer ///////////////////////////////
 
-    const undicht::vulkan::VertexBuffer &WorldBuffer::getBuffer() const {
+    template<typename T>
+    const undicht::vulkan::VertexBuffer &ChunkBuffer<T>::getBuffer() const {
 
         return _buffer;
     }
 
     // getting the areas of the buffer that contain data that should be drawn
-    const std::vector<WorldBuffer::BufferEntry>& WorldBuffer::getDrawAreas() const {
+    template<typename T>
+    const std::vector<typename ChunkBuffer<T>::BufferEntry>& ChunkBuffer<T>::getDrawAreas() const {
 
         return _buffer_sections;
     }
 
-    /////////////////////////////// private WorldBuffer functions ////////////////////////////
+    /////////////////////////////// private ChunkBuffer functions ////////////////////////////
 
-    void WorldBuffer::sortBufferEntries() {
+    template<typename T>
+    void ChunkBuffer<T>::sortBufferEntries() {
 
         if(!_buffer_sections.size())
             return;
@@ -155,7 +134,8 @@ namespace cell {
 
     }
 
-    WorldBuffer::BufferEntry* WorldBuffer::findBufferEntry(const glm::ivec3& chunk_pos) {
+    template<typename T>
+    typename ChunkBuffer<T>::BufferEntry* ChunkBuffer<T>::findBufferEntry(const glm::ivec3& chunk_pos) {
         
         for(BufferEntry& entry : _buffer_sections) {
             
@@ -169,7 +149,8 @@ namespace cell {
         return nullptr;
     }
 
-    WorldBuffer::BufferEntry WorldBuffer::findFreeMemory(uint32_t byte_size) const {
+    template<typename T>
+    typename ChunkBuffer<T>::BufferEntry ChunkBuffer<T>::findFreeMemory(uint32_t byte_size) const {
         // searches through the buffer trying to find a memory spot at least the size of byte_size
         // if no such spot can be found a section of memory will be declared that reaches outside the buffer
         // in which case new memory for the buffer needs to be allocated (the buffer needs to be resized)
@@ -194,4 +175,4 @@ namespace cell {
         return entry;
     }
 
-} // namespace cell
+} // cell

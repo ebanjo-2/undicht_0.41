@@ -1,17 +1,17 @@
 <MATERIAL_FILE version=0.0.1>
 <MATERIALS>
   <MATERIAL name=Grass>
-    <ALBEDO_ROUGHNESS>../examples/cell/res/grass.png</ALBEDO_ROUGHNESS>
+    <ALBEDO_ROUGHNESS>grass.png</ALBEDO_ROUGHNESS>
   </MATERIAL>
   <MATERIAL name=Sand>
-    <ALBEDO_ROUGHNESS>../examples/cell/res/sand.png</ALBEDO_ROUGHNESS>
+    <ALBEDO_ROUGHNESS>sand.png</ALBEDO_ROUGHNESS>
   </MATERIAL>
   <MATERIAL name=Gold>
-    <ALBEDO_ROUGHNESS>../examples/cell/res/gold_albedo.png</ALBEDO_ROUGHNESS>
-    <NORMAL_METALNESS>../examples/cell/res/gold_metal.png</NORMAL_METALNESS>
+    <ALBEDO_ROUGHNESS>gold_albedo.png</ALBEDO_ROUGHNESS>
+    <NORMAL_METALNESS>gold_metal.png</NORMAL_METALNESS>
   </MATERIAL>
   <MATERIAL name=Iron>
-    <ALBEDO_ROUGHNESS>../examples/cell/res/iron_albedo.png</ALBEDO_ROUGHNESS>
-    <NORMAL_METALNESS>../examples/cell/res/iron_metal.png</NORMAL_METALNESS>
+    <ALBEDO_ROUGHNESS>iron_albedo.png</ALBEDO_ROUGHNESS>
+    <NORMAL_METALNESS>iron_metal.png</NORMAL_METALNESS>
   </MATERIAL>
 </MATERIALS>

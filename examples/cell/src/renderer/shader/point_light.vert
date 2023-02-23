@@ -4,9 +4,10 @@
 layout(location = 0) in vec3 aPos;
 
 // per light data
-layout(location = 1) in vec3 aLightPos;
-layout(location = 2) in vec3 aColor;
-layout(location = 3) in float aRange;
+layout(location = 1) in uint aLightType;
+layout(location = 2) in vec3 aLightPos;
+layout(location = 3) in vec3 aColor;
+layout(location = 4) in float aRange;
 
 layout(location = 0) out vec3 light_color;
 layout(location = 1) out vec3 light_pos_rel_cam;

@@ -1,4 +1,4 @@
-#include "renderer/drawable_world.h"
+#include "world/drawable_world.h"
 #include "debug.h"
 #include "glm/gtx/string_cast.hpp"
 #include "algorithm"
@@ -6,8 +6,9 @@
 namespace cell {
 
     void DrawableWorld::init(const undicht::vulkan::LogicalDevice& device) {
-
-        _world_buffer.init(device);
+        
+        _sun.setType(Light::Type::Directional);
+        _cell_buffer.init(device);
         _light_buffer.init(device);
         _materials.init(device);
 
@@ -15,30 +16,21 @@ namespace cell {
 
     void DrawableWorld::cleanUp() {
 
-        _world_buffer.cleanUp();
+        _cell_buffer.cleanUp();
         _light_buffer.cleanUp();
         _materials.cleanUp();
     }
 
     ///////////////////////////////////////////// update parts of the drawable world //////////////////////////////////////////
 
-    uint32_t DrawableWorld::addLight(const PointLight& light) {
+    CellWorld& DrawableWorld::getCellWorld() {
 
-        _lights.push_back(light);
-
-        return _lights.size() - 1;
+        return _cell_world;
     }
 
-    void DrawableWorld::removeLight(uint32_t light_id) {
+    LightWorld& DrawableWorld::getLightWorld() {
 
-        if(light_id < _lights.size())
-            _lights.erase(_lights.begin() + light_id);
-
-    }
-
-    void DrawableWorld::removeAllLights() {
-
-        _lights.clear();
+        return _light_world;
     }
 
     void DrawableWorld::setSunDirection(const glm::vec3& dir) {
@@ -52,28 +44,32 @@ namespace cell {
         _sun.setColor(color);
     }
 
-    void DrawableWorld::setSunTarget(const glm::vec3& target) {
-        // for shadow mapping
-        
-        _sun.setShadowOrigin(target - 100.0f * _sun.getDirection());
-    } 
 
     // make sure the chunk is correctly stored in the world buffer
     void DrawableWorld::updateWorldBuffer() {
 
-        for(int i = 0; i < _loaded_chunks.size(); i++) {
+        for(int i = 0; i < _cell_world.getLoadedChunks().size(); i++) {
 
-            const Chunk& chunk = _loaded_chunks.at(i);
-            const glm::ivec3& chunk_pos = _chunk_positions.at(i);
+            const CellChunk* chunk = (CellChunk*)_cell_world.getLoadedChunks().at(i);
+            const glm::ivec3& chunk_pos = _cell_world.getChunkPositions().at(i);
 
-            _world_buffer.updateChunk(chunk, chunk_pos);
+            _cell_buffer.updateChunk(*chunk, chunk_pos);
         }
 
     }
 
     void DrawableWorld::updateLightBuffer() {
 
-        uint32_t lights_to_update = std::max((uint32_t)_lights.size(), _light_buffer.getPointLightCount());
+        // make sure each light chunk is correctly stored in the light buffer
+        for(int i = 0; i < _light_world.getLoadedChunks().size(); i++) {
+
+            const LightChunk* chunk = (LightChunk*)_light_world.getLoadedChunks().at(i);
+            const glm::ivec3& chunk_pos = _light_world.getChunkPositions().at(i);
+
+            _light_buffer.updateChunk(*chunk, chunk_pos);
+        }
+
+        /*uint32_t lights_to_update = std::max((uint32_t)_lights.size(), _light_buffer.getPointLightCount());
 
         for(int i = 0; i < lights_to_update; i++) {
             
@@ -89,15 +85,15 @@ namespace cell {
                 _light_buffer.freePointLight(i);
             }
 
-        }
+        }*/
 
     }
 
     /////////////////////////////////// access parts of the drawable world (for rendering) ///////////////////////////////////
 
-    const WorldBuffer& DrawableWorld::getWorldBuffer() const {
+    const CellBuffer& DrawableWorld::getCellBuffer() const {
 
-        return _world_buffer;
+        return _cell_buffer;
     }
 
     const LightBuffer& DrawableWorld::getLightBuffer() const {
@@ -105,12 +101,12 @@ namespace cell {
         return _light_buffer;
     }
 
-    const MaterialAtlas& DrawableWorld::getMaterialAtlas() const {
+    MaterialAtlas& DrawableWorld::getMaterialAtlas() {
 
         return _materials;
     }
 
-    const DirectLight& DrawableWorld::getSun() const {
+    const Light& DrawableWorld::getSun() const {
 
         return _sun;
     }

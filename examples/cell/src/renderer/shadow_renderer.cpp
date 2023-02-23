@@ -1,5 +1,5 @@
 #include "shadow_renderer.h"
-#include "world/cell.h"
+#include "world/cells/cell.h"
 #include "file_tools.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "debug.h"
@@ -17,7 +17,7 @@ namespace cell {
         _renderer.setDeviceHandle(gpu);
         _renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/direct_shadow.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/direct_shadow.frag.spv");
         _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 0, 0); // global descriptors
-        _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 1, 1); // renderer specific descriptors
+        _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 1, 0); // renderer specific descriptors
         _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER}, 2, 1000); // chunk specific descriptors
         _renderer.setVertexInputLayout(CUBE_VERTEX_LAYOUT, CELL_LAYOUT);
         _renderer.setDepthStencilTest(true, true);
@@ -25,11 +25,6 @@ namespace cell {
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         //_renderer.setBlending(0, false);
         _renderer.init(viewport, render_pass, subpass);
-
-
-        // light view matrix
-        // light projection matrix
-        _local_ubo.init(gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
 
     }
     
@@ -39,7 +34,6 @@ namespace cell {
             ubo.cleanUp();
 
         _renderer.cleanUp();
-        _local_ubo.cleanUp();
     }
 
     void ShadowRenderer::onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass) {
@@ -47,22 +41,17 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void ShadowRenderer::beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set) {
+    void ShadowRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set) {
 
         _last_used_chunk_ubo = -1;
-        _renderer.resetDescriptorCache(1);
         _renderer.resetDescriptorCache(2);
-        _renderer.accquireDescriptorSet(1);
+
+        // bind global descriptor set
         _renderer.bindDescriptorSet(cmd, global_descriptor_set, 0);
 
-        _local_ubo.setAttribute(0, glm::value_ptr(light.getShadowView()), 16 * sizeof(float));
-        _local_ubo.setAttribute(1, glm::value_ptr(light.getShadowProj()), 16 * sizeof(float));
-
-        _renderer.bindUniformBuffer(1, 0, _local_ubo.getBuffer());
-        _renderer.bindDescriptorSet(cmd, 1);
     }
 
-    void ShadowRenderer::draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd) {
+    void ShadowRenderer::draw(const CellBuffer& world, undicht::vulkan::CommandBuffer& cmd) {
         // draw to shadow map
 
         _renderer.bindPipeline(cmd);
@@ -71,7 +60,7 @@ namespace cell {
         // drawing the chunks
         uint32_t cell_byte_size = CELL_LAYOUT.getTotalSize();
         createPerChunkUBOs(world.getDrawAreas().size());
-        for(const WorldBuffer::BufferEntry& entry : world.getDrawAreas()) {
+        for(const CellBuffer::BufferEntry& entry : world.getDrawAreas()) {
 
             // loading the chunk position to the chunk ubo
             _last_used_chunk_ubo++;

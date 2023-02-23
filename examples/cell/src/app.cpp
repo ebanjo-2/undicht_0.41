@@ -19,62 +19,42 @@ namespace cell {
         _master_renderer.init(_gpu, _swap_chain);
         _world.init(_gpu);
         _player.init();
-        _materials.init(_gpu);
-
         _player.setPosition(glm::vec3(0, -5, 10));
 
-        // setting some materials for testing
-        uint32_t grass = _materials.setMaterial(Material("Grass", 
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/grass.png"
-        ));
-
-        uint32_t sand = _materials.setMaterial(Material("Sand", 
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/sand.png"
-        ));
-
-        uint32_t gold = _materials.setMaterial(Material("Gold",
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_albedo.png",
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/gold_metal.png"
-        ));
-
-        uint32_t iron = _materials.setMaterial(Material("Iron",
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/iron_albedo.png",
-            UND_ENGINE_SOURCE_DIR + "examples/cell/res/iron_metal.png"
-        ));
-
-        _world.addLight(PointLight(glm::vec3(05.4,-54.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
-        _world.addLight(PointLight(glm::vec3(10.5,-20.5,20.5),glm::vec3(200.0,200.0, 200.0)));
-        _world.addLight(PointLight(glm::vec3(15.5,-3.5,50.5),glm::vec3(10.0,0.0,10.0)));
+        LightChunk& light_chunk = *(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk());
+        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(05.4,-54.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
+        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(10.5,-20.5,20.5),glm::vec3(200.0,200.0, 200.0)));
+        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(15.5,-3.5,50.5),glm::vec3(10.0,0.0,10.0)));
         _world.updateLightBuffer();
 
+        _world.setSunDirection(glm::vec3(1,0.5,1));
         _world.setSunColor(glm::vec3(23.47, 21.31, 20.79) * 0.5f);
 
-        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Milkyway/Milkyway_BG.jpg");
 
         if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.txt")) {
 
-            _world_file.read(_world.loadChunk(glm::ivec3(0,-255,0), {}), glm::ivec3(0,-255,0));
-            _world_file.read(_world.loadChunk(glm::ivec3(255,-255,0), {}), glm::ivec3(255,-255,0));
-            _world_file.read(_world.loadChunk(glm::ivec3(-255,-255,0), {}), glm::ivec3(-255,-255,0));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), glm::ivec3(0,-255,0));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,0), new CellChunk()), glm::ivec3(255,-255,0));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,0), new CellChunk()), glm::ivec3(-255,-255,0));
+            _world_file.readMaterials(_world.getMaterialAtlas());
             _world.updateWorldBuffer();
 
         } else {
             UND_LOG << "failed to open the world file\n";
             //_world_file.newWorldFile();
         }
-        
+
     }
 
     void App::cleanUp() {
 
         _gpu.waitForProcessesToFinish();
 
-        _materials.cleanUp();
         _player.cleanUp();
         _world.cleanUp();
-        //_lights.cleanUp();
         _master_renderer.cleanUp();
 
         undicht::Engine::cleanUp();
@@ -95,8 +75,8 @@ namespace cell {
         }
 
         // updating the world
-        _world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
-        _world.setSunTarget(_player.getPosition() + 50.0f * _player.getViewDirection());
+        //_world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        //_world.setSunTarget(_player.getPosition());
         _player.move(getDeltaT(), _main_window);
 
         // checking if the window is minimized
@@ -108,17 +88,17 @@ namespace cell {
         if(_master_renderer.beginFrame(_swap_chain)) {
             
             // shadow pass
-            _master_renderer.beginShadowPass(_world.getSun());
-            _master_renderer.drawToShadowMap(_world.getWorldBuffer());
+            _master_renderer.beginShadowPass(_world.getSun(), _player.getPosition());
+            _master_renderer.drawToShadowMap(_world.getCellBuffer());
 
             // main render pass
             _master_renderer.beginMainRenderPass();
-            _master_renderer.beginGeometrySubPass(_materials);
-            _master_renderer.drawWorld(_world.getWorldBuffer());
+            _master_renderer.beginGeometrySubPass(_world.getMaterialAtlas());
+            _master_renderer.drawWorld(_world.getCellBuffer());
             _master_renderer.beginLightSubPass();
             _master_renderer.drawLight(_world.getSun());
             _master_renderer.drawLights(_world.getLightBuffer());
-            //_master_renderer.drawAmbientLight();
+            _master_renderer.drawAmbientLight();
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(1.0f);
 

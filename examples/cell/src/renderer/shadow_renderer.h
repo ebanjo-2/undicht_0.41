@@ -3,8 +3,7 @@
 
 #include "renderer/vulkan/renderer.h"
 #include "renderer/vulkan/uniform_buffer.h"
-#include "entities/lights/direct_light.h"
-#include "renderer/world_buffer.h"
+#include "world/cells/cell_buffer.h"
 
 namespace cell {
 
@@ -15,7 +14,7 @@ namespace cell {
         undicht::vulkan::LogicalDevice _device_handle;
 
         undicht::vulkan::Renderer _renderer;
-        undicht::vulkan::UniformBuffer _local_ubo;
+        
         std::vector<undicht::vulkan::UniformBuffer> _per_chunk_uniform_buffer;
         int _last_used_chunk_ubo = -1;
 
@@ -26,8 +25,8 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void beginFrame(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set); // only one direct light for now
-        void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd); // draw to shadow map
+        void beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set); // only one direct light for now
+        void draw(const CellBuffer& world, undicht::vulkan::CommandBuffer& cmd); // draw to shadow map
     
       protected:
         // private renderer functions 

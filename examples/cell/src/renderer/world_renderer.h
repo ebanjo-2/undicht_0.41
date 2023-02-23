@@ -15,7 +15,7 @@
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
 
-#include "renderer/world_buffer.h"
+#include "world/cells/cell_buffer.h"
 
 namespace cell {
 
@@ -40,7 +40,7 @@ namespace cell {
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
         
         void beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd);
-        void draw(const WorldBuffer& world, undicht::vulkan::CommandBuffer& cmd);
+        void draw(const CellBuffer& world, undicht::vulkan::CommandBuffer& cmd);
 
       protected:
         // private renderer functions 

@@ -3,7 +3,7 @@
 
 #include "cstdint"
 #include "vector"
-#include "world/cell.h"
+#include "world/cells/cell.h"
 
 namespace cell {
 

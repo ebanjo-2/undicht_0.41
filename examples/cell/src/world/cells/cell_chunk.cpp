@@ -1,4 +1,4 @@
-#include "world/chunk.h"
+#include "world/cells/cell_chunk.h"
 #include "iostream"
 #include "math/math_tools.h"
 #include "debug.h"
@@ -7,14 +7,14 @@ using namespace undicht::tools;
 
 namespace cell {
 
-    Chunk::Chunk() {
+    CellChunk::CellChunk() {
 
         initMiniChunks();
     }
 
     ////////////////////////////// updating cells (adding, changing, removing) //////////////////////////////
 
-    uint32_t Chunk::addCell(const Cell &c) {
+    uint32_t CellChunk::addCell(const Cell &c) {
         // returns an id with which the cell can be accessed
 
         uint32_t cell_id;
@@ -37,7 +37,7 @@ namespace cell {
         return cell_id;
     }
 
-    void Chunk::setCell(uint32_t id, const Cell &c) {
+    void CellChunk::setCell(uint32_t id, const Cell &c) {
 
         if (id >= _cells.size())
             return;
@@ -51,7 +51,7 @@ namespace cell {
         _has_changed = true;
     }
 
-    void Chunk::removeCell(uint32_t id) {
+    void CellChunk::removeCell(uint32_t id) {
 
         if (id >= _cells.size())
             return;
@@ -69,7 +69,7 @@ namespace cell {
 
     /////////////////////////////////////////// getting cells //////////////////////////////////////////////
 
-    const Cell *Chunk::getCell(uint32_t id) const {
+    const Cell *CellChunk::getCell(uint32_t id) const {
         // returns nullptr if there is no cell with that id
 
         if (id >= _cells.size())
@@ -78,7 +78,7 @@ namespace cell {
         return &_cells.at(id);
     }
 
-    const Cell *Chunk::getCell(uint32_t x, uint32_t y, uint32_t z) const {
+    const Cell *CellChunk::getCell(uint32_t x, uint32_t y, uint32_t z) const {
 
         uint32_t id = getCellID(x, y, z);
 
@@ -88,7 +88,7 @@ namespace cell {
         return &_cells.at(id);
     }
 
-    uint32_t Chunk::getCellID(uint32_t x, uint32_t y, uint32_t z) const {
+    uint32_t CellChunk::getCellID(uint32_t x, uint32_t y, uint32_t z) const {
 
         const MiniChunk *mini_chunk = calcMiniChunk(x, y, z);
 
@@ -106,17 +106,17 @@ namespace cell {
         return -1;
     }
 
-    uint32_t Chunk::getCellCount() const {
+    uint32_t CellChunk::getCellCount() const {
 
         return _cells.size();
     }
 
-    const std::vector<Cell> &Chunk::getAllCells() const {
+    const std::vector<Cell> &CellChunk::getAllCells() const {
 
         return _cells;
     }
 
-    std::vector<uint32_t> Chunk::getCellIDsInVolume(const Cell &volume) const {
+    std::vector<uint32_t> CellChunk::getCellIDsInVolume(const Cell &volume) const {
         /// @return the ids of all cells within that volume
 
         std::vector<uint32_t> ids;
@@ -136,7 +136,7 @@ namespace cell {
         return ids;
     }
 
-    std::vector<const Cell *> Chunk::getCellsInVolume(const Cell &volume) const {
+    std::vector<const Cell *> CellChunk::getCellsInVolume(const Cell &volume) const {
         /// @return all cells within the volume
 
         std::vector<const Cell *> cells;
@@ -156,31 +156,33 @@ namespace cell {
         return cells;
     }
 
-    uint32_t Chunk::fillBuffer(const void *buffer) const {
-        // will return the number of bytes that are going to be written
-        // will only write the data if buffer is not nullptr
-        // the ints of the cells are stored in little endian format,
-        // which means the data in the buffer is structured like this:
-        // v z0 y0 x0 u z1 y1 x1 (one byte each)
+    uint32_t CellChunk::fillBuffer(char *buffer) const {
 
         if (buffer && _cells.size())
-            std::copy(_cells.begin(), _cells.end(), (Cell *)buffer);
+            std::copy(_cells.begin(), _cells.end(), (Cell*)buffer);
 
         // the size of the chunk data
-        return _cells.size() * CELL_LAYOUT.getTotalSize();
+        return _cells.size() * sizeof(Cell);
     }
 
-    void Chunk::loadFromBuffer(const Cell* buffer, uint32_t cell_count) {
+    void CellChunk::loadFromBuffer(const char* buffer, uint32_t byte_size) {
         // initializes the complete chunk from the cell data stored in the buffer
 
-        if (buffer && cell_count) {
-            _cells.resize(cell_count);
-            std::copy(buffer, buffer + cell_count, _cells.begin());
-        };
+        _cells.clear();
 
+        if(buffer != nullptr)
+            _cells.insert(_cells.begin(), (Cell*)buffer, (Cell*)(buffer + byte_size));
+
+        initMiniChunks();
     }
 
-    bool Chunk::getWasEdited() const {
+    void CellChunk::loadFromBuffer(const std::vector<Cell>& buffer) {
+        // initializes the complete chunk from the cell data stored in the buffer
+
+        loadFromBuffer((char*)buffer.data(), sizeof(Cell) * buffer.size());
+    }
+
+    /*bool Chunk::getWasEdited() const {
         
         return _has_changed;
     }
@@ -188,12 +190,12 @@ namespace cell {
     void Chunk::markAsUnEdited() {
 
         _has_changed = false;
-    }
+    }*/
 
     ///////////////////////////// loading the chunk from existing data ///////////////////////////////////
     // will remove the current data in the chunks _cells buffer
 
-    void Chunk::initFromData(const Cell* buffer, uint32_t byte_size) {
+    /*void Chunk::initFromData(const Cell* buffer, uint32_t byte_size) {
         // calling it with a byte_size of 0 or nullptr will effectivly clear the cells of the chunk
         
         _cells.clear();
@@ -207,11 +209,11 @@ namespace cell {
     void Chunk::initFromData(const std::vector<Cell>& cells) {
 
         initFromData(cells.data(), sizeof(Cell) * cells.size());
-    }
+    }*/
 
     /////////////////////////////////// protected chunk functions ////////////////////////////////////////
 
-    void Chunk::initMiniChunks() {
+    void CellChunk::initMiniChunks() {
         // create 16 * 16 * 16 mini chunks
 
         _mini_chunks.clear();
@@ -236,7 +238,7 @@ namespace cell {
 
     }
 
-    const MiniChunk *Chunk::calcMiniChunk(uint32_t x, uint32_t y, uint32_t z) const {
+    const MiniChunk *CellChunk::calcMiniChunk(uint32_t x, uint32_t y, uint32_t z) const {
         /// @return the mini chunk containing that location
 
         x /= 16;
@@ -251,7 +253,7 @@ namespace cell {
         return nullptr;
     }
 
-    std::vector<const MiniChunk *> Chunk::calcMiniChunks(const Cell &volume) const {
+    std::vector<const MiniChunk *> CellChunk::calcMiniChunks(const Cell &volume) const {
         // @return all mini chunks within that volume
 
         std::vector<const MiniChunk *> mini_chunks;
@@ -274,7 +276,7 @@ namespace cell {
         return mini_chunks;
     }
 
-    bool Chunk::withinVolume(const Cell &c, uint32_t x, uint32_t y, uint32_t z) const {
+    bool CellChunk::withinVolume(const Cell &c, uint32_t x, uint32_t y, uint32_t z) const {
 
         uint32_t x1, y1, z1, x2, y2, z2;
         c.getPos0(x1, y1, z1);
@@ -290,7 +292,7 @@ namespace cell {
         return true;
     }
 
-    bool Chunk::sharedVolume(const Cell &c1, const Cell &c2) const {
+    bool CellChunk::sharedVolume(const Cell &c1, const Cell &c2) const {
         /// @return true, if the cells have some shared volume ("touching" doesnt count)
 
         uint32_t x11, y11, z11, x12, y12, z12;

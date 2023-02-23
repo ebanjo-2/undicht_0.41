@@ -14,8 +14,7 @@
 #include "renderer/vulkan/renderer.h"
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
-#include "renderer/light_buffer.h"
-#include "entities/lights/direct_light.h"
+#include "world/lights/light_buffer.h"
 
 namespace cell {
 
@@ -69,7 +68,7 @@ namespace cell {
 
         void beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos);
         void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
-        void draw(const DirectLight& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height);
+        void draw(const Light& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height); // direct light only
         void draw(undicht::vulkan::CommandBuffer& cmd); // ambient light / light from the environment map
 
       protected:

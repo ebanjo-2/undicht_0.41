@@ -1,7 +1,4 @@
 #include "iostream"
-#include "world/cell.h"
-#include "world/chunk.h"
-#include "world/world.h"
 
 #include "app.h"
 

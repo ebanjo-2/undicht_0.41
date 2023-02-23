@@ -1,13 +1,14 @@
-#ifndef CHUNK_H
-#define CHUNK_H
+#ifndef CELL_CHUNK_H
+#define CELL_CHUNK_H
 
-#include "world/cell.h"
-#include "world/mini_chunk.h"
+#include "world/chunk_system/chunk.h"
+#include "world/cells/cell.h"
+#include "world/cells/mini_chunk.h"
 #include "vector"
 
 namespace cell {
 
-    class Chunk {
+    class CellChunk : public Chunk<Cell> {
       // chunks are 255*255*255 units in size
       // (the biggest cell possible within a chunk goes from 0 to 255 (not covering the volume at 255))
       // a cell connecting to it would have to start at 255
@@ -21,11 +22,11 @@ namespace cell {
         std::vector<uint32_t> _unused_cells;
 
         // keeping track of whether the chunk was edited (and needs to be updated in gpu memory)
-        bool _has_changed = false;
+        //bool _has_changed = false;
 
       public:
 
-        Chunk();
+        CellChunk();
 
         // updating cells (adding, changing, removing)
         uint32_t addCell(const Cell& c); // returns an id with which the cell can be accessed
@@ -45,25 +46,20 @@ namespace cell {
         std::vector<uint32_t> getCellIDsInVolume(const Cell& volume) const;
         std::vector<const Cell*> getCellsInVolume(const Cell& volume) const;
 
-        // storing the complete chunk data in a buffer
-        // will return the number of bytes that are going to be written
-        // will only write the data if buffer is not nullptr
-        // if buffer is not nullptr it has to have enough memory allocated
-        // the ints of the cells are stored in little endian format,
-        // which means the data in the buffer is structured like this:
-        // v z0 y0 x0 u z1 y1 x1 (one byte each)
-        uint32_t fillBuffer(const void* buffer) const;
+        uint32_t fillBuffer(char* buffer) const; // store the contents of the chunk in the buffer (if buffer != nullptr), return number of elements stored
+        void loadFromBuffer(const char* buffer, uint32_t byte_size); // initialize the complete data of the chunk from the buffer
+        void loadFromBuffer(const std::vector<Cell>& buffer);
 
         // initializes the complete chunk from the cell data stored in the buffer
-        void loadFromBuffer(const Cell* buffer, uint32_t cell_count);
+        //void loadFromBuffer(const Cell* buffer, uint32_t cell_count);
 
-        bool getWasEdited() const;
-        void markAsUnEdited();
+        //bool getWasEdited() const;
+        //void markAsUnEdited();
 
         // loading the chunk from existing data
         // will remove the current data in the chunks _cells buffer
-        void initFromData(const Cell* buffer, uint32_t byte_size); // calling it with a byte_size of 0 or nullptr will effectivly clear the cells of the chunk
-        void initFromData(const std::vector<Cell>& cells);
+        //void initFromData(const Cell* buffer, uint32_t byte_size); // calling it with a byte_size of 0 or nullptr will effectivly clear the cells of the chunk
+        //void initFromData(const std::vector<Cell>& cells);
 
       protected:
         // protected chunk functions
@@ -79,4 +75,4 @@ namespace cell {
 
 } // namespace cell
 
-#endif // CHUNK_H
+#endif // CELL_CHUNK_H

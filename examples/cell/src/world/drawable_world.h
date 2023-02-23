@@ -1,25 +1,31 @@
 #ifndef CELL_DRAWABLE_WORLD
 #define CELL_DRAWABLE_WORLD
 
-#include "world/world.h"
-#include "renderer/world_buffer.h"
-#include "renderer/light_buffer.h"
+#include "world/cells/cell_world.h"
+#include "world/cells/cell_buffer.h"
+
 #include "materials/material_atlas.h"
-#include "entities/lights/direct_light.h"
-#include "entities/lights/point_light.h"
+
+#include "world/lights/light_world.h"
+#include "world/lights/light_buffer.h"
+
 
 namespace cell {
 
-    class DrawableWorld : public World {
+    class DrawableWorld {
         // holds and updates the graphics api objects necessary to display the world (including lighting)
 
       protected:
 
-        DirectLight _sun;
-        std::vector<PointLight> _lights;
+        // cells
+        CellWorld _cell_world;
+        CellBuffer _cell_buffer;
 
-        WorldBuffer _world_buffer;
+        // lights
+        Light _sun; // cant be put into any chunk
+        LightWorld _light_world;
         LightBuffer _light_buffer; // point lights
+
         MaterialAtlas _materials;
 
       public:
@@ -30,15 +36,12 @@ namespace cell {
       public:
         // update parts of the drawable world
 
-        // point lights
-        uint32_t addLight(const PointLight& light);
-        void removeLight(uint32_t light_id);
-        void removeAllLights();
+        CellWorld& getCellWorld();
+        LightWorld& getLightWorld();
 
         // sun / directional light
         void setSunDirection(const glm::vec3& dir);
         void setSunColor(const glm::vec3& color);
-        void setSunTarget(const glm::vec3& target); // for shadow mapping
 
         // make sure the chunk is correctly stored in the world buffer
         void updateWorldBuffer();
@@ -47,10 +50,10 @@ namespace cell {
       public:
         // access parts of the drawable world (for rendering)
 
-        const WorldBuffer& getWorldBuffer() const;
+        const CellBuffer& getCellBuffer() const;
         const LightBuffer& getLightBuffer() const;
-        const MaterialAtlas& getMaterialAtlas() const;
-        const DirectLight& getSun() const;
+        MaterialAtlas& getMaterialAtlas();
+        const Light& getSun() const;
 
     };
 

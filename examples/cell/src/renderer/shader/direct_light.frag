@@ -102,7 +102,7 @@ float isInLight(vec3 N, vec3 L) {
     ivec2 current_filter = ivec2(mod(gl_FragCoord.xy, vec2(local.shadow_offset_texture_size))); // filter for the current fragment
     ivec3 offset_coord = ivec3(0, current_filter); // going to be used to access a offset from the 3D offset texture
 
-    float random_sample_radius = 2.0f;
+    float random_sample_radius = 1.0f;
     float bias = 0.0; // mix(0.00005, 0.0, dot(N, L));
     int shadow_sum = 0;
 
@@ -138,12 +138,14 @@ float isInLight(vec3 N, vec3 L) {
         shadow_sum += ring_sum;
 
         // if all of the samples on this ring were in shadow or light -> not going to test the inner rings
-        if((ring_sum == samples_per_ring) || (ring_sum == 0))
+        if((ring_sum == samples_per_ring) || (ring_sum == 0)) {
+            ring++;
             break;
+        }
 
     }
 
-    float shadow = float(shadow_sum) / ((ring + 1) * samples_per_ring);
+    float shadow = float(shadow_sum) / float(ring  * samples_per_ring);
 
     return 1.0f - shadow; // light;
 }

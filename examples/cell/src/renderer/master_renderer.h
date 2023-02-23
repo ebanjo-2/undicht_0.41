@@ -14,8 +14,10 @@
 #include "renderer/vulkan/texture.h"
 #include "renderer/vulkan/render_target.h"
 
-#include "renderer/light_buffer.h"
-#include "entities/lights/direct_light.h"
+#include "world/lights/light.h"
+#include "world/lights/light_buffer.h"
+
+#include "world/cells/cell_buffer.h"
 
 #include "3D/camera/perspective_camera_3d.h"
 
@@ -79,16 +81,16 @@ namespace cell {
         void loadEnvironment(const std::string& file_name);
 
         // shadow pass
-        void beginShadowPass(const DirectLight& global_shadow_source); // only one shadow source for now
-        void drawToShadowMap(const WorldBuffer& world);
+        void beginShadowPass(const Light& global_shadow_source, const glm::vec3& shadow_target); // only one shadow source for now
+        void drawToShadowMap(const CellBuffer& world);
 
         // main pass
         void beginMainRenderPass();
         void beginGeometrySubPass(const MaterialAtlas& materials);
-        void drawWorld(const WorldBuffer& world);
+        void drawWorld(const CellBuffer& world);
         void beginLightSubPass();
         void drawLights(const LightBuffer& lights);
-        void drawLight(const DirectLight& light);
+        void drawLight(const Light& light); // draw a directional light
         void drawAmbientLight();
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);

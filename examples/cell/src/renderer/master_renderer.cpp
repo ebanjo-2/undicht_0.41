@@ -1,6 +1,8 @@
 #include "renderer/master_renderer.h"
 #include "core/vulkan/formats.h"
 #include "debug.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace cell {
 
@@ -127,23 +129,27 @@ namespace cell {
         _light_renderer.loadEnvironment(file_name);
     }
 
-    void MasterRenderer::beginShadowPass(const DirectLight& global_shadow_source) {
+    void MasterRenderer::beginShadowPass(const Light& global_shadow_source, const glm::vec3& shadow_target) {
 
         _current_pass = SHADOW_PASS;
 
+        // calculate the shadow matrices
+        glm::mat4 shadow_view = glm::lookAt(shadow_target - 100.0f * global_shadow_source.getDirection(), shadow_target, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 shadow_proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -200.0f, 200.0f);
+
         // loading the global shadow source
-        _global_uniform_buffer.setAttribute(6, glm::value_ptr(global_shadow_source.getShadowView()), 16 * sizeof(float));
-        _global_uniform_buffer.setAttribute(7, glm::value_ptr(global_shadow_source.getShadowProj()), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(6, glm::value_ptr(shadow_view), 16 * sizeof(float));
+        _global_uniform_buffer.setAttribute(7, glm::value_ptr(shadow_proj), 16 * sizeof(float));
 
         undicht::vulkan::Framebuffer& frame_buffer = _shadow_map_target.getFramebuffer(_swap_image_id);
         VkClearValue depth_clear_value{1.0f, 0};
 
         _draw_cmd.beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
-        _shadow_renderer.beginFrame(global_shadow_source, _draw_cmd, _global_descriptor_set);
+        _shadow_renderer.beginFrame(_draw_cmd, _global_descriptor_set);
 
     }
 
-    void MasterRenderer::drawToShadowMap(const WorldBuffer& world) {
+    void MasterRenderer::drawToShadowMap(const CellBuffer& world) {
         
         _shadow_renderer.draw(world, _draw_cmd);
     }
@@ -186,7 +192,7 @@ namespace cell {
         _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd);
     }
 
-    void MasterRenderer::drawWorld(const WorldBuffer& world) {
+    void MasterRenderer::drawWorld(const CellBuffer& world) {
 
         _world_renderer.draw(world, _draw_cmd);
     }
@@ -209,7 +215,8 @@ namespace cell {
         _light_renderer.draw(lights, _draw_cmd);
     }
 
-    void MasterRenderer::drawLight(const DirectLight& light) {
+    void MasterRenderer::drawLight(const Light& light) {
+        // draw a directional light
 
         const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
         const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
@@ -295,8 +302,6 @@ namespace cell {
         _main_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
         _main_render_target.addVisibleAttachment(swap_chain, true, true); // 0
         _main_render_target.addAttachment(DEPTH_BUFFER_FORMAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL); // 1
-        //_main_render_target.addAttachment(MATERIAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
-        //_main_render_target.addAttachment(NORMAL_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
         _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
         _main_render_target.addAttachment(ALBEDO_ROUGHNESS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
         _main_render_target.addAttachment(NORMAL_METALNESS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 4

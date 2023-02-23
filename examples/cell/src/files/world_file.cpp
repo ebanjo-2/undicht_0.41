@@ -2,6 +2,7 @@
 #include "fstream"
 #include "debug.h"
 #include "file_tools.h"
+#include "material_file.h"
 
 namespace cell {
 
@@ -59,7 +60,7 @@ namespace cell {
 
     //////////////////////////////////////// store / load single chunks ///////////////////////////////////////////
 
-    bool WorldFile::write(const Chunk& chunk, const glm::ivec3& chunk_pos) {
+    bool WorldFile::write(const CellChunk& chunk, const glm::ivec3& chunk_pos) {
         /// @return true, if a chunk with the same chunk_pos existed before and is now overwritten
 
         std::string chunk_pos_str = chunkPosToStr(chunk_pos);
@@ -78,12 +79,12 @@ namespace cell {
         c->setContent(chunk_file);
 
         // write the changes to the world file
-        XmlFile::write(_file_path + _file_name);
+        XmlFile::write(_world_file);
 
         return true;
     }
 
-    bool WorldFile::read(Chunk& chunk, const glm::ivec3& chunk_pos) {
+    bool WorldFile::read(CellChunk& chunk, const glm::ivec3& chunk_pos) {
         /// @return true, if a chunk with the chunk_pos existed in the file and could be read
 
         std::string chunk_pos_str = chunkPosToStr(chunk_pos);
@@ -98,6 +99,34 @@ namespace cell {
 
         // read the chunk from the specified chunk file
         return readChunkFromFile(_file_path + c->getContent(), chunk);
+    }
+
+    ///////////////////////////////////// load other stuff from the file////////////////////////////////////////
+
+    bool WorldFile::readMaterials(MaterialAtlas& atlas) {
+        
+        XmlElement* materials = getElement({"MATERIALS"});
+        if(!materials) return false;
+
+        std::vector<XmlElement*> sources = materials->getAllElements({"SOURCE"});
+
+        // load all source files
+        std::vector<Material> all_materials;
+        for(XmlElement* source : sources) {
+
+            MaterialFile file(_file_path + source->getContent());
+
+            if(!file.loadAllMaterials(all_materials))
+                return false;
+        }
+
+        // store the materials in the atlas
+        for(Material& m : all_materials) 
+            atlas.setMaterial(m);
+
+        UND_LOG << "loaded " << all_materials.size() << " materials\n";
+
+        return true;
     }
 
     ////////////////////////////////////// protected WorldFile functions /////////////////////////////////////////
@@ -120,7 +149,7 @@ namespace cell {
         return pos;
     }
 
-    void WorldFile::writeChunkToFile(const std::string& file_name, const Chunk& chunk) {
+    void WorldFile::writeChunkToFile(const std::string& file_name, const CellChunk& chunk) {
 
         std::ofstream file(file_name, std::ios::binary | std::ios::out | std::ios::trunc);
 
@@ -140,7 +169,7 @@ namespace cell {
         file.close();
     }
 
-    bool WorldFile::readChunkFromFile(const std::string& file_name, Chunk& chunk) {
+    bool WorldFile::readChunkFromFile(const std::string& file_name, CellChunk& chunk) {
 
         std::fstream file(file_name, std::ios::binary | std::ios::in);
 
@@ -160,7 +189,7 @@ namespace cell {
         file.close();
 
         // storing the cell data in the chunk
-        chunk.initFromData((const Cell*)buffer.data(), buffer.size());
+        chunk.loadFromBuffer(buffer.data(), buffer.size());
 
         return true;
     }

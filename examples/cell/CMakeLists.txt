@@ -1,45 +1,48 @@
 
 set(WORLD_SOURCES
-    src/world/cell.h
-    src/world/cell.cpp
-    src/world/mini_chunk.h
-    src/world/mini_chunk.cpp
-    src/world/chunk.h
-    src/world/chunk.cpp
-    src/world/world.h
-    src/world/world.cpp
+    src/world/drawable_world.h
+    src/world/drawable_world.cpp
+
+    src/world/chunk_system/chunk_system.h
+    src/world/chunk_system/chunk_system.cpp
+    src/world/chunk_system/chunk.h
+    src/world/chunk_system/chunk.cpp
+    src/world/chunk_system/chunk_buffer.h
+    src/world/chunk_system/chunk_buffer.cpp
+    
+    src/world/cells/cell.h
+    src/world/cells/cell.cpp
+    src/world/cells/mini_chunk.h
+    src/world/cells/mini_chunk.cpp
+    src/world/cells/cell_chunk.h
+    src/world/cells/cell_chunk.cpp
+    src/world/cells/cell_world.h
+    src/world/cells/cell_world.cpp
+    src/world/cells/cell_buffer.h
+    src/world/cells/cell_buffer.cpp
+    
+    src/world/lights/light.h
+    src/world/lights/light.cpp
+    src/world/lights/light_chunk.h
+    src/world/lights/light_chunk.cpp
+    src/world/lights/light_world.h
+    src/world/lights/light_world.cpp
+    src/world/lights/light_buffer.h
+    src/world/lights/light_buffer.cpp
 )
 
-set(ENTITY_SOURCES
-	src/entities/entity.h
-	src/entities/entity.cpp
-	src/entities/entity_chunk.h
-	src/entities/entity_chunk.cpp
-	src/entities/entity_world.h
-	src/entities/entity_world.cpp
-    src/entities/lights/point_light.h
-    src/entities/lights/point_light.cpp
-    src/entities/lights/direct_light.h
-    src/entities/lights/direct_light.cpp
-)
 
 set(RENDERER_SOURCES
     src/renderer/master_renderer.h
-	src/renderer/master_renderer.cpp
-	src/renderer/world_renderer.h
-	src/renderer/world_renderer.cpp
-	src/renderer/world_buffer.h
-    src/renderer/world_buffer.cpp
-    src/renderer/drawable_world.h
-    src/renderer/drawable_world.cpp
+		src/renderer/master_renderer.cpp
+		src/renderer/world_renderer.h
+		src/renderer/world_renderer.cpp
     src/renderer/final_renderer.h
     src/renderer/final_renderer.cpp
     src/renderer/light_renderer.h
     src/renderer/light_renderer.cpp
     src/renderer/shadow_renderer.h
     src/renderer/shadow_renderer.cpp
-    src/renderer/light_buffer.h
-    src/renderer/light_buffer.cpp
 )
 
 set(MATERIALS_SOURCES
@@ -57,6 +60,8 @@ set(PLAYER_SOURCES
 set(FILES_SOURCES
 	src/files/world_file.h
 	src/files/world_file.cpp
+	src/files/material_file.h
+	src/files/material_file.cpp
 )
 
 add_executable(cell 
@@ -66,7 +71,6 @@ add_executable(cell
     src/app.cpp
     
     ${WORLD_SOURCES}
-    ${ENTITY_SOURCES}
     ${RENDERER_SOURCES}
     ${MATERIALS_SOURCES}
     ${PLAYER_SOURCES}

@@ -1,26 +1,27 @@
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef CELL_WORLD_H
+#define CELL_WORLD_H
 
 #include "vector"
-#include "world/chunk.h"
+#include "cell.h"
+#include "world/chunk_system/chunk_system.h"
+#include "world/cells/cell_chunk.h"
 #include "glm/glm.hpp"
 
 namespace cell {
 
+    class CellWorld : public ChunkSystem<Cell> {
 
-    class World {
+      /*protected:
 
-      protected:
-
-        std::vector<Chunk> _loaded_chunks;
+        std::vector<CellChunk> _loaded_chunks;
         std::vector<glm::ivec3> _chunk_positions; // the positions of the loaded chunks
 
       public:
         
         // loading chunks into ram
         // returns the loaded chunk
-        Chunk& loadChunk(const glm::ivec3& chunk_pos, const std::vector<Cell>& cells);
-        Chunk& loadChunk(const glm::ivec3& chunk_pos, const Cell* cell_buffer, uint32_t byte_size);
+        CellChunk& loadChunk(const glm::ivec3& chunk_pos, const std::vector<Cell>& cells);
+        CellChunk& loadChunk(const glm::ivec3& chunk_pos, const Cell* cell_buffer, uint32_t byte_size);
 
         // removes the chunk from the vector of loaded chunks
         void unloadChunk(const glm::ivec3& chunk_pos);
@@ -37,10 +38,10 @@ namespace cell {
         // protected world functions
 
         // takes a position in the world and calculates which chunk it belongs to
-        glm::ivec3 calcChunkPosition(const glm::ivec3& world_pos) const;
+        glm::ivec3 calcChunkPosition(const glm::ivec3& world_pos) const;*/
 
     };
 
 } // namespace cell
 
-#endif // WORLD_H
+#endif // CELL_WORLD_H
