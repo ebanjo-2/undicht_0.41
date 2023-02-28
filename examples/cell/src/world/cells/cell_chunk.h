@@ -50,17 +50,6 @@ namespace cell {
         void loadFromBuffer(const char* buffer, uint32_t byte_size); // initialize the complete data of the chunk from the buffer
         void loadFromBuffer(const std::vector<Cell>& buffer);
 
-        // initializes the complete chunk from the cell data stored in the buffer
-        //void loadFromBuffer(const Cell* buffer, uint32_t cell_count);
-
-        //bool getWasEdited() const;
-        //void markAsUnEdited();
-
-        // loading the chunk from existing data
-        // will remove the current data in the chunks _cells buffer
-        //void initFromData(const Cell* buffer, uint32_t byte_size); // calling it with a byte_size of 0 or nullptr will effectivly clear the cells of the chunk
-        //void initFromData(const std::vector<Cell>& cells);
-
       protected:
         // protected chunk functions
 

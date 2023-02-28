@@ -182,35 +182,6 @@ namespace cell {
         loadFromBuffer((char*)buffer.data(), sizeof(Cell) * buffer.size());
     }
 
-    /*bool Chunk::getWasEdited() const {
-        
-        return _has_changed;
-    }
-
-    void Chunk::markAsUnEdited() {
-
-        _has_changed = false;
-    }*/
-
-    ///////////////////////////// loading the chunk from existing data ///////////////////////////////////
-    // will remove the current data in the chunks _cells buffer
-
-    /*void Chunk::initFromData(const Cell* buffer, uint32_t byte_size) {
-        // calling it with a byte_size of 0 or nullptr will effectivly clear the cells of the chunk
-        
-        _cells.clear();
-
-        if(buffer != nullptr)
-            _cells.insert(_cells.begin(), (Cell*)buffer, (Cell*)(buffer + byte_size / CELL_LAYOUT.getTotalSize()));
-
-        initMiniChunks();
-    }
-
-    void Chunk::initFromData(const std::vector<Cell>& cells) {
-
-        initFromData(cells.data(), sizeof(Cell) * cells.size());
-    }*/
-
     /////////////////////////////////// protected chunk functions ////////////////////////////////////////
 
     void CellChunk::initMiniChunks() {

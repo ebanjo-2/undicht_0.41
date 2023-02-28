@@ -38,6 +38,9 @@ add_library("tools"
 	src/IBL/ibl.h
 	src/IBL/ibl.cpp
 	
+	src/binary_data/binary_data_file.h
+	src/binary_data/binary_data_file.cpp
+	
 	extern/stb_implementation.cpp
 )
 

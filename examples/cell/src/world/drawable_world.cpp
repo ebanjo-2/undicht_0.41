@@ -33,6 +33,11 @@ namespace cell {
         return _light_world;
     }
 
+    MaterialAtlas& DrawableWorld::getMaterialAtlas() {
+
+        return _materials;
+    }
+
     void DrawableWorld::setSunDirection(const glm::vec3& dir) {
 
         _sun.setDirection(dir);
@@ -69,24 +74,6 @@ namespace cell {
             _light_buffer.updateChunk(*chunk, chunk_pos);
         }
 
-        /*uint32_t lights_to_update = std::max((uint32_t)_lights.size(), _light_buffer.getPointLightCount());
-
-        for(int i = 0; i < lights_to_update; i++) {
-            
-            if(i < _lights.size()) {
-                // update / add the light
-                if(i < _light_buffer.getPointLightCount()) {
-                    _light_buffer.updatePointLight(i, _lights.at(i)); // update
-                } else {
-                    _light_buffer.addPointLight(_lights.at(i)); // add
-                }
-            } else {
-                // remove the entry in the light buffer
-                _light_buffer.freePointLight(i);
-            }
-
-        }*/
-
     }
 
     /////////////////////////////////// access parts of the drawable world (for rendering) ///////////////////////////////////
@@ -99,11 +86,6 @@ namespace cell {
     const LightBuffer& DrawableWorld::getLightBuffer() const {
 
         return _light_buffer;
-    }
-
-    MaterialAtlas& DrawableWorld::getMaterialAtlas() {
-
-        return _materials;
     }
 
     const Light& DrawableWorld::getSun() const {

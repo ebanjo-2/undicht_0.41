@@ -75,7 +75,7 @@ namespace cell {
             _renderer.bindDescriptorSet(cmd, 2);
 
             // draw command
-            _renderer.draw(cmd, 36, false, entry.byte_size / cell_byte_size, 0, entry.offset / cell_byte_size);
+            _renderer.draw(cmd, world.getCellModelVertexCount(), false, entry.byte_size / cell_byte_size, 0, entry.offset / cell_byte_size);
 
         }
     }

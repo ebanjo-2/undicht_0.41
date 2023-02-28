@@ -62,6 +62,8 @@ set(FILES_SOURCES
 	src/files/world_file.cpp
 	src/files/material_file.h
 	src/files/material_file.cpp
+	src/files/chunk_file.h
+	src/files/chunk_file.cpp
 )
 
 add_executable(cell 

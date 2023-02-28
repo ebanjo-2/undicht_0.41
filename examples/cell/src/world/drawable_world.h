@@ -38,6 +38,7 @@ namespace cell {
 
         CellWorld& getCellWorld();
         LightWorld& getLightWorld();
+        MaterialAtlas& getMaterialAtlas();
 
         // sun / directional light
         void setSunDirection(const glm::vec3& dir);
@@ -52,7 +53,6 @@ namespace cell {
 
         const CellBuffer& getCellBuffer() const;
         const LightBuffer& getLightBuffer() const;
-        MaterialAtlas& getMaterialAtlas();
         const Light& getSun() const;
 
     };
