@@ -36,23 +36,25 @@ namespace undicht {
           protected:
             // protected BinaryDataBuffer functions
 
+            BufferEntry& addBufferEntry(bool in_use, size_t offset, size_t byte_size);
+
             /// @brief remove buffer entries with a byte_size of 0 
-            virtual void removeEmptyEntries();
+            void removeEmptyEntries();
 
             /// @brief make sure the _buffer_entries are sorted by their offsets
-            virtual void sortBufferEntries();
+            void sortBufferEntries();
 
             /// @brief will try to merge following entries marked as unused
             /// @warning entries have to be in a sorted state before calling this function !!!!
-            virtual void mergeUnusedEntries();
+            void mergeUnusedEntries();
             
             /// @brief tries to find an entry with the specified offset
             /// @return will return nullptr if no such entry was found
-            virtual BufferEntry* findBufferEntry(size_t location) const;
+            BufferEntry* findBufferEntry(size_t location) const;
 
-            /// @brief tries to find a entry that is marked as unused with specified size of at least byte_size
+            /// @brief tries to find an entry that is marked as unused with specified size of at least byte_size
             /// @return will return nullptr if no entry with a large enough unused memory could be found
-            virtual BufferEntry* findUnusedMemory(size_t byte_size) const;
+            BufferEntry* findUnusedMemory(size_t byte_size) const;
 
         };
 

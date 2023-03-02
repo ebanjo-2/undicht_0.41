@@ -6,7 +6,19 @@ namespace undicht {
     namespace tools {
 
         ////////////////////////// protected BinaryDataBuffer functions //////////////////////////
-        
+
+        BinaryDataBuffer::BufferEntry& BinaryDataBuffer::addBufferEntry(bool in_use, size_t offset, size_t byte_size) {
+
+            BufferEntry entry;
+            entry.is_in_use = in_use;
+            entry.offset = offset;
+            entry.byte_size = byte_size;
+
+            _buffer_entries.push_back(entry);
+
+            return _buffer_entries.back();
+        }
+
         void BinaryDataBuffer::removeEmptyEntries() {
             /// @brief remove buffer entries with a byte_size of 0
 
@@ -71,7 +83,7 @@ namespace undicht {
             /// @return will return nullptr if no entry with a large enough unused memory could be found
 
             for(const BufferEntry& entry : _buffer_entries)
-                if(entry.byte_size <= byte_size)
+                if((!entry.is_in_use) && (entry.byte_size <= byte_size))
                     return (BufferEntry*)&entry;
 
             return nullptr;

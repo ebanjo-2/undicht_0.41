@@ -48,6 +48,11 @@ namespace cell {
         /// @return the size of the data that gets stored (in bytes)
         uint32_t fillBuffer(char* buffer) const;
 
+        /// @brief init the point light from data
+        /// same layout and size as used by fillBuffer() is expected
+        /// @return the number of bytes used
+        uint32_t loadFromData(const char* buffer);
+
     };
 
 } // cell

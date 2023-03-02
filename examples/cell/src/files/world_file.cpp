@@ -9,14 +9,12 @@ namespace cell {
     using namespace undicht;
     using namespace tools;
 
-    const std::string CURRENT_WORLD_VERSION = "0.0.1";
-    const uint32_t CURRENT_CHUNK_VERSION = 0;
+    const std::string CURRENT_WORLD_VERSION = "0.0.2";
 
     WorldFile::WorldFile(const std::string& file_name) {
 
         open(file_name);
     }
-
 
     bool WorldFile::open(const std::string& file_name) {
         /// @brief loads in the content stored in the world file
@@ -24,9 +22,9 @@ namespace cell {
 
         _file_path = getFilePath(file_name);
         _file_name = getFileName(file_name);
-        _world_file = file_name;
 
         if(!XmlFile::open(file_name)) return false;
+        if(!_chunk_file.open(_file_path + getFileName(file_name, true) + ".chunk")) return false;
 
         // check if the file is a correct world file
 
@@ -42,6 +40,10 @@ namespace cell {
         XmlElement* world = getElement({"WORLD"});
         if(!world) return false;
 
+        // lights element
+        XmlElement* lights = getElement({"LIGHTS"});
+        if(!lights) return false;
+
         return true;
     }
 
@@ -53,9 +55,13 @@ namespace cell {
 
         // add a world element
         addChildElement("WORLD");
+        addChildElement("LIGHTS");
 
         // should create a new file if it doesnt exist already
-        XmlFile::write(_world_file);
+        XmlFile::write(_file_path + _file_name);
+
+        // new chunk file
+        _chunk_file.newChunkFile();
     }
 
     //////////////////////////////////////// store / load single chunks ///////////////////////////////////////////
@@ -63,42 +69,25 @@ namespace cell {
     bool WorldFile::write(const CellChunk& chunk, const glm::ivec3& chunk_pos) {
         /// @return true, if a chunk with the same chunk_pos existed before and is now overwritten
 
-        std::string chunk_pos_str = chunkPosToStr(chunk_pos);
+        return write<Cell>(chunk, chunk_pos, "WORLD");
+    }
 
-        // get world element
-        XmlElement* world = getElement({"WORLD"});
-        if(!world) return false;
+    bool WorldFile::write(const LightChunk& chunk, const glm::ivec3& chunk_pos) {
+        /// @return true, if a chunk with the same chunk_pos existed before and is now overwritten
 
-        // looking for a chunk entry with the same chunk_pos
-        XmlElement* c = world->getElement({"CHUNK chunk_pos=" + chunk_pos_str});
-        if(!c) c = world->addChildElement("CHUNK", {"chunk_pos=" + chunk_pos_str}); // create an entry for the chunk
-        
-        // writing the chunk data to a file
-        std::string chunk_file = chunk_pos_str + "_" + _file_name;
-        writeChunkToFile(chunk_file, chunk);
-        c->setContent(chunk_file);
-
-        // write the changes to the world file
-        XmlFile::write(_world_file);
-
-        return true;
+        return write<Light>(chunk, chunk_pos, "LIGHTS");
     }
 
     bool WorldFile::read(CellChunk& chunk, const glm::ivec3& chunk_pos) {
         /// @return true, if a chunk with the chunk_pos existed in the file and could be read
 
-        std::string chunk_pos_str = chunkPosToStr(chunk_pos);
+        return read<Cell>(chunk, chunk_pos, "WORLD");
+    }
 
-        // get world element
-        XmlElement* world = getElement({"WORLD"});
-        if(!world) return false;
+    bool WorldFile::read(LightChunk& chunk, const glm::ivec3& chunk_pos) {
+        /// @return true, if a chunk with the chunk_pos existed in the file and could be read
 
-        // looking for a chunk entry with the same chunk_pos
-        XmlElement* c = world->getElement({"CHUNK chunk_pos=" + chunk_pos_str});
-        if(!c) return false;
-
-        // read the chunk from the specified chunk file
-        return readChunkFromFile(_file_path + c->getContent(), chunk);
+        return read<Light>(chunk, chunk_pos, "LIGHTS");
     }
 
     ///////////////////////////////////// load other stuff from the file////////////////////////////////////////
@@ -131,6 +120,58 @@ namespace cell {
 
     ////////////////////////////////////// protected WorldFile functions /////////////////////////////////////////
 
+    template<typename T>
+    bool WorldFile::write(const Chunk<T>& chunk, const glm::ivec3& chunk_pos, const std::string& world_name) {
+        /// @return true, if a chunk with the same chunk_pos existed before and is now overwritten
+
+        std::string chunk_pos_str = chunkPosToStr(chunk_pos);
+
+        // get world element
+        XmlElement* world = getElement({world_name});
+        if(!world) return false;
+
+        // looking for a chunk entry with the same chunk_pos
+        XmlElement* c = world->getElement({"CHUNK chunk_pos=" + chunk_pos_str});
+        size_t store_location;
+
+        if(c) {
+            // update existing chunk
+            size_t old_location = std::strtol(c->getContent().data(), nullptr, 10);
+            store_location = _chunk_file.update(chunk, old_location);
+        } else {
+            // new chunk
+            c = world->addChildElement("CHUNK", {"chunk_pos=" + chunk_pos_str}); // create an entry for the chunk
+            store_location = _chunk_file.store(chunk);
+        }
+        
+        // storing the location of the chunk in the chunk file
+        c->setContent(toStr(store_location));
+
+        // write the changes to the world file
+        XmlFile::write(_file_path + _file_name);
+
+        return true;
+    }
+        
+    template<typename T>
+    bool WorldFile::read(Chunk<T>& chunk, const glm::ivec3& chunk_pos, const std::string& world_name) {
+        /// @return true, if a chunk with the chunk_pos existed in the file and could be read
+
+        std::string chunk_pos_str = chunkPosToStr(chunk_pos);
+
+        // get world element
+        XmlElement* world = getElement({world_name});
+        if(!world) return false;
+
+        // looking for a chunk entry with the same chunk_pos
+        XmlElement* c = world->getElement({"CHUNK chunk_pos=" + chunk_pos_str});
+        if(!c) return false;
+
+        // read the chunk from the chunk file
+        size_t store_location = std::strtol(c->getContent().data(), nullptr, 10);
+        return _chunk_file.read(chunk, store_location);
+    }
+
     std::string WorldFile::chunkPosToStr(const glm::ivec3& chunk_pos) const {
 
         return tools::toStr(chunk_pos.x) + "_" + tools::toStr(chunk_pos.y) + "_" + tools::toStr(chunk_pos.z);
@@ -147,51 +188,6 @@ namespace cell {
         pos.z = std::strtol(tmp + 1, &tmp, 0);
 
         return pos;
-    }
-
-    void WorldFile::writeChunkToFile(const std::string& file_name, const CellChunk& chunk) {
-
-        std::ofstream file(file_name, std::ios::binary | std::ios::out | std::ios::trunc);
-
-        // writing the file "header"
-        file << "Chunk ";
-        file << CURRENT_CHUNK_VERSION << " "; // chunk file version
-        file << chunk.getCellCount() << " ";
-        file << sizeof(Cell) << "\n";
-
-        // storing the cell data in a buffer
-        size_t buffer_size = chunk.fillBuffer(nullptr);
-        std::vector<char> buffer(buffer_size);
-        chunk.fillBuffer(buffer.data());
-
-        // writing the cell binary data
-        file.write(buffer.data(), buffer.size());
-        file.close();
-    }
-
-    bool WorldFile::readChunkFromFile(const std::string& file_name, CellChunk& chunk) {
-
-        std::fstream file(file_name, std::ios::binary | std::ios::in);
-
-        if(!file.is_open()) return false;
-        
-        // reading the file "header"
-        std::string header_type; // should just contain "Chunk"
-        uint32_t version, cell_count, cell_size;
-        file >> header_type >> version >> cell_count >> cell_size;
-
-        // moving past the newline
-        file.get();
-
-        // reading the cell binary data
-        std::vector<char> buffer(cell_count * cell_size);
-        file.read(buffer.data(), buffer.size());
-        file.close();
-
-        // storing the cell data in the chunk
-        chunk.loadFromBuffer(buffer.data(), buffer.size());
-
-        return true;
     }
 
 } // cell

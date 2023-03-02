@@ -56,11 +56,15 @@ namespace undicht {
             return file_name;
         }
 
-        std::string getFileName(std::string file_name_and_path) {
+        std::string getFileName(std::string file_name_and_path, bool remove_file_ending) {
 
             size_t path_end = file_name_and_path.rfind("/");
+            size_t name_end = file_name_and_path.rfind(".");
 
-            return file_name_and_path.substr(path_end + 1, file_name_and_path.size() - path_end - 1);
+            if(remove_file_ending)
+                return file_name_and_path.substr(path_end + 1, name_end - path_end - 1);
+            else
+                return file_name_and_path.substr(path_end + 1, file_name_and_path.size() - path_end - 1);
         }
 
         std::string replaceAllChars(std::string str, char to_be_replaced, char replace_with) {

@@ -13,7 +13,7 @@ namespace cell {
 
         UND_LOG << "App::init() gets called\n";
         
-        undicht::Engine::init(true, false);
+        undicht::Engine::init(true, true);
 
         UND_LOG << "initialized the engine\n";
 
@@ -22,43 +22,30 @@ namespace cell {
         _player.init();
         _player.setPosition(glm::vec3(0, -5, 10));
 
-        LightChunk& light_chunk = *(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk());
-        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(05.4,-54.4,35.4),glm::vec3(23.47, 21.31, 20.79)));
-        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(10.5,-20.5,20.5),glm::vec3(200.0,200.0, 200.0)));
-        light_chunk.addLight(Light(Light::Type::Point, glm::vec3(15.5,-3.5,50.5),glm::vec3(10.0,0.0,10.0)));
-        _world.updateLightBuffer();
-
         _world.setSunDirection(glm::vec3(1,0.5,1));
         _world.setSunColor(glm::vec3(23.47, 21.31, 20.79) * 0.5f);
 
-        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
+        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
         //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Milkyway/Milkyway_BG.jpg");
 
-        if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.txt")) {
+        if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.world")) {
 
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), glm::ivec3(0,-255,0));
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,0), new CellChunk()), glm::ivec3(255,-255,0));
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,0), new CellChunk()), glm::ivec3(-255,-255,0));
             _world.updateWorldBuffer();
+
+            _world_file.read(*(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk()), glm::ivec3(0,-255,0));
+            _world.updateLightBuffer();
+
+            //_world_file.write(*(CellChunk*)_world.getCellWorld().getChunkAt(glm::ivec3(0,-255,0)), glm::ivec3(-255,-255,0));
+            //_world_file.write(light_chunk, glm::ivec3(0,-255,0));
             _world_file.readMaterials(_world.getMaterialAtlas());
 
         } else {
             UND_LOG << "failed to open the world file\n";
             //_world_file.newWorldFile();
-        }
-
-        ChunkFile c_file;
-        if(c_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_chunk.txt")) {
-            //c_file.newChunkFile();
-            //c_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), 8);
-            //c_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,0), new CellChunk()), 100);
-            //c_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,0), new CellChunk()), 192);
-            //_world.updateWorldBuffer();
-            // size_t location = c_file.store(*_world.getCellWorld().getChunkAt(glm::ivec3(0,-255,0)));
-        } else {
-            c_file.newChunkFile();
-            UND_LOG << "created a new chunk file\n";
         }
 
     }
@@ -112,7 +99,7 @@ namespace cell {
             _master_renderer.beginLightSubPass();
             _master_renderer.drawLight(_world.getSun());
             _master_renderer.drawLights(_world.getLightBuffer());
-            //_master_renderer.drawAmbientLight();
+            _master_renderer.drawAmbientLight();
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(1.0f);
 

@@ -101,4 +101,37 @@ namespace cell {
             return 6 * sizeof(float) + sizeof(uint32_t);
     }
 
+    uint32_t Light::loadFromData(const char* buffer) {
+        /// @brief init the point light from data
+        /// same layout and size as used by fillBuffer() is expected
+        /// @return the number of bytes used
+
+        uint32_t* ubuffer = (uint32_t*)buffer;
+        float* fbuffer = (float*)ubuffer + 1;
+
+        if(buffer) {
+            // just reverse of what fillBuffer() does
+
+            _type = (Light::Type)ubuffer[0];
+
+            _pos_or_dir.x = fbuffer[0];
+            _pos_or_dir.y = fbuffer[1];
+            _pos_or_dir.z = fbuffer[2];
+
+            _color.x = fbuffer[3];
+            _color.y = fbuffer[4];
+            _color.z = fbuffer[5];
+
+            if(_type == Point)
+                _range = fbuffer[6];
+        } else {
+            return 0;
+        }
+
+        if(_type == Point)
+            return 7 * sizeof(float) + sizeof(uint32_t);
+        else 
+            return 6 * sizeof(float) + sizeof(uint32_t);
+    }
+
 } // cell

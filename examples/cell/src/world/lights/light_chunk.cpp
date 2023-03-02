@@ -1,4 +1,5 @@
 #include "world/lights/light_chunk.h"
+#include "debug.h"
 
 namespace cell {
 
@@ -47,12 +48,19 @@ namespace cell {
 
     void LightChunk::loadFromBuffer(const char* buffer, uint32_t byte_size) {
         // initialize the complete data of the chunk from the buffer
+        
+        if(buffer == nullptr) return;
 
-        /*_lights.clear();
-        uint32_t light_size = POINT_LIGHT_LAYOUT.getTotalSize();
+        _lights.clear();
 
-        if(buffer != nullptr)
-            _lights.insert(_lights.begin(), buffer, buffer + byte_size);*/
+        uint32_t pos = 0;
+        while(pos < byte_size) {
+
+            Light l;
+            pos += l.loadFromData(buffer + pos);
+            _lights.push_back(l);
+        }
+        
     }
     
     void LightChunk::loadFromBuffer(const std::vector<Light>& buffer) {

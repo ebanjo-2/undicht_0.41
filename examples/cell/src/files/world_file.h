@@ -4,8 +4,10 @@
 #include <string>
 #include "world/cells/cell_world.h"
 #include "world/cells/cell_chunk.h"
+#include "world/lights/light_chunk.h"
 #include "xml/xml_file.h"
 #include "materials/material_atlas.h"
+#include "files/chunk_file.h"
 
 namespace cell {
 
@@ -14,8 +16,9 @@ namespace cell {
       protected:
 
         std::string _file_path; // path to the file that is currently open
-        std::string _file_name; // name of the current file
-        std::string _world_file; // path + name
+        std::string _file_name; // name of the current file (without the path)
+
+        ChunkFile _chunk_file; // to store the binary data of all kinds of chunks
 
       public:
 
@@ -29,10 +32,14 @@ namespace cell {
         void newWorldFile();
 
         // store / load single chunks
+
         /// @return true, if a chunk with the same chunk_pos existed before and is now overwritten
         bool write(const CellChunk& chunk, const glm::ivec3& chunk_pos);
+        bool write(const LightChunk& chunk, const glm::ivec3& chunk_pos);
+
         /// @return true, if a chunk with the chunk_pos existed in the file and could be read
         bool read(CellChunk& chunk, const glm::ivec3& chunk_pos);
+        bool read(LightChunk& chunk, const glm::ivec3& chunk_pos);
 
         // load other stuff from the file
         bool readMaterials(MaterialAtlas& atlas);
@@ -40,11 +47,15 @@ namespace cell {
       protected:
         // protected WorldFile functions
 
+        template<typename T>
+        bool write(const Chunk<T>& chunk, const glm::ivec3& chunk_pos, const std::string& world_name);
+        
+        template<typename T>
+        bool read(Chunk<T>& chunk, const glm::ivec3& chunk_pos, const std::string& world_name);
+
         std::string chunkPosToStr(const glm::ivec3& chunk_pos) const;
         glm::ivec3 strToChunkPos(std::string str) const;
 
-        void writeChunkToFile(const std::string& file_name, const CellChunk& chunk);
-        bool readChunkFromFile(const std::string& file_name, CellChunk& chunk);
     };
 
 } // cell
