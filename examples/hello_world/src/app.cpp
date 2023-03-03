@@ -162,7 +162,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 
     // loading the data from the file
     std::vector<undicht::tools::MeshData> meshes;
-    std::vector<undicht::tools::ImageData> textures;
+    std::vector<undicht::tools::ImageData<char>> textures;
 
     if(hasFileType(file_name, ".dae")) {
         undicht::tools::ColladaFile file(file_name);
@@ -182,7 +182,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
     UND_LOG << "loaded " << meshes.size() << " meshes\n";
 
     // loading the textures
-    for(undicht::tools::ImageData& data : textures) {
+    for(undicht::tools::ImageData<char>& data : textures) {
 
         undicht::vulkan::Texture t;
         t.setMipMaps(true);
@@ -206,21 +206,21 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 
 void HelloWorldApp::loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo) {
 
-    undicht::tools::ImageData data;
+    undicht::tools::ImageData<char> data;
     undicht::tools::ImageFile(file_name, data);
 
     loadTexture(data, loadTo);
 }
 
-void HelloWorldApp::loadTexture(const undicht::tools::ImageData& data, undicht::vulkan::Texture& loadTo) {
+void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo) {
 
-    if(data._width && data._height) {
-        loadTo.setExtent(data._width, data._height, 1);
+    if(data.getWidth() && data.getHeight()) {
+        loadTo.setExtent(data.getWidth(), data.getHeight(), 1);
     } else {
         loadTo.setExtent(1, 1);
     }
     
-    if(data._nr_channels == 3) {
+    if(data.getNrChannels() == 3) {
         loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8_SRGB));
     } else {
         loadTo.setFormat(undicht::vulkan::translate(UND_R8G8B8A8_SRGB));
@@ -228,8 +228,8 @@ void HelloWorldApp::loadTexture(const undicht::tools::ImageData& data, undicht::
 
     loadTo.init(_gpu);
 
-    if(data._pixels.size()) {
-        loadTo.setData(data._pixels.data(), data._pixels.size());
+    if(data.getPixelDataSize()) {
+        loadTo.setData(data.getPixelData(), data.getPixelDataSize());
     } else {
         std::array<char, 4> pink = {0, 0, 0, 0}; // no texture color
         loadTo.setData(pink.data(), pink.size());

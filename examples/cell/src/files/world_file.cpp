@@ -36,13 +36,11 @@ namespace cell {
         if(!version) return false;
         if(version->m_value.compare(CURRENT_WORLD_VERSION)) UND_WARNING << "world file version does not match the current version (version " << CURRENT_WORLD_VERSION << ")\n";
 
-        // world element
-        XmlElement* world = getElement({"WORLD"});
-        if(!world) return false;
-
-        // lights element
-        XmlElement* lights = getElement({"LIGHTS"});
-        if(!lights) return false;
+        // expected elements
+        if(!getElement({"WORLD"})) return false;
+        if(!getElement({"LIGHTS"})) return false;
+        if(!getElement({"MATERIALS"})) return false;
+        if(!getElement({"ENVIRONMENT"})) return false;
 
         return true;
     }
@@ -56,6 +54,8 @@ namespace cell {
         // add a world element
         addChildElement("WORLD");
         addChildElement("LIGHTS");
+        addChildElement("MATERIALS");
+        addChildElement("ENVIRONMENT");
 
         // should create a new file if it doesnt exist already
         XmlFile::write(_file_path + _file_name);
@@ -110,13 +110,29 @@ namespace cell {
         }
 
         // store the materials in the atlas
-        for(Material& m : all_materials) 
+        for(Material& m : all_materials)
             atlas.setMaterial(m);
 
         UND_LOG << "loaded " << all_materials.size() << " materials\n";
 
         return true;
     }
+
+    bool WorldFile::readEnvironment(Environment& env) {
+
+        XmlElement* materials = getElement({"ENVIRONMENT"});
+        if(!materials) return false;
+
+        XmlElement* source = materials->getElement({"SOURCE"});
+
+        if(source) {
+
+            env.load(_file_path + source->getContent());
+        }
+
+        return true;
+    }
+
 
     ////////////////////////////////////// protected WorldFile functions /////////////////////////////////////////
 

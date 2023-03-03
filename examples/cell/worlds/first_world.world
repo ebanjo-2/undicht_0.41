@@ -2,6 +2,9 @@
 <MATERIALS>
   <SOURCE>../res/default.txt</SOURCE>
 </MATERIALS>
+<ENVIRONMENT>
+  <SOURCE>../res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg</SOURCE>
+</ENVIRONMENT>
 <LIGHTS>
   <CHUNK chunk_pos=0_-255_0>288</CHUNK>
 </LIGHTS>

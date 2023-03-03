@@ -3,34 +3,21 @@
 
 #include "string"
 #include "vector"
+#include "images/image_data.h"
 
 namespace undicht {
 
     namespace tools {
 
-        struct ImageData {
-            std::vector<char> _pixels;
-            uint32_t _width = 0;
-            uint32_t _height = 0;
-            uint32_t _nr_channels = 0;
-        };
-
-        struct HDRImageData {
-            std::vector<float> _pixels;
-            uint32_t _width = 0;
-            uint32_t _height = 0;
-            uint32_t _nr_channels = 0;
-        };
-
         class ImageFile {
         public:
 
             ImageFile() = default;
-            ImageFile(const std::string& file_name, ImageData& data);
-            ImageFile(const std::string& file_name, HDRImageData& data);
+            ImageFile(const std::string& file_name, ImageData<char>& data);
+            ImageFile(const std::string& file_name, ImageData<float>& data);
 
-            bool loadImage(const std::string& file_name, ImageData& data);
-            bool loadImage(const std::string& file_name, HDRImageData& data);
+            bool loadImage(const std::string& file_name, ImageData<char>& data);
+            bool loadImage(const std::string& file_name, ImageData<float>& data);
 
         };
 

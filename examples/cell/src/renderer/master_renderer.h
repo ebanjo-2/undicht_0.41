@@ -78,7 +78,6 @@ namespace cell {
 
         // do before starting to render
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
-        void loadEnvironment(const std::string& file_name);
 
         // shadow pass
         void beginShadowPass(const Light& global_shadow_source, const glm::vec3& shadow_target); // only one shadow source for now
@@ -91,7 +90,7 @@ namespace cell {
         void beginLightSubPass();
         void drawLights(const LightBuffer& lights);
         void drawLight(const Light& light); // draw a directional light
-        void drawAmbientLight();
+        void drawAmbientLight(const Environment& env);
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);
 

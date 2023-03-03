@@ -92,6 +92,7 @@ namespace cell {
         _cube_map_sampler.setMinFilter(VK_FILTER_LINEAR);
         _cube_map_sampler.setMaxFilter(VK_FILTER_LINEAR);
         _cube_map_sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
+        _cube_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
         _cube_map_sampler.init(gpu.getDevice());
 
         _brdf_map_sampler.setMinFilter(VK_FILTER_LINEAR);
@@ -108,26 +109,7 @@ namespace cell {
         _shadow_sampler_offsets.init(gpu);
         _shadow_sampler_offsets.setData((const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
 
-        // environment cube map
-        _env_cube_map.setExtent(_env_cube_map_size, _env_cube_map_size, 1, 6);
-        _env_cube_map.setFormat(translate(UND_VEC4F)); // hdr (could be VEC4F16)
-        _env_cube_map.setCubeMap(true);
-        _env_cube_map.init(gpu);
-
-        _irradiance_map.setExtent(_irradiance_map_size, _irradiance_map_size, 1, 6);
-        _irradiance_map.setFormat(translate(UND_VEC4F)); // hdr (could be VEC4F16)
-        _irradiance_map.setCubeMap(true);
-        _irradiance_map.init(gpu);
-
-        _specular_prefilter_map.setExtent(_specular_prefilter_map_size, _specular_prefilter_map_size, 1, 6);
-        _specular_prefilter_map.setFormat(translate(UND_VEC4F)); // hdr (could be VEC4F16)
-        _specular_prefilter_map.setMipMaps(true, false, _specular_prefilter_mip_levels);
-        _specular_prefilter_map.setCubeMap(true); // reflections for rougher surfaces will be stored in higher mip levels
-        _specular_prefilter_map.init(gpu);
-
-        _brdf_integration_map.setExtent(_brdf_integration_map_size, _brdf_integration_map_size);
-        _brdf_integration_map.setFormat(translate(UND_VEC2F)); // could be VEC2F16
-        _brdf_integration_map.init(gpu);
+        _brdf_map.init(gpu);
 
         // local uniform buffer
         // tile map tile size
@@ -155,10 +137,7 @@ namespace cell {
         _cube_map_sampler.cleanUp();
         _brdf_map_sampler.cleanUp();
         _shadow_sampler_offsets.cleanUp();
-        _env_cube_map.cleanUp();
-        _irradiance_map.cleanUp();
-        _specular_prefilter_map.cleanUp();
-        _brdf_integration_map.cleanUp();
+        _brdf_map.cleanUp();
         _point_light_renderer.cleanUp();
         _direct_light_renderer.cleanUp();
         _ambient_light_renderer.cleanUp();
@@ -169,58 +148,6 @@ namespace cell {
         _point_light_renderer.resizeViewport(viewport);
         _direct_light_renderer.resizeViewport(viewport);
         _ambient_light_renderer.resizeViewport(viewport);
-    }
-
-    void LightRenderer::loadEnvironment(const std::string& file_name) {
-        // load an environment that is used for image based lighting
-
-        HDRImageData hdr_sphere;
-        ImageFile(file_name, hdr_sphere);
-        
-        // generate cubemap faces from the loaded environment map
-        std::array<HDRImageData, 6> faces;
-        convertEquirectangularToCubeMap(hdr_sphere, faces, _env_cube_map_size);
-
-        // store the faces in the cubemap
-        for(int i = 0; i < 6; i++) {
-            const HDRImageData& face = faces.at(i);
-            _env_cube_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
-        }
-
-        UND_LOG << "finished loading the skybox\n";
-
-        // generate convoluted environment map (irradiance map)
-        std::array<HDRImageData, 6> irradiance_faces;
-        convoluteCubeMap(faces, irradiance_faces, _irradiance_map_size);
-
-        // store the faces in the irradiance cubemap
-        for(int i = 0; i < 6; i++) {
-            const HDRImageData& face = irradiance_faces.at(i);
-            _irradiance_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i);
-        }
-
-        UND_LOG << "finished calculating the diffuse lighting from the environment\n";
-
-        // pre filter the environment for specular reflections
-        std::vector<std::array<HDRImageData, 6>> prefilter_mip_maps;
-        prefilterSpecularReflections(faces, prefilter_mip_maps, _specular_prefilter_map_size, _specular_prefilter_mip_levels);
-
-        for(int mip_level = 0; mip_level < _specular_prefilter_mip_levels; mip_level++) {
-            for(int i = 0; i < 6; i++) {
-                const HDRImageData& face = prefilter_mip_maps.at(mip_level).at(i);
-                _specular_prefilter_map.setData((const char*)face._pixels.data(), face._pixels.size() * sizeof(float), i, mip_level);
-            }
-        }
-
-        UND_LOG << "finished calculating the specular reflection maps\n";
-
-        // calculate the convoluted BRDF part of the split sum integral
-        HDRImageData brdf_map;
-        createBRDFIntegrationMap(brdf_map, _brdf_integration_map_size);
-        _brdf_integration_map.setData((const char*)brdf_map._pixels.data(), brdf_map._pixels.size() * sizeof(float));
-
-        UND_LOG << "finished calculating the brdf part \n";
-
     }
 
     void LightRenderer::beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos){
@@ -301,13 +228,13 @@ namespace cell {
 
     }
 
-    void LightRenderer::draw(undicht::vulkan::CommandBuffer& cmd) {
+    void LightRenderer::draw(const Environment& env, undicht::vulkan::CommandBuffer& cmd) {
 
         _ambient_light_renderer.accquireDescriptorSet(2);
-        _ambient_light_renderer.bindImage(2, 0, _env_cube_map.getImage().getImageView(), _env_cube_map.getLayout(), _cube_map_sampler.getSampler()); 
-        _ambient_light_renderer.bindImage(2, 1, _irradiance_map.getImage().getImageView(), _irradiance_map.getLayout(), _cube_map_sampler.getSampler());
-        _ambient_light_renderer.bindImage(2, 2, _specular_prefilter_map.getImage().getImageView(), _specular_prefilter_map.getLayout(), _cube_map_sampler.getSampler()); 
-        _ambient_light_renderer.bindImage(2, 3, _brdf_integration_map.getImage().getImageView(), _brdf_integration_map.getLayout(), _brdf_map_sampler.getSampler());
+        _ambient_light_renderer.bindImage(2, 0, env.getSkyBox().getImage().getImageView(), env.getSkyBox().getLayout(), _cube_map_sampler.getSampler()); 
+        _ambient_light_renderer.bindImage(2, 1, env.getIrradiance().getImage().getImageView(), env.getIrradiance().getLayout(), _cube_map_sampler.getSampler());
+        _ambient_light_renderer.bindImage(2, 2, env.getSpecular().getImage().getImageView(), env.getSpecular().getLayout(), _cube_map_sampler.getSampler()); 
+        _ambient_light_renderer.bindImage(2, 3, _brdf_map.getMap().getImage().getImageView(), _brdf_map.getMap().getLayout(), _brdf_map_sampler.getSampler());
         _ambient_light_renderer.bindDescriptorSet(cmd, 2);
 
         _ambient_light_renderer.bindPipeline(cmd);

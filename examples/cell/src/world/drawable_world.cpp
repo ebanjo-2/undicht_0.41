@@ -11,7 +11,7 @@ namespace cell {
         _cell_buffer.init(device);
         _light_buffer.init(device);
         _materials.init(device);
-
+        _environment.init(device);
     }
 
     void DrawableWorld::cleanUp() {
@@ -19,6 +19,7 @@ namespace cell {
         _cell_buffer.cleanUp();
         _light_buffer.cleanUp();
         _materials.cleanUp();
+        _environment.cleanUp();
     }
 
     ///////////////////////////////////////////// update parts of the drawable world //////////////////////////////////////////
@@ -36,6 +37,11 @@ namespace cell {
     MaterialAtlas& DrawableWorld::getMaterialAtlas() {
 
         return _materials;
+    }
+
+    Environment& DrawableWorld::getEnvironment() {
+
+        return _environment;
     }
 
     void DrawableWorld::setSunDirection(const glm::vec3& dir) {

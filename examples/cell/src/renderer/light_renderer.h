@@ -15,6 +15,8 @@
 #include "3D/camera/perspective_camera_3d.h"
 #include "materials/material_atlas.h"
 #include "world/lights/light_buffer.h"
+#include "brdf_integration_map.h"
+#include "environment/environment.h"
 
 namespace cell {
 
@@ -41,15 +43,7 @@ namespace cell {
         undicht::vulkan::Texture _shadow_sampler_offsets;
 
         // image based lighting
-        const int _env_cube_map_size = 1024; // width and height of the cubemap faces
-        undicht::vulkan::Texture _env_cube_map; // "sky box" (the environment map that the image based lighting is based on)
-        const int _irradiance_map_size = 16; // small size should be enough
-        undicht::vulkan::Texture _irradiance_map; // a cube map that contains the diffuse light for every surface normal direction
-        const int _specular_prefilter_map_size = 128; // size of the highest mip level (reflections for the smoothest surface)
-        const int _specular_prefilter_mip_levels = 5;
-        undicht::vulkan::Texture _specular_prefilter_map;
-        const int _brdf_integration_map_size = 512;
-        undicht::vulkan::Texture _brdf_integration_map;
+        BRDFIntegrationMap _brdf_map;
 
         undicht::vulkan::UniformBuffer _local_ubo;
         undicht::vulkan::DescriptorSetLayout _local_descriptor_layout;
@@ -64,12 +58,12 @@ namespace cell {
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void loadEnvironment(const std::string& file_name);
+        //void loadEnvironment(const std::string& file_name);
 
         void beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos);
         void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
         void draw(const Light& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height); // direct light only
-        void draw(undicht::vulkan::CommandBuffer& cmd); // ambient light / light from the environment map
+        void draw(const Environment& env, undicht::vulkan::CommandBuffer& cmd); // ambient light / light from the environment map
 
       protected:
         // protected LightRenderer functions

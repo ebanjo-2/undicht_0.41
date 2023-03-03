@@ -48,13 +48,13 @@ namespace undicht {
 			virtual void getMesh(MeshData& loadTo_mesh, unsigned int id = 0, bool load_positions = true, bool load_uvs = true, bool load_normals = true) = 0;
 
 			/** @param id: to iterate through the texture of the file */
-			virtual void getTexture(ImageData& loadTo_texture, int id = 0) = 0;
+			virtual void getTexture(ImageData<char>& loadTo_texture, int id = 0) = 0;
 
 			////////////////////////////////////////// functions to load all meshes / textures ///////////////////////////////////////////
 
 			virtual void loadAllMeshes(std::vector<MeshData>& loadTo_meshes, bool load_positions = true, bool load_uvs = true, bool load_normals = true) = 0;
 
-			virtual void loadAllTextures(std::vector<ImageData>& loadTo_textures) = 0;
+			virtual void loadAllTextures(std::vector<ImageData<char>>& loadTo_textures) = 0;
 
 		protected:
 			// universal functions that may be useful for loading models

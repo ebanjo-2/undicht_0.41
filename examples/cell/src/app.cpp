@@ -25,10 +25,6 @@ namespace cell {
         _world.setSunDirection(glm::vec3(1,0.5,1));
         _world.setSunColor(glm::vec3(23.47, 21.31, 20.79) * 0.5f);
 
-        _master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Mono_Lake_C/Mono_Lake_C_HiRes.jpg");
-        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Winter_Forest/WinterForest_8k.jpg");
-        //_master_renderer.loadEnvironment(UND_ENGINE_SOURCE_DIR + "examples/cell/res/environment_maps/Milkyway/Milkyway_BG.jpg");
-
         if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.world")) {
 
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), glm::ivec3(0,-255,0));
@@ -39,9 +35,9 @@ namespace cell {
             _world_file.read(*(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk()), glm::ivec3(0,-255,0));
             _world.updateLightBuffer();
 
-            //_world_file.write(*(CellChunk*)_world.getCellWorld().getChunkAt(glm::ivec3(0,-255,0)), glm::ivec3(-255,-255,0));
-            //_world_file.write(light_chunk, glm::ivec3(0,-255,0));
             _world_file.readMaterials(_world.getMaterialAtlas());
+            
+            _world_file.readEnvironment(_world.getEnvironment());
 
         } else {
             UND_LOG << "failed to open the world file\n";
@@ -77,7 +73,6 @@ namespace cell {
 
         // updating the world
         _world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
-        //_world.setSunTarget(_player.getPosition());
         _player.move(getDeltaT(), _main_window);
 
         // checking if the window is minimized
@@ -99,7 +94,7 @@ namespace cell {
             _master_renderer.beginLightSubPass();
             _master_renderer.drawLight(_world.getSun());
             _master_renderer.drawLights(_world.getLightBuffer());
-            _master_renderer.drawAmbientLight();
+            _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(1.0f);
 

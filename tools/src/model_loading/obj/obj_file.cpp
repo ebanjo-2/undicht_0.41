@@ -67,10 +67,10 @@ namespace undicht {
 
         }
 
-		void OBJFile::getTexture(ImageData& loadTo_texture, int id) {
+		void OBJFile::getTexture(ImageData<char>& loadTo_texture, int id) {
 		    /** @param id: to iterate through the texture of the file */
 
-            std::vector<ImageData> all_textures;
+            std::vector<ImageData<char>> all_textures;
 
             loadAllTextures(all_textures);
 
@@ -146,24 +146,26 @@ namespace undicht {
 
         }
 
-		void OBJFile::loadAllTextures(std::vector<ImageData>& loadTo_textures) {
+		void OBJFile::loadAllTextures(std::vector<ImageData<char>>& loadTo_textures) {
 
             for(const MTLFile::Material& mat : _mtl_file.getMaterials()) {
                 
                 // only loading the diffuse texture for now
                 std::string image_file_name = mat._map_kd;
-                ImageData image_data;
+                ImageData<char> image_data;
 
                 if(image_file_name.size()) {
                     ImageFile image_file(getFilePath(_file_name) + image_file_name, image_data);
                 } else {
-                    image_data._width = 1;
-                    image_data._height = 1;
-                    image_data._nr_channels = 4;
-                    image_data._pixels.push_back(mat._kd[0] * 255);
-                    image_data._pixels.push_back(mat._kd[1] * 255);
-                    image_data._pixels.push_back(mat._kd[2] * 255);
-                    image_data._pixels.push_back(0);
+                    image_data.setExtent(1,1);
+                    image_data.setNrChannels(4);
+                    char pixel[] = {
+                        mat._kd[0] * 255,
+                        mat._kd[1] * 255,
+                        mat._kd[2] * 255,
+                        0
+                    };
+                    image_data.setPixel(pixel, 0, 0);
                 }
 
                 loadTo_textures.push_back(image_data);

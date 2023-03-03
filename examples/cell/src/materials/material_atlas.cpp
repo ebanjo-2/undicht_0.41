@@ -65,16 +65,16 @@ namespace cell {
         _materials.at(fixed_id) = mat;
 
         // loading the textures
-        ImageData diffuse_data;
-        ImageData specular_data;
+        ImageData<char> diffuse_data;
+        ImageData<char> specular_data;
         loadAlbedoTexture(mat.getAlbedoTexture(), diffuse_data);
         loadNormalTexture(mat.getNormalTexture(), specular_data);
 
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _tile_map.setData(diffuse_data._pixels.data(), diffuse_data._pixels.size(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
-        _tile_map.setData(specular_data._pixels.data(), specular_data._pixels.size(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(diffuse_data.getPixelData(), diffuse_data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(specular_data.getPixelData(), specular_data.getPixelDataSize(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
     }
 
     const Material* MaterialAtlas::getMaterial(const std::string& mat_name) const {
@@ -112,21 +112,20 @@ namespace cell {
 
     //////////////////////////////////// protected material atlas functions ////////////////////////////////////
 
-    void MaterialAtlas::loadAlbedoTexture(const std::string& file_name, ImageData& data) {
+    void MaterialAtlas::loadAlbedoTexture(const std::string& file_name, ImageData<char>& data) {
 
         if(!file_name.compare("")) {
             // init the data with default values
-            data._nr_channels = 4;
-            data._width = 16;
-            data._height = 16;
-            data._pixels.resize(16 * 16 * 4);
+            data.setNrChannels(4);
+            data.setExtent(16, 16);
 
-            for(int x = 0; x < 16; x++) {
-                for(int y = 0; y < 16; y++) {
-                    data._pixels.at(4 * (x * 16 + y) + 0) = 0;
-                    data._pixels.at(4 * (x * 16 + y) + 1) = 100;
-                    data._pixels.at(4 * (x * 16 + y) + 2) = 200;
-                    data._pixels.at(4 * (x * 16 + y) + 3) = 20; // roughness
+            for(uint32_t x = 0; x < 16; x++) {
+                for(uint32_t y = 0; y < 16; y++) {
+                    data.getPixel(x, y)[0] = 0;
+                    data.getPixel(x, y)[1] = 100;
+                    data.getPixel(x, y)[2] = 200;
+                    data.getPixel(x, y)[3] = 20; // roughness
+
                 }
             }
 
@@ -135,28 +134,26 @@ namespace cell {
 
         ImageFile(file_name, data);
 
-        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
+        if(data.getNrChannels() != TILE_MAP_FORMAT.m_num_components || data.getWidth() != TILE_WIDTH || data.getHeight() != TILE_HEIGHT) {
             UND_ERROR << "failed to load Albedo + Roughness texture: " << file_name << "\n";
             return;
         }
 
     }
 
-    void MaterialAtlas::loadNormalTexture(const std::string& file_name, ImageData& data) {
+    void MaterialAtlas::loadNormalTexture(const std::string& file_name, ImageData<char>& data) {
 
         if(!file_name.compare("")) {
             // init the data with default values
-            data._nr_channels = 4;
-            data._width = 16;
-            data._height = 16;
-            data._pixels.resize(16 * 16 * 4);
+            data.setNrChannels(4);
+            data.setExtent(16, 16);
 
-            for(int x = 0; x < 16; x++) {
-                for(int y = 0; y < 16; y++) {
-                    data._pixels.at(4 * (x * 16 + y) + 0) = 0; // normal
-                    data._pixels.at(4 * (x * 16 + y) + 1) = 255;
-                    data._pixels.at(4 * (x * 16 + y) + 2) = 0;
-                    data._pixels.at(4 * (x * 16 + y) + 3) = 0; // metalness
+            for(uint32_t x = 0; x < 16; x++) {
+                for(uint32_t y = 0; y < 16; y++) {
+                    data.getPixel(x, y)[0] = 0; // normal
+                    data.getPixel(x, y)[1] = 255;
+                    data.getPixel(x, y)[2] = 0;
+                    data.getPixel(x, y)[3] = 0; // metalness
                 }
             }
 
@@ -165,7 +162,7 @@ namespace cell {
 
         ImageFile(file_name, data);
 
-        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
+        if(data.getNrChannels() != TILE_MAP_FORMAT.m_num_components || data.getWidth() != TILE_WIDTH || data.getHeight() != TILE_HEIGHT) {
             UND_ERROR << "failed to load Normal + Metalness texture: " << file_name << "\n";
             return;
         }

@@ -124,11 +124,6 @@ namespace cell {
 
     }
 
-    void MasterRenderer::loadEnvironment(const std::string& file_name) {
-
-        _light_renderer.loadEnvironment(file_name);
-    }
-
     void MasterRenderer::beginShadowPass(const Light& global_shadow_source, const glm::vec3& shadow_target) {
 
         _current_pass = SHADOW_PASS;
@@ -224,9 +219,9 @@ namespace cell {
         _light_renderer.draw(light, _draw_cmd, shadow_map, shadow_map_layout, _SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT);
     }
 
-    void MasterRenderer::drawAmbientLight() {
+    void MasterRenderer::drawAmbientLight(const Environment& env) {
 
-        _light_renderer.draw(_draw_cmd);
+        _light_renderer.draw(env, _draw_cmd);
     }
 
 

@@ -7,6 +7,16 @@ namespace undicht {
 
     namespace tools {
 
+        BinaryDataFile::BinaryDataFile(const std::string& file_name) {
+
+            open(file_name);
+        }
+
+        BinaryDataFile::~BinaryDataFile() {
+            
+            close();
+        }
+
         bool BinaryDataFile::open(const std::string& file_name) {
 
             _file_name = file_name;

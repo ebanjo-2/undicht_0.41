@@ -82,7 +82,7 @@ protected:
 
     void loadModel(const std::string& file_name, TexturedModel& loadTo);
     void loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo);
-    void loadTexture(const undicht::tools::ImageData& data, undicht::vulkan::Texture& loadTo);
+    void loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo);
     void loadMesh(const undicht::tools::MeshData& data, undicht::vulkan::VertexBuffer& loadTo);
 
 };

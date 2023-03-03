@@ -27,6 +27,11 @@ namespace undicht {
 
           public:
 
+            BinaryDataFile() = default;
+            BinaryDataFile(const std::string& file_name);
+            virtual~ BinaryDataFile();
+
+
             bool open(const std::string& file_name);
             void close();
 

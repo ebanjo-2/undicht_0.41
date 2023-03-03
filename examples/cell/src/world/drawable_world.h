@@ -9,6 +9,8 @@
 #include "world/lights/light_world.h"
 #include "world/lights/light_buffer.h"
 
+#include "environment/environment.h"
+
 
 namespace cell {
 
@@ -28,6 +30,8 @@ namespace cell {
 
         MaterialAtlas _materials;
 
+        Environment _environment; // "skybox"
+
       public:
       
         void init(const undicht::vulkan::LogicalDevice& device);
@@ -39,6 +43,7 @@ namespace cell {
         CellWorld& getCellWorld();
         LightWorld& getLightWorld();
         MaterialAtlas& getMaterialAtlas();
+        Environment& getEnvironment();
 
         // sun / directional light
         void setSunDirection(const glm::vec3& dir);

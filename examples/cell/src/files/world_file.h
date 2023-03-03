@@ -7,6 +7,7 @@
 #include "world/lights/light_chunk.h"
 #include "xml/xml_file.h"
 #include "materials/material_atlas.h"
+#include "environment/environment.h"
 #include "files/chunk_file.h"
 
 namespace cell {
@@ -43,6 +44,7 @@ namespace cell {
 
         // load other stuff from the file
         bool readMaterials(MaterialAtlas& atlas);
+        bool readEnvironment(Environment& env);
 
       protected:
         // protected WorldFile functions

@@ -90,7 +90,7 @@ namespace undicht {
 
 		}
 
-		void ColladaFile::getTexture(ImageData& loadTo_texture, int id) {
+		void ColladaFile::getTexture(ImageData<char>& loadTo_texture, int id) {
 			/** @param id: to iterate through the texture of the file */
 
 			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" }); // all materials stored in the file
@@ -144,13 +144,13 @@ namespace undicht {
 			}
 		}
 
-		void ColladaFile::loadAllTextures(std::vector<ImageData>& loadTo_textures) {
+		void ColladaFile::loadAllTextures(std::vector<ImageData<char>>& loadTo_textures) {
 
 			// all materials stored in the file
 			std::vector<XmlElement*> materials = getAllElements({ "COLLADA", "library_materials", "material" });
 
 			for (const XmlElement* material : materials) {
-				loadTo_textures.emplace_back(ImageData());
+				loadTo_textures.emplace_back(ImageData<char>());
 				loadMaterialTextures(material, loadTo_textures.back());
 			}
 
@@ -255,7 +255,7 @@ namespace undicht {
 
 		//////////////////////////////// functions to load textures for a material ////////////////////////////////
 
-		void ColladaFile::loadMaterialTextures(const XmlElement* material, ImageData& loadTo_texture) {
+		void ColladaFile::loadMaterialTextures(const XmlElement* material, ImageData<char>& loadTo_texture) {
 			// its a long and tedious process to get the name of the Texture-File ...
 
 			const XmlElement* instance_effect = material->getElement({ "instance_effect" });

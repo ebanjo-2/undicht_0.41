@@ -34,15 +34,17 @@ set(WORLD_SOURCES
 
 set(RENDERER_SOURCES
     src/renderer/master_renderer.h
-		src/renderer/master_renderer.cpp
-		src/renderer/world_renderer.h
-		src/renderer/world_renderer.cpp
+	src/renderer/master_renderer.cpp
+	src/renderer/world_renderer.h
+	src/renderer/world_renderer.cpp
     src/renderer/final_renderer.h
     src/renderer/final_renderer.cpp
     src/renderer/light_renderer.h
     src/renderer/light_renderer.cpp
     src/renderer/shadow_renderer.h
     src/renderer/shadow_renderer.cpp
+    src/renderer/brdf_integration_map.h
+    src/renderer/brdf_integration_map.cpp
 )
 
 set(MATERIALS_SOURCES
@@ -66,6 +68,11 @@ set(FILES_SOURCES
 	src/files/chunk_file.cpp
 )
 
+set(ENVIRONMENT_SOURCES
+	src/environment/environment.h
+	src/environment/environment.cpp
+)
+
 add_executable(cell 
 
     src/main.cpp
@@ -77,6 +84,7 @@ add_executable(cell
     ${MATERIALS_SOURCES}
     ${PLAYER_SOURCES}
     ${FILES_SOURCES}
+    ${ENVIRONMENT_SOURCES}
 )
 
 target_link_libraries(cell core graphics tools engine)

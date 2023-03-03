@@ -49,7 +49,7 @@ void main() {
 
 	if(length(frag_pos_rel_cam) == 0.0) { // display the sky box
 		out_color = texture(env_cube_map, sample_dir);
-		//out_color = textureLod(env_cube_map, sample_dir, 1.0);
+		//out_color = textureLod(irradiance_map, sample_dir, 1.0);
 		return;
     }
 

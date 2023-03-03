@@ -33,10 +33,10 @@ namespace tonk {
 
     void TileMap::setTile(int id, const std::string& file_name) {
         
-        ImageData data;
+        ImageData<char> data;
         ImageFile(file_name, data);
 
-        if(data._nr_channels != TILE_MAP_FORMAT.m_num_components || data._width != TILE_WIDTH || data._height != TILE_HEIGHT) {
+        if(data.getNrChannels() != TILE_MAP_FORMAT.m_num_components || data.getWidth() != TILE_WIDTH || data.getHeight() != TILE_HEIGHT) {
 
             UND_ERROR << "failed to load tile: " << file_name << "\n";
             return;
@@ -45,7 +45,7 @@ namespace tonk {
         int pos_x = (id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _map.setData(data._pixels.data(), data._pixels.size(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _map.setData(data.getPixelData(), data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
         
     }
 
