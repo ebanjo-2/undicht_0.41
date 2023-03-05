@@ -6,7 +6,9 @@ add_library("tools"
 	src/images/image_data.cpp
 	src/images/cube_map_data.h
 	src/images/cube_map_data.cpp
-		
+	src/images/image_data_3d.h
+	src/images/image_data_3d.cpp
+	
 	src/math/math_tools.h
 	src/math/orientation_3d.h
 	src/math/orientation_3d.cpp

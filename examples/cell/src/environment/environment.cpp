@@ -53,6 +53,11 @@ namespace cell {
         env_map.setExtent(_env_cube_map_size);
         env_map.setPixels(hdr_sphere);
 
+        load(env_map);
+    }
+
+    void Environment::load(const CubeMapData<float>& env_map) {
+
         // store the faces in the cubemap
         for(int i = 0; i < 6; i++) {
             const ImageData<float>& face = env_map.getFace((CubeMapData<float>::Face)i);
@@ -85,7 +90,6 @@ namespace cell {
         }
 
         UND_LOG << "finished calculating the specular reflection maps\n";
-
     }
 
     const undicht::vulkan::Texture& Environment::getSkyBox() const {

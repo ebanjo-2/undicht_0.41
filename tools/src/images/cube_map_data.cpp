@@ -44,8 +44,6 @@ namespace undicht {
         void CubeMapData<PIXEL_TYPE>::setPixels(const ImageData<PIXEL_TYPE>& equirectangular_map) {
             /// @brief convert an equirectangular map to a cubemap (both can describe 360 degrees of an environment)
 
-            const float texel_size = 1.0f / _extent; // size of one "pixel" on the cubemap (in uv coords)
-
             // resize the cube maps faces
             setNrChannels(equirectangular_map.getNrChannels());
 
@@ -55,11 +53,7 @@ namespace undicht {
                     for(int y = 0; y < _extent; y++) {
                         
                         // calculate the direction in which the source map should be sampled
-                        glm::vec3 dir = CUBE_MAP_DIRS.at(face);
-                        glm::vec3 right = CUBE_MAP_RIGHTS.at(face);
-                        glm::vec3 up = CUBE_MAP_UPS.at(face);
-                        glm::vec3 sample_dir = dir + ((x * texel_size) - 0.5f) * 2.0f * right + ((y * texel_size) - 0.5f) * 2.0f * up;
-                        sample_dir = glm::normalize(sample_dir);
+                        glm::vec3 sample_dir = calcDir(x, y, (Face)face);
 
                         // store the pixel in the cubemap face
                         const PIXEL_TYPE* pixel = equirectangular_map.getPixel(sample_dir);
@@ -146,6 +140,34 @@ namespace undicht {
         uint32_t CubeMapData<PIXEL_TYPE>::getFaceDataSize() const {
             
             return _extent * _extent * _nr_channels * sizeof(PIXEL_TYPE);
+        }
+
+        template<typename PIXEL_TYPE>
+        glm::vec3 CubeMapData<PIXEL_TYPE>::calcDir(int x, int y, Face face) const {
+            /// @brief calculate the direction that points at the pixel at pixel coords (x,y) on the specified face
+
+            const float texel_size = 1.0f / _extent; // size of one "pixel" on the cubemap (in uv coords)
+
+            glm::vec3 dir = CUBE_MAP_DIRS.at(face);
+            glm::vec3 right = CUBE_MAP_RIGHTS.at(face);
+            glm::vec3 up = CUBE_MAP_UPS.at(face);
+            glm::vec3 sample_dir = dir + ((x * texel_size) - 0.5f) * 2.0f * right + ((y * texel_size) - 0.5f) * 2.0f * up;
+            sample_dir = glm::normalize(sample_dir);
+
+            return sample_dir;
+        }
+
+        template<typename PIXEL_TYPE>
+        glm::vec3 CubeMapData<PIXEL_TYPE>::calcDir(float u, float v, Face face) const {
+            /// @brief calculate the direction that points at the pixel at uv coords (u,v) on the specified face
+
+            glm::vec3 dir = CUBE_MAP_DIRS.at(face);
+            glm::vec3 right = CUBE_MAP_RIGHTS.at(face);
+            glm::vec3 up = CUBE_MAP_UPS.at(face);
+            glm::vec3 sample_dir = dir + (u - 0.5f) * 2.0f * right + (v - 0.5f) * 2.0f * up;
+            sample_dir = glm::normalize(sample_dir);
+
+            return sample_dir;
         }
 
     } // tools

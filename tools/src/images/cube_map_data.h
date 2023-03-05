@@ -51,6 +51,10 @@ namespace undicht {
             const PIXEL_TYPE* getFaceData(Face face) const;
             uint32_t getFaceDataSize() const; // size of the pixel data per face in bytes
 
+            /// @brief calculate the direction that points at the pixel at pixel coords (x,y) on the specified face
+            glm::vec3 calcDir(int x, int y, Face face) const;
+            glm::vec3 calcDir(float u, float v, Face face) const;
+
         };
 
     } // tools

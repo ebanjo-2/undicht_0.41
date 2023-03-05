@@ -76,7 +76,7 @@ namespace undicht {
             _own_image = true;
 
             // creating the image
-            VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : NULL;
+            VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
             VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
             vkCreateImage(_device_handle, &info, {}, &_image);
 

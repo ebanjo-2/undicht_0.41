@@ -160,9 +160,9 @@ namespace undicht {
                     image_data.setExtent(1,1);
                     image_data.setNrChannels(4);
                     char pixel[] = {
-                        mat._kd[0] * 255,
-                        mat._kd[1] * 255,
-                        mat._kd[2] * 255,
+                        char(mat._kd[0] * 255.0f),
+                        char(mat._kd[1] * 255.0f),
+                        char(mat._kd[2] * 255.0f),
                         0
                     };
                     image_data.setPixel(pixel, 0, 0);

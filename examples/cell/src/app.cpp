@@ -22,7 +22,9 @@ namespace cell {
         _player.init();
         _player.setPosition(glm::vec3(0, -5, 10));
 
-        _world.setSunDirection(glm::vec3(1,0.5,1));
+        glm::vec3 sun_dir = glm::vec3(0.5f,1.0,0.5f);
+
+        _world.setSunDirection(sun_dir);
         _world.setSunColor(glm::vec3(23.47, 21.31, 20.79) * 0.5f);
 
         if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.world")) {
@@ -37,12 +39,17 @@ namespace cell {
 
             _world_file.readMaterials(_world.getMaterialAtlas());
             
-            _world_file.readEnvironment(_world.getEnvironment());
+            //_world_file.readEnvironment(_world.getEnvironment());
 
         } else {
             UND_LOG << "failed to open the world file\n";
             //_world_file.newWorldFile();
         }
+
+        CubeMapData<float> env_map;
+        _env_gen.setSunDir(sun_dir);
+        _env_gen.generate(env_map);
+        _world.getEnvironment().load(env_map);
 
     }
 
@@ -72,7 +79,7 @@ namespace cell {
         }
 
         // updating the world
-        _world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        //_world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
         _player.move(getDeltaT(), _main_window);
 
         // checking if the window is minimized
@@ -92,7 +99,7 @@ namespace cell {
             _master_renderer.beginGeometrySubPass(_world.getMaterialAtlas());
             _master_renderer.drawWorld(_world.getCellBuffer());
             _master_renderer.beginLightSubPass();
-            _master_renderer.drawLight(_world.getSun());
+            //_master_renderer.drawLight(_world.getSun());
             _master_renderer.drawLights(_world.getLightBuffer());
             _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();

@@ -71,6 +71,10 @@ set(FILES_SOURCES
 set(ENVIRONMENT_SOURCES
 	src/environment/environment.h
 	src/environment/environment.cpp
+	src/environment/environment_generator.h
+	src/environment/environment_generator.cpp
+	src/environment/cloud_layer.h
+	src/environment/cloud_layer.cpp
 )
 
 add_executable(cell 
