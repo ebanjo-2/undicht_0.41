@@ -38,7 +38,7 @@ namespace cell {
             // calculate the data for the brdf map
             createBRDFIntegrationMap(brdf_map, _brdf_integration_map_size);
             file.newBinaryFile();
-            size_t location = file.store((char*)brdf_map.getPixelData(), sizeof(float) * brdf_map.getPixelDataSize());
+            size_t location = file.store((char*)brdf_map.getPixelData(), brdf_map.getPixelDataSize());
             UND_LOG << "finished calculating the brdf data, stored it at: " << location << "\n";
         }
         

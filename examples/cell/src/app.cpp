@@ -48,6 +48,7 @@ namespace cell {
 
         CubeMapData<float> env_map;
         _env_gen.setSunDir(sun_dir);
+        _env_gen.addCloudLayer();
         _env_gen.generate(env_map);
         _world.getEnvironment().load(env_map);
 
@@ -99,7 +100,7 @@ namespace cell {
             _master_renderer.beginGeometrySubPass(_world.getMaterialAtlas());
             _master_renderer.drawWorld(_world.getCellBuffer());
             _master_renderer.beginLightSubPass();
-            //_master_renderer.drawLight(_world.getSun());
+            _master_renderer.drawLight(_world.getSun());
             _master_renderer.drawLights(_world.getLightBuffer());
             _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();

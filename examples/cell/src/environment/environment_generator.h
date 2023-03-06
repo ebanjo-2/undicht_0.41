@@ -4,6 +4,8 @@
 #include "images/cube_map_data.h"
 #include "cstdint"
 #include "glm/glm.hpp"
+#include "images/image_data_3d.h"
+#include "environment/cloud_layer.h"
 
 namespace cell {
 
@@ -15,10 +17,15 @@ namespace cell {
 
         // environment variables
         glm::vec3 _sun_dir = glm::vec3(0.0f,1.0f,0.0f); // straight down
+        std::vector<CloudLayer> _cloud_layers;
 
       public:
 
+        void init();
+        void cleanUp();
+
         void setSunDir(const glm::vec3& dir);
+        void addCloudLayer(); // parameters to be added
 
         void generate(undicht::tools::CubeMapData<float>& dst);
 
