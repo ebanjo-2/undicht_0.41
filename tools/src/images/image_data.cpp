@@ -78,9 +78,64 @@ namespace undicht {
             /// for values outside [0, 1] the texture will repeat itself
 
             uint32_t x = uint32_t(u * _width) % _width;
-            uint32_t y = uint32_t(v * _height) % _height;
+            uint32_t y = uint32_t(v * _height ) % _height;
 
             return getPixel(x, y);
+        }
+
+        template<typename PIXEL_TYPE>
+        std::vector<PIXEL_TYPE> ImageData<PIXEL_TYPE>::sampleLinear(float u, float v) const {
+            /// @brief sample the image by linearly interpolating between the nearest pixels to the u v coordinates
+
+            // translate the uv coords to the [0, 1] range
+            u = u - floor(u);
+            v = v - floor(v);
+
+            float pos_on_pixel_x = u * _width - floor(u * _width); // 0 to 1
+            float pos_on_pixel_y = v * _height - floor(v * _height);
+
+            uint32_t x0 = uint32_t(u * _width) % _width; // pixel closest to the uv coord
+            uint32_t y0 = uint32_t(v * _height) % _height;
+            uint32_t x1;
+            uint32_t y1;
+
+            float x0_weight;
+            float y0_weight;
+            float x1_weight;
+            float y1_weight;
+
+            if(pos_on_pixel_x < 0.5f) {
+                x1 = (x0 == 0 ? _width - 1 : x0 - 1); // x coord of the other pixel that influenzes the mixed color
+                x0_weight = pos_on_pixel_x + 0.5f;
+            } else {
+                x1 = (x0 == _width - 1 ? 0 : x0 + 1);
+                x0_weight = (1.0f - pos_on_pixel_x) + 0.5f;
+            }
+
+            if(pos_on_pixel_y < 0.5f) {
+                y1 = (y0 == 0 ? _height - 1 : y0 - 1); // y coord of the other pixel that influenzes the mixed color
+                y0_weight = pos_on_pixel_y + 0.5f;
+            } else {
+                y1 = (y0 == _height - 1 ? 0 : y0 + 1);
+                y0_weight = (1.0f - pos_on_pixel_y) + 0.5f;
+            }
+
+            x1_weight = 1.0f - x0_weight;
+            y1_weight = 1.0f - y0_weight;
+
+            std::vector<PIXEL_TYPE> final_color;
+
+            for(int i = 0; i < _nr_channels; i++) {
+
+                PIXEL_TYPE channel = 0;
+                channel += getPixel(x0, y0)[i] * x0_weight * y0_weight;
+                channel += getPixel(x0, y1)[i] * x0_weight * y1_weight;
+                channel += getPixel(x1, y0)[i] * x1_weight * y0_weight;
+                channel += getPixel(x1, y1)[i] * x1_weight * y1_weight;
+                final_color.push_back(channel);
+            }
+
+            return final_color;
         }
 
         template<typename PIXEL_TYPE>

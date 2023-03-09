@@ -11,30 +11,30 @@ namespace cell {
       
       protected:
 
-        float _threshold_density = 0.2f; // 0 to 1
-        float _base_height = 1000.0f;
+        float _base_height = 100.0f;
         float _cloud_height = 50.0f;
-        float _cloud_wrap = 100000.0f;
-
-        uint32_t _sample_count = 5;
+        float _cloud_wrap = 2000.0f;
 
         uint32_t _detail_levels = 5;
-        uint32_t _random_map_height = 64;
-        uint32_t _random_map_size = 1024;
+        uint32_t _random_map_height = 24;
+        uint32_t _random_map_size = 256;
         undicht::tools::ImageData3D<float> _random_map;
+        undicht::tools::ImageData3D<float> _density_map; // combines the detail levels, same size as random map
 
       public:
 
         CloudLayer();
 
-        /// @return the density of the cloud layer in the requested direction
-        float sample(const glm::vec3& dir) const;
+        void initRandomMap();
+        void initDensityMap();
 
-      protected:
-        // protected CloudLayer functions
+        float getBaseHeight() const;
+        float getCloudHeight() const;
 
-        // sample the _random_map at a point in the cloud
-        float sample(const glm::vec3& point, uint32_t detail_level) const;
+        /// @brief sample the cloud layer at a point in the cloud
+        /// @return the density of the cloud layer in the requested direction (0 to 1)
+        /// @return 0.0f, if the point is below the cloud base height or above the cloud layer
+        float sample(const glm::vec3& point) const;
         
     };
 

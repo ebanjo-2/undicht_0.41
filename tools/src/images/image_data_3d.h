@@ -31,6 +31,13 @@ namespace undicht {
 
             void setPixel(const PIXEL_TYPE* pixel, uint32_t x, uint32_t y, uint32_t z);
 
+            /// @brief sample the image for a given uvw coordinate (range [0, 1])
+            /// for values outside [0, 1] the texture will repeat itself
+            PIXEL_TYPE* getPixel(float u, float v, float w) const;
+
+            // linear interpolation will only happen in uv direction
+            std::vector<PIXEL_TYPE> sampleLinear(float u, float v, float w) const;
+
             uint32_t getWidth() const;
             uint32_t getHeight() const;
             uint32_t getDepth() const;

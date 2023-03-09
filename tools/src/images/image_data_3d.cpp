@@ -92,6 +92,27 @@ namespace undicht {
 
         }
 
+        template<typename PIXEL_TYPE>
+        PIXEL_TYPE* ImageData3D<PIXEL_TYPE>::getPixel(float u, float v, float w) const {
+            /// @brief sample the image for a given uvw coordinate (range [0, 1])
+            /// for values outside [0, 1] the texture will repeat itself   
+
+            uint32_t x = uint32_t(u * _width + 0.5f) % _width;
+            uint32_t y = uint32_t(v * _height + 0.5f) % _height;
+            uint32_t z = uint32_t(w * _depth + 0.5f) % _depth;
+
+            return getPixel(x, y, z);
+        }
+
+        template<typename PIXEL_TYPE>
+        std::vector<PIXEL_TYPE> ImageData3D<PIXEL_TYPE>::sampleLinear(float u, float v, float w) const {
+        // linear interpolation will only happen in uv direction
+
+            uint32_t z = uint32_t(w * _depth + 0.5f) % _depth;
+
+            return _image_layers.at(z).sampleLinear(u, v);
+        }
+
     } // tools
 
 } // namespace undicht 

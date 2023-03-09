@@ -43,6 +43,9 @@ namespace undicht {
             /// for values outside [0, 1] the texture will repeat itself
             PIXEL_TYPE* getPixel(float u, float v) const;
 
+            /// @brief sample the image by linearly interpolating between the nearest pixels to the u v coordinates
+            std::vector<PIXEL_TYPE> sampleLinear(float u, float v) const;
+
             /// @brief sample a equirectangular map in a given direction
             PIXEL_TYPE* getPixel(const glm::vec3& dir) const;
 

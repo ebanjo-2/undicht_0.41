@@ -45,11 +45,11 @@ namespace cell {
     template<typename T>
     void ChunkBuffer<T>::addChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
 
-        BufferEntry* entry = findBufferEntry(chunk_pos);
+        /*BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry != nullptr) {
             updateChunk(c, chunk_pos);
             return;
-        }
+        }*/
 
         // filling a buffer with the chunk data
         uint32_t chunk_buffer_size = c.fillBuffer(nullptr);
@@ -90,11 +90,11 @@ namespace cell {
 
         BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry != nullptr) {
-            
             entry->offset = 0;
             entry->byte_size = 0;
         }
 
+        // will remove the entry, because its byte_size is 0
         sortBufferEntries();
     }
 

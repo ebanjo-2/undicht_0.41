@@ -32,7 +32,16 @@ namespace cell {
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), glm::ivec3(0,-255,0));
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,0), new CellChunk()), glm::ivec3(255,-255,0));
             _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,0), new CellChunk()), glm::ivec3(-255,-255,0));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,-255), new CellChunk()), glm::ivec3(0,-255,-255));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255, 255), new CellChunk()), glm::ivec3(0,-255, 255));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,-255), new CellChunk()), glm::ivec3(255,-255,-255));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255, 255), new CellChunk()), glm::ivec3(255,-255, 255));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,-255), new CellChunk()), glm::ivec3(-255,-255,-255));
+            _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255, 255), new CellChunk()), glm::ivec3(-255,-255, 255));
+
+            UND_LOG << "updating world buffer\n";
             _world.updateWorldBuffer();
+            UND_LOG << "done updating the world buffer\n";
 
             _world_file.read(*(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk()), glm::ivec3(0,-255,0));
             _world.updateLightBuffer();
@@ -47,8 +56,21 @@ namespace cell {
         }
 
         CubeMapData<float> env_map;
+        _env_gen.init();
         _env_gen.setSunDir(sun_dir);
-        _env_gen.addCloudLayer();
+        
+        // darkish sky / clouds 
+        _env_gen.setCloudCoverage(1.1f); 
+        _env_gen.setCloudDensity(1.7f);
+        _env_gen.setSkyBrightness(1.2f);
+        _env_gen.setCloudBrightness(0.05f);
+
+        // brightish sky / clouds 
+        /*_env_gen.setCloudCoverage(0.55f); 
+        _env_gen.setCloudDensity(2.5f);
+        _env_gen.setSkyBrightness(1.0f);
+        _env_gen.setCloudBrightness(1.0f);*/
+
         _env_gen.generate(env_map);
         _world.getEnvironment().load(env_map);
 
@@ -80,7 +102,7 @@ namespace cell {
         }
 
         // updating the world
-        //_world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        _world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
         _player.move(getDeltaT(), _main_window);
 
         // checking if the window is minimized
@@ -104,7 +126,7 @@ namespace cell {
             _master_renderer.drawLights(_world.getLightBuffer());
             _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();
-            _master_renderer.drawFinal(1.0f);
+            _master_renderer.drawFinal(0.3f);
 
             _master_renderer.endFrame(_swap_chain);
         } else {

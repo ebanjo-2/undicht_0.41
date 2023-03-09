@@ -55,10 +55,9 @@ namespace cell {
         _sun.setColor(color);
     }
 
-
-    // make sure the chunk is correctly stored in the world buffer
     void DrawableWorld::updateWorldBuffer() {
 
+        // make sure each chunk is correctly stored in the world buffer
         for(int i = 0; i < _cell_world.getLoadedChunks().size(); i++) {
 
             const CellChunk* chunk = (CellChunk*)_cell_world.getLoadedChunks().at(i);

@@ -12,4 +12,10 @@
   <CHUNK chunk_pos=0_-255_0>0</CHUNK>
   <CHUNK chunk_pos=255_-255_0>96</CHUNK>
   <CHUNK chunk_pos=-255_-255_0>192</CHUNK>
+  <CHUNK chunk_pos=0_-255_-255>392</CHUNK>
+  <CHUNK chunk_pos=0_-255_255>416</CHUNK>
+  <CHUNK chunk_pos=255_-255_-255>440</CHUNK>
+  <CHUNK chunk_pos=255_-255_255>464</CHUNK>
+  <CHUNK chunk_pos=-255_-255_-255>488</CHUNK>
+  <CHUNK chunk_pos=-255_-255_255>512</CHUNK>
 </WORLD>
