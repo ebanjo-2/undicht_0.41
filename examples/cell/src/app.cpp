@@ -17,7 +17,7 @@ namespace cell {
 
         UND_LOG << "initialized the engine\n";
 
-        _master_renderer.init(_gpu, _swap_chain);
+        _master_renderer.init(_vk_instance.getInstance(), (GLFWwindow*)_main_window.getWindow(), _gpu, _swap_chain);
         _world.init(_gpu);
         _player.init();
         _player.setPosition(glm::vec3(0, -5, 10));
@@ -73,6 +73,7 @@ namespace cell {
 
         _env_gen.generate(env_map);
         _world.getEnvironment().load(env_map);
+        _world.getEnvironment().calcLightingMaps(env_map);
 
     }
 
@@ -108,6 +109,10 @@ namespace cell {
         // checking if the window is minimized
         if(_main_window.isMinimized())
             return;
+        
+        // debug menu
+        if(_main_window.isKeyPressed(GLFW_KEY_V)) 
+            _debug_menu.open();            
 
         // drawing a new frame
         _master_renderer.loadPlayerCamera(_player);
@@ -128,7 +133,14 @@ namespace cell {
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(0.3f);
 
+            // imgui debug menu
+            _master_renderer.beginImguiRenderPass();
+            _debug_menu.display(getFPS(), _world.getEnvironment());
+            _master_renderer.drawImGui();
+
+            // end frame
             _master_renderer.endFrame(_swap_chain);
+
         } else {
             // skipping a frame, recreating the swap chain
             onWindowResize();

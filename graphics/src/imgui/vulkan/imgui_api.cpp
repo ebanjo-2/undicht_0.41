@@ -8,10 +8,21 @@ namespace undicht {
     namespace vulkan {
 
         // static objects
+		LogicalDevice ImGuiAPI::_device_handle;
         VkDescriptorPool ImGuiAPI::_descriptor_pool;
+        RenderTarget ImGuiAPI::_render_target;
 
-        void ImGuiAPI::init(const VkInstance& instance, const LogicalDevice& device, const VkRenderPass& render_pass, GLFWwindow* window) {
+        void ImGuiAPI::init(const VkInstance& instance, const LogicalDevice& device, const SwapChain& swap_chain, GLFWwindow* window) {
             // source: https://vkguide.dev/docs/extra-chapter/implementing_imgui/
+
+			_device_handle = device;
+
+			// init render target
+			_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
+			_render_target.addVisibleAttachment(swap_chain, false, true);
+			_render_target.addSubPass({0}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL});
+			_render_target.init(swap_chain.getExtent(), &swap_chain);
+
 
             //1: create descriptor pool for IMGUI
 	        // the size of the pool is very oversize, but it's copied from imgui demo itself.
@@ -57,7 +68,7 @@ namespace undicht {
 	        init_info.ImageCount = 3;
 	        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-        	ImGui_ImplVulkan_Init(&init_info, render_pass);
+        	ImGui_ImplVulkan_Init(&init_info, _render_target.getRenderPass().getRenderPass());
 
         	//execute a gpu command to upload imgui font textures
             CommandBuffer cmd;
@@ -73,11 +84,42 @@ namespace undicht {
 
         }
 
-        void ImGuiAPI::cleanUp(const VkDevice& device) {
-
-		    vkDestroyDescriptorPool(device, _descriptor_pool, nullptr);
+        void ImGuiAPI::cleanUp() {
+			
+		    vkDestroyDescriptorPool(_device_handle.getDevice(), _descriptor_pool, nullptr);
 		    ImGui_ImplVulkan_Shutdown();
+
+			_render_target.cleanUp();
         }
-    }
+
+		void ImGuiAPI::newFrame() {
+
+        	ImGui_ImplVulkan_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+        	ImGui::NewFrame();
+		}
+
+    	void ImGuiAPI::endFrame() {
+
+			ImGui::EndFrame();
+		}
+
+        void ImGuiAPI::render(uint32_t frame, CommandBuffer& draw_cmd) {
+
+        	draw_cmd.beginRenderPass(_render_target.getRenderPass().getRenderPass(), _render_target.getFramebuffer(frame).getFramebuffer(), _render_target.getExtent(), {});
+        
+			ImGui::Render();
+        	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), draw_cmd.getCommandBuffer());
+
+			draw_cmd.endRenderPass();
+			
+		}
+
+		void ImGuiAPI::onViewportResize(const SwapChain& swap_chain) {
+
+			_render_target.resize(swap_chain.getExtent(), &swap_chain);
+		}
+
+    } // vulkan
 
 } // undicht

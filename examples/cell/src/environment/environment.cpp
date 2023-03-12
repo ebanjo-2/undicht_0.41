@@ -66,6 +66,10 @@ namespace cell {
 
         UND_LOG << "finished loading the skybox\n";
 
+    }
+
+    void Environment::calcLightingMaps(const CubeMapData<float>& env_map) {
+
         // generate convoluted environment map (irradiance map)
         CubeMapData<float> irradiance_map;
         convoluteCubeMap(env_map, irradiance_map, _irradiance_map_size);

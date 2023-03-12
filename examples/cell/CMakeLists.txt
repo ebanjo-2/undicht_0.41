@@ -77,6 +77,11 @@ set(ENVIRONMENT_SOURCES
 	src/environment/cloud_layer.cpp
 )
 
+set(USER_INTERFACE_SOURCES
+	src/user_interface/debug/debug_menu.h
+	src/user_interface/debug/debug_menu.cpp
+)
+
 add_executable(cell 
 
     src/main.cpp
@@ -89,6 +94,7 @@ add_executable(cell
     ${PLAYER_SOURCES}
     ${FILES_SOURCES}
     ${ENVIRONMENT_SOURCES}
+    ${USER_INTERFACE_SOURCES}
 )
 
 target_link_libraries(cell core graphics tools engine)

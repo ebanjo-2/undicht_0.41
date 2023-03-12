@@ -12,6 +12,7 @@
 #include "player/player.h"
 #include "files/world_file.h"
 #include "environment/environment_generator.h"
+#include "user_interface/debug/debug_menu.h"
 
 namespace cell {
 
@@ -23,6 +24,8 @@ namespace cell {
         MasterRenderer _master_renderer;
         DrawableWorld _world;
         WorldFile _world_file;
+
+        DebugMenu _debug_menu;
 
         EnvironmentGenerator _env_gen;
 

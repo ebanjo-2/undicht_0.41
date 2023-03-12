@@ -9,7 +9,7 @@ using namespace tools;
 
 namespace tonk {
 
-    void Renderer::init(VkInstance instance, const undicht::vulkan::LogicalDevice& device, std::vector<undicht::vulkan::Framebuffer>* visible_framebuffers, VkRenderPass render_pass, VkExtent2D viewport, const GLFWwindow* window) {
+    void Renderer::init(VkInstance instance, const undicht::vulkan::LogicalDevice& device, std::vector<undicht::vulkan::Framebuffer>* visible_framebuffers, undicht::vulkan::SwapChain& swap_chain, VkRenderPass render_pass, VkExtent2D viewport, const GLFWwindow* window) {
         
         _device = device;
         _visible_framebuffers = visible_framebuffers;
@@ -26,13 +26,13 @@ namespace tonk {
 
         initMapPipeline(viewport);
 
-        ImGuiAPI::init(instance, device, render_pass, (GLFWwindow*)window);
+        ImGuiAPI::init(instance, device, swap_chain, (GLFWwindow*)window);
 
     }
 
     void Renderer::cleanUp() {
 
-        ImGuiAPI::cleanUp(_device.getDevice());
+        ImGuiAPI::cleanUp();
 
         _sampler.cleanUp();
         _draw_cmd.cleanUp();
@@ -59,22 +59,19 @@ namespace tonk {
         // begin a new frame
         _swap_image_id = swap_chain.acquireNextSwapImage(_swap_image_ready.getAsSignal());
 
-        // tell imgui to start a new frame
-        ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
         // start draw command
-        VkClearValue color_clear_value{0.0f, 0.2f, 0.05f, 1.0f};
-        VkClearValue depth_clear_value{1.0f, 0};
-
         _draw_cmd.resetCommandBuffer();
         _draw_cmd.beginCommandBuffer(true);
-        _draw_cmd.beginRenderPass(_render_pass, _visible_framebuffers->at(_swap_image_id).getFramebuffer(), swap_chain.getExtent(), {color_clear_value, depth_clear_value});
+
+        ImGuiAPI::newFrame();
         
     }
 
-    void Renderer::drawMap(const Map& map, const TileMap& tile_map, glm::vec2 map_center, float zoom_factor) {
+    void Renderer::drawMap(undicht::vulkan::SwapChain& swap_chain, const Map& map, const TileMap& tile_map, glm::vec2 map_center, float zoom_factor) {
+
+        VkClearValue color_clear_value{0.0f, 0.2f, 0.05f, 1.0f};
+        VkClearValue depth_clear_value{1.0f, 0};
+        _draw_cmd.beginRenderPass(_render_pass, _visible_framebuffers->at(_swap_image_id).getFramebuffer(), swap_chain.getExtent(), {color_clear_value, depth_clear_value});
 
         _map_ubo.setAttribute(1, &zoom_factor, sizeof(zoom_factor));
         _map_ubo.setAttribute(2, glm::value_ptr(map_center), 2 * sizeof(float));
@@ -90,18 +87,18 @@ namespace tonk {
         _draw_cmd.bindVertexBuffer(map.getVertexBuffer().getInstanceBuffer().getBuffer(), 1);
         _draw_cmd.draw(map.getVertexCount(), map.getDrawIndexed(), map.getInstanceCount());
 
+        _draw_cmd.endRenderPass();
     }
 
     void Renderer::drawImGui() {
 
-        ImGui::Render();
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _draw_cmd.getCommandBuffer());
-
+        ImGuiAPI::render(_swap_image_id, _draw_cmd);
     }
 
     void Renderer::endFrame(undicht::vulkan::SwapChain& swap_chain) {
 
-        _draw_cmd.endRenderPass();
+        ImGuiAPI::endFrame();
+
         _draw_cmd.endCommandBuffer();
 
         // submit the draw command
@@ -111,7 +108,9 @@ namespace tonk {
         _device.presentOnPresentQueue(swap_chain.getSwapchain(), _swap_image_id, {_render_finished.getAsWaitOn()});
     }
 
-    void Renderer::onWindowResize(VkExtent2D new_viewport) {
+    void Renderer::onWindowResize(SwapChain& swap_chain) {
+
+        VkExtent2D new_viewport = swap_chain.getExtent();
 
         // resize map pipeline viewport
         _map_pipeline.cleanUp();
@@ -120,6 +119,8 @@ namespace tonk {
 
         float aspect_ratio = float(new_viewport.width) / new_viewport.height;
         _map_ubo.setAttribute(0, &aspect_ratio, sizeof(aspect_ratio));
+
+        ImGuiAPI::onViewportResize(swap_chain);
 
     }
 

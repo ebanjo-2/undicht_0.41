@@ -3,13 +3,14 @@
 #include "debug.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "imgui/vulkan/imgui_api.h"
 
 namespace cell {
 
     using namespace undicht;
     using namespace vulkan;
 
-    void MasterRenderer::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain) {
+    void MasterRenderer::init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain) {
         
         // storing handles
         _device_handle = device;
@@ -46,9 +47,13 @@ namespace cell {
         _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0);
         _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
         _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
+
+        undicht::vulkan::ImGuiAPI::init(instance, device, swap_chain, window);
     }
 
     void MasterRenderer::cleanUp() {
+
+        undicht::vulkan::ImGuiAPI::cleanUp();
         
         _shadow_renderer.cleanUp();
         _world_renderer.cleanUp();
@@ -96,10 +101,11 @@ namespace cell {
 
     void MasterRenderer::endFrame(undicht::vulkan::SwapChain& swap_chain) {
 
+        undicht::vulkan::ImGuiAPI::endFrame();
+
         _current_pass = NO_PASS;
 
-        // ending the render pass
-        _draw_cmd.endRenderPass();
+        // end draw command
         _draw_cmd.endCommandBuffer();
 
         // submit the draw command
@@ -239,6 +245,24 @@ namespace cell {
         _final_renderer.draw(_draw_cmd, exposure);
     }
 
+    //////////////////////////////////////////////// imgui pass ////////////////////////////////////////////////
+
+    void MasterRenderer::beginImguiRenderPass() {
+
+        // ending the main render pass
+        _draw_cmd.endRenderPass();
+
+        undicht::vulkan::ImGuiAPI::newFrame();
+
+    }
+
+    void MasterRenderer::drawImGui() {
+
+        undicht::vulkan::ImGuiAPI::render(_swap_image_id, _draw_cmd);
+    }
+
+    ////////////////////////////////////////////// other functions //////////////////////////////////////////////
+
     void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {
         
         _viewport = {(uint32_t)swap_chain.getExtent().width, (uint32_t)swap_chain.getExtent().height};
@@ -252,6 +276,8 @@ namespace cell {
         _world_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _light_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _final_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
+
+        undicht::vulkan::ImGuiAPI::onViewportResize(swap_chain);
     }
 
     ///////////////////////////////////////// private functions /////////////////////////////////////////

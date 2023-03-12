@@ -119,6 +119,11 @@ namespace undicht {
         return std::chrono::duration<double, std::milli>(_this_frame_time - _last_frame_time).count() ;
     }
 
+    double Engine::getFPS() const {
+
+        return 1000.0 / getDeltaT(); // delta_t is in milliseconds
+    }
+
     double Engine::getTimeSinceEpoch() const {
 
         return _this_frame_time.time_since_epoch().count();

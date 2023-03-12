@@ -64,6 +64,9 @@ namespace undicht {
 
         /** time in milliseconds since last frame started */
         double getDeltaT() const;
+        
+        // 1 / delta_t
+        double getFPS() const;
 
         double getTimeSinceEpoch() const;
 

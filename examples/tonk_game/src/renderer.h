@@ -55,15 +55,15 @@ namespace tonk {
 
     public:
 
-        void init(VkInstance instance, const undicht::vulkan::LogicalDevice& device, std::vector<undicht::vulkan::Framebuffer>* visible_framebuffers, VkRenderPass render_pass, VkExtent2D viewport, const GLFWwindow* window);
+        void init(VkInstance instance, const undicht::vulkan::LogicalDevice& device, std::vector<undicht::vulkan::Framebuffer>* visible_framebuffers, undicht::vulkan::SwapChain& swap_chain, VkRenderPass render_pass, VkExtent2D viewport, const GLFWwindow* window);
         void cleanUp();
 
         void beginFrame(undicht::vulkan::SwapChain& swap_chain);
-        void drawMap(const Map& map, const TileMap& tile_map, glm::vec2 map_center, float zoom_factor = 0.04);
+        void drawMap(undicht::vulkan::SwapChain& swap_chain, const Map& map, const TileMap& tile_map, glm::vec2 map_center, float zoom_factor = 0.04);
         void drawImGui();
         void endFrame(undicht::vulkan::SwapChain& swap_chain);
 
-        void onWindowResize(VkExtent2D new_viewport);
+        void onWindowResize(undicht::vulkan::SwapChain& swap_chain);
 
         VkDescriptorSet createImGuiTexture(const undicht::vulkan::Texture& texture);
 

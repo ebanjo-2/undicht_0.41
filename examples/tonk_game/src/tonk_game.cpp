@@ -17,7 +17,7 @@ namespace tonk {
 
         Engine::init();
 
-        _renderer.init(_vk_instance.getInstance(), _gpu, &_default_framebuffer, _default_render_pass.getRenderPass(), _swap_chain.getExtent(), _main_window.getWindow());
+        _renderer.init(_vk_instance.getInstance(), _gpu, &_default_framebuffer, _swap_chain, _default_render_pass.getRenderPass(), _swap_chain.getExtent(), _main_window.getWindow());
         
         // load tile set + tile map
         _tile_map.init(_gpu);
@@ -43,7 +43,7 @@ namespace tonk {
         debugMenu();
 
         // drawing
-        _renderer.drawMap(_map, _tile_map, _map_center, 0.04f);
+        _renderer.drawMap(_swap_chain, _map, _tile_map, _map_center, 0.04f);
         _renderer.drawImGui();
 
         // end frame
@@ -67,7 +67,7 @@ namespace tonk {
 
         Engine::onWindowResize();
 
-        _renderer.onWindowResize(_swap_chain.getExtent());
+        _renderer.onWindowResize(_swap_chain);
     }
 
     /////////////////////////////////// processing user input ///////////////////////////////////

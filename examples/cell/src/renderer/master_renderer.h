@@ -20,6 +20,7 @@
 #include "world/cells/cell_buffer.h"
 
 #include "3D/camera/perspective_camera_3d.h"
+#include "GLFW/glfw3.h"
 
 namespace cell {
 
@@ -28,7 +29,8 @@ namespace cell {
       enum Pass {
         NO_PASS,
         SHADOW_PASS,
-        MAIN_PASS
+        MAIN_PASS,
+        IMGUI_PASS,
       };
 
       protected:
@@ -68,7 +70,7 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
+        void init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
         void cleanUp();
 
         /// @brief to be called before rendering something
@@ -94,8 +96,13 @@ namespace cell {
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);
 
+        // imgui pass
+        void beginImguiRenderPass();
+        void drawImGui();
+
+        // other functions
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
-      
+
       protected:
         // private functions
 

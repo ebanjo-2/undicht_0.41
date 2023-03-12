@@ -28,9 +28,10 @@ namespace cell {
         void cleanUp();
 
         /// loads the environment map from the hdr spherical map
-        /// and calculates the lighting maps based on it
         void load(const std::string& file_name);
         void load(const undicht::tools::CubeMapData<float>& env_map);
+
+        void calcLightingMaps(const undicht::tools::CubeMapData<float>& env_map);
 
         const undicht::vulkan::Texture& getSkyBox() const;
         const undicht::vulkan::Texture& getIrradiance() const;
