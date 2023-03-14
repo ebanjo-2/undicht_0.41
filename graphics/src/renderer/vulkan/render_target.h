@@ -41,7 +41,7 @@ namespace undicht {
 
             // settings that have(!) to be set before the render target is initialized
             int addAttachment(VkFormat format, VkImageLayout final_layout, uint32_t samples = 1, bool clear_before_rendering = true, bool store_result = true);
-            int addVisibleAttachment(const SwapChain& swap_chain, bool clear_before_rendering = true, bool store_result = true);
+            int addVisibleAttachment(const SwapChain& swap_chain, bool clear_before_rendering = true, bool store_result = true, VkImageLayout output_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
             int addSubPass(const std::vector<uint32_t>& output_attachments, const std::vector<VkImageLayout>& output_layouts, const std::vector<uint32_t>& input_attachments = {}, const std::vector<VkImageLayout>& input_layouts = {}, VkPipelineBindPoint bind_point = VK_PIPELINE_BIND_POINT_GRAPHICS);
             void addSubPassDependency(uint32_t src_subpass, uint32_t dst_subpass, const VkPipelineStageFlags& src_stage, const VkPipelineStageFlags& dst_stage, const VkAccessFlags& src_access, const VkAccessFlags& dst_access);
 

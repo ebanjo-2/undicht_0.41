@@ -68,9 +68,11 @@ namespace cell {
         LightRenderer _light_renderer;
         FinalRenderer _final_renderer;
 
+        bool _enable_imgui = true;
+
       public:
 
-        void init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain);
+        void init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain, bool enable_imgui = true);
         void cleanUp();
 
         /// @brief to be called before rendering something
@@ -84,6 +86,7 @@ namespace cell {
         // shadow pass
         void beginShadowPass(const Light& global_shadow_source, const glm::vec3& shadow_target); // only one shadow source for now
         void drawToShadowMap(const CellBuffer& world);
+        void endShadowPass();
 
         // main pass
         void beginMainRenderPass();
@@ -95,10 +98,12 @@ namespace cell {
         void drawAmbientLight(const Environment& env);
         void beginFinalSubPass();
         void drawFinal(float exposure = 1.0f);
+        void endMainRenderPass();
 
         // imgui pass
         void beginImguiRenderPass();
         void drawImGui();
+        void endImguiRenderPass();
 
         // other functions
         void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);

@@ -38,14 +38,14 @@ namespace undicht {
             return attachment_id;
         }
 
-        int RenderTarget::addVisibleAttachment(const SwapChain& swap_chain, bool clear_before_rendering, bool store_result) {
+        int RenderTarget::addVisibleAttachment(const SwapChain& swap_chain, bool clear_before_rendering, bool store_result, VkImageLayout output_layout) {
             
             if (_frame_data.size() != swap_chain.getSwapImageCount()) {
                 UND_ERROR << "Failed to add visible Attachment to RenderTarget, please set the number of frames equal to the number of swap images in the swap chain \n";
                 return -1;
             }
 
-            int attachment_id = _render_pass.addAttachment(swap_chain.getSwapImageFormat(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1, clear_before_rendering, store_result);
+            int attachment_id = _render_pass.addAttachment(swap_chain.getSwapImageFormat(), output_layout, 1, clear_before_rendering, store_result);
 
             for(int i = 0; i <  _frame_data.size(); i++) {
                 _frame_data.at(i)._visible_attachment_id = attachment_id;

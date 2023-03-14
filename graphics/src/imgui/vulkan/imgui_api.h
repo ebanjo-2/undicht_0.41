@@ -28,7 +28,7 @@ namespace undicht {
             void static cleanUp();
 
             void static newFrame();
-            void static endFrame();
+            void static endFrame(); // not necessary if render was called
 
             void static render(uint32_t frame, CommandBuffer& draw_cmd);
 

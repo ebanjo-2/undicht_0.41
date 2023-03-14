@@ -239,8 +239,8 @@ namespace undicht {
 
                     glm::vec3 N = glm::vec3(0.0f, 0.0f, 1.0f);
 
-                    const uint SAMPLE_COUNT = 128u; // originally: 1024u
-                    for(uint i = 0u; i < SAMPLE_COUNT; ++i) {
+                    const uint32_t SAMPLE_COUNT = 128u; // originally: 1024u
+                    for(uint32_t i = 0u; i < SAMPLE_COUNT; ++i) {
                         glm::vec2 Xi = hammersley(i, SAMPLE_COUNT);
                         glm::vec3 H  = importanceSampleGGX(Xi, N, roughness);
                         glm::vec3 L  = glm::normalize(2.0f * glm::dot(V, H) * H - V);

@@ -97,10 +97,13 @@ namespace undicht {
             attachment.format = format;
             attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 
-            if(clear_before_rendering)
+            if(clear_before_rendering) {
                 attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            else
+                attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            } else {
                 attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            }
 
             if(store_result)
                 attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -109,7 +112,6 @@ namespace undicht {
 
             attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             attachment.finalLayout = final_layout;
 
             return attachment;

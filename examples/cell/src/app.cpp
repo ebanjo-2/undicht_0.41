@@ -121,6 +121,7 @@ namespace cell {
             // shadow pass
             _master_renderer.beginShadowPass(_world.getSun(), _player.getPosition());
             _master_renderer.drawToShadowMap(_world.getCellBuffer());
+            _master_renderer.endShadowPass();
 
             // main render pass
             _master_renderer.beginMainRenderPass();
@@ -132,11 +133,13 @@ namespace cell {
             _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(0.3f);
+            _master_renderer.endMainRenderPass();
 
             // imgui debug menu
             _master_renderer.beginImguiRenderPass();
             _debug_menu.display(getFPS(), _world.getEnvironment());
             _master_renderer.drawImGui();
+            _master_renderer.endImguiRenderPass();
 
             // end frame
             _master_renderer.endFrame(_swap_chain);

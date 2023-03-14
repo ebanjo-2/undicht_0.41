@@ -10,7 +10,7 @@ namespace cell {
     using namespace undicht;
     using namespace vulkan;
 
-    void MasterRenderer::init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain) {
+    void MasterRenderer::init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain, bool enable_imgui) {
         
         // storing handles
         _device_handle = device;
@@ -48,12 +48,18 @@ namespace cell {
         _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
         _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
 
-        undicht::vulkan::ImGuiAPI::init(instance, device, swap_chain, window);
+        _enable_imgui = enable_imgui;
+
+        if(_enable_imgui)
+            undicht::vulkan::ImGuiAPI::init(instance, device, swap_chain, window);
+
+
     }
 
     void MasterRenderer::cleanUp() {
 
-        undicht::vulkan::ImGuiAPI::cleanUp();
+        if(_enable_imgui)
+            undicht::vulkan::ImGuiAPI::cleanUp();
         
         _shadow_renderer.cleanUp();
         _world_renderer.cleanUp();
@@ -100,8 +106,6 @@ namespace cell {
     }
 
     void MasterRenderer::endFrame(undicht::vulkan::SwapChain& swap_chain) {
-
-        undicht::vulkan::ImGuiAPI::endFrame();
 
         _current_pass = NO_PASS;
 
@@ -155,11 +159,15 @@ namespace cell {
         _shadow_renderer.draw(world, _draw_cmd);
     }
 
-    void MasterRenderer::beginMainRenderPass() {
+    void MasterRenderer::endShadowPass() {
 
         // end shadow pass
         if(_current_pass == SHADOW_PASS)
             _draw_cmd.endRenderPass();
+        
+    }
+
+    void MasterRenderer::beginMainRenderPass() {
 
         _current_pass = MAIN_PASS;
 
@@ -245,20 +253,34 @@ namespace cell {
         _final_renderer.draw(_draw_cmd, exposure);
     }
 
+    void MasterRenderer::endMainRenderPass() {
+
+        // ending the main render pass
+        if(_current_pass == MAIN_PASS)
+            _draw_cmd.endRenderPass();
+
+    }
+
+
     //////////////////////////////////////////////// imgui pass ////////////////////////////////////////////////
 
     void MasterRenderer::beginImguiRenderPass() {
 
-        // ending the main render pass
-        _draw_cmd.endRenderPass();
-
+        _current_pass = IMGUI_PASS;
         undicht::vulkan::ImGuiAPI::newFrame();
-
     }
 
     void MasterRenderer::drawImGui() {
 
         undicht::vulkan::ImGuiAPI::render(_swap_image_id, _draw_cmd);
+    }
+
+    void MasterRenderer::endImguiRenderPass() {
+
+        // ending the imgui pass
+        if(_current_pass == IMGUI_PASS)
+            undicht::vulkan::ImGuiAPI::endFrame();
+
     }
 
     ////////////////////////////////////////////// other functions //////////////////////////////////////////////
@@ -319,9 +341,15 @@ namespace cell {
         const VkFormat POSITION_REL_CAM_FORMAT = translate(UND_VEC4F16);
         const VkFormat SHADOW_MAP_POS_FORMAT = translate(UND_VEC4F16); // pos + depth on shadow map
 
+        VkImageLayout swap_image_output_layout;
+        if(_enable_imgui) { // the imgui render pass will transition it to the present layout
+            swap_image_output_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        } else {
+            swap_image_output_layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        }
 
         _main_render_target.setDeviceHandle(device, swap_chain.getSwapImageCount());
-        _main_render_target.addVisibleAttachment(swap_chain, true, true); // 0
+        _main_render_target.addVisibleAttachment(swap_chain, true, true, swap_image_output_layout); // 0
         _main_render_target.addAttachment(DEPTH_BUFFER_FORMAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL); // 1
         _main_render_target.addAttachment(LIGHT_BUFFER_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 2
         _main_render_target.addAttachment(ALBEDO_ROUGHNESS_FORMAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 1, true, false); // 3
