@@ -25,8 +25,8 @@ namespace undicht {
 
             bool isInUse() const;
 
-            const VkSemaphore& getAsSignal();
-            const VkSemaphore& getAsWaitOn();
+            VkSemaphore getAsSignal();
+            VkSemaphore getAsWaitOn();
 
         protected:
             // creating semaphore related structs

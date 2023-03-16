@@ -153,14 +153,14 @@ namespace undicht {
 
         //////////////////////////////////////////// init / cleanUp //////////////////////////////////////////////
 
-        void Renderer::init(VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t sub_pass) {
+        void Renderer::init(VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t sub_pass, uint32_t num_frames) {
             
             // storing the handles
             _render_pass_handle = render_pass;
             _sub_pass = sub_pass;
 
             // init the descriptor set cache
-            _descriptor_cache.init(_device_handle, _descriptor_set_layouts, _descriptor_set_pool_sizes);
+            _descriptor_cache.init(_device_handle, _descriptor_set_layouts, _descriptor_set_pool_sizes, num_frames);
 
             // init the pipeline
             _pipeline.setViewport(viewport);
@@ -196,12 +196,12 @@ namespace undicht {
 
         void Renderer::resetDescriptorCache(uint32_t slot) {
 
-            _descriptor_cache.reset({slot});
+            _descriptor_cache.reset({slot}, _frame_id);
         }
 
         void Renderer::accquireDescriptorSet(uint32_t slot) {
             
-            _descriptor_sets.at(slot) = &_descriptor_cache.accquire(slot);
+            _descriptor_sets.at(slot) = &_descriptor_cache.accquire(slot, _frame_id);
         }
 
         void Renderer::bindUniformBuffer(uint32_t descriptor_set_slot, uint32_t binding, const Buffer& buffer) {
@@ -236,6 +236,11 @@ namespace undicht {
         
 
         //////////////////////////////////////////////// drawing ////////////////////////////////////////////////
+
+        void Renderer::beginFrame(uint32_t frame_id) {
+
+            _frame_id = frame_id;
+        }
 
         void Renderer::bindPipeline(undicht::vulkan::CommandBuffer& cmd) {
 

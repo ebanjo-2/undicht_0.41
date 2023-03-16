@@ -10,18 +10,15 @@ namespace cell {
     using namespace undicht;
     using namespace vulkan;
 
-    void MasterRenderer::init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain, bool enable_imgui) {
+    const int MAX_FRAMES_IN_FLIGHT = 2;
+
+    void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, bool enable_imgui) {
         
+        FrameManager::init(device, window, true, MAX_FRAMES_IN_FLIGHT);
+
         // storing handles
         _device_handle = device;
-        _viewport = {(uint32_t)swap_chain.getExtent().width, (uint32_t)swap_chain.getExtent().height};
-        
-        _swap_image_ready.init(device.getDevice());
-        _draw_cmd.init(device.getDevice(), device.getGraphicsCmdPool());
-
-        // signal objects
-        _render_finished_fence.init(device.getDevice(), false);
-        _render_finished_semaphore.init(device.getDevice());
+        _viewport = getSwapChain().getExtent();
 
         // global uniform buffer (contains global uniform data, such as the players camera)
         _global_uniform_buffer.init(device, BufferLayout({
@@ -38,25 +35,26 @@ namespace cell {
         // global descriptor set
         _global_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // global ubo
         _global_descriptor_layout.init(device.getDevice());
-        _global_descriptor_cache.init(device, {_global_descriptor_layout}, {1});
+        _global_descriptor_cache.init(device, {_global_descriptor_layout}, {1}, MAX_FRAMES_IN_FLIGHT);
 
-        initShadowRenderTarget(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, swap_chain.getSwapImageCount());
-        initMainRenderTarget(device, swap_chain);
+        initShadowRenderTarget(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, getSwapChain().getSwapImageCount());
+        initMainRenderTarget(device, getSwapChain());
 
-        _shadow_renderer.init(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, _shadow_map_target.getRenderPass(), 0);
-        _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0);
-        _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1);
-        _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2);
+        _shadow_renderer.init(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, _shadow_map_target.getRenderPass(), 0, MAX_FRAMES_IN_FLIGHT);
+        _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0, MAX_FRAMES_IN_FLIGHT);
+        _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1, MAX_FRAMES_IN_FLIGHT);
+        _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2, MAX_FRAMES_IN_FLIGHT);
 
         _enable_imgui = enable_imgui;
 
         if(_enable_imgui)
-            undicht::vulkan::ImGuiAPI::init(instance, device, swap_chain, window);
-
+            undicht::vulkan::ImGuiAPI::init(instance, device, getSwapChain(), (GLFWwindow*)window.getWindow());
 
     }
 
     void MasterRenderer::cleanUp() {
+
+        FrameManager::cleanUp();
 
         if(_enable_imgui)
             undicht::vulkan::ImGuiAPI::cleanUp();
@@ -70,53 +68,28 @@ namespace cell {
         _global_descriptor_layout.cleanUp();
         _global_uniform_buffer.cleanUp();
 
-        _render_finished_fence.cleanUp();
-        _render_finished_semaphore.cleanUp();
-
-        _draw_cmd.cleanUp();
-        _swap_image_ready.cleanUp();
-
         _shadow_map_target.cleanUp();
         _main_render_target.cleanUp();
     }
 
-    bool MasterRenderer::beginFrame(undicht::vulkan::SwapChain& swap_chain) {
+    bool MasterRenderer::beginFrame() {
 
-        _global_descriptor_cache.reset({0});
-        _global_descriptor_set = _global_descriptor_cache.accquire(0);
-
-        // waiting for the previous frame to finish
-        if(_swap_image_id != -1) 
-            _render_finished_fence.waitForProcessToFinish();
-        
-        // acquiring an image to render to
-        _swap_image_id = swap_chain.acquireNextSwapImage(_swap_image_ready.getAsSignal());
-
-        if(_swap_image_id == -1)
+        if(!FrameManager::beginFrame())
             return false;
 
-        // beginning the render pass
-        _draw_cmd.resetCommandBuffer();
-        _draw_cmd.beginCommandBuffer(true);
-
         // bind global ubo in case no shadow pass is started, in which case the ubo will be rebound
+        _global_descriptor_cache.reset({0}, getFrameID());
+        _global_descriptor_set = _global_descriptor_cache.accquire(0, getFrameID());
         _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
 
         return true;
     }
 
-    void MasterRenderer::endFrame(undicht::vulkan::SwapChain& swap_chain) {
+    void MasterRenderer::endFrame() {
 
         _current_pass = NO_PASS;
 
-        // end draw command
-        _draw_cmd.endCommandBuffer();
-
-        // submit the draw command
-        _device_handle.submitOnGraphicsQueue(_draw_cmd.getCommandBuffer(), _render_finished_fence.getFence(), {_swap_image_ready.getAsWaitOn()}, {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT}, {_render_finished_semaphore.getAsSignal()});
-
-        // submitting the image to be presented
-        _device_handle.presentOnPresentQueue(swap_chain.getSwapchain(), _swap_image_id, {_render_finished_semaphore.getAsWaitOn()});
+        FrameManager::endFrame();
     }
 
     void MasterRenderer::loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam) {
@@ -149,21 +122,21 @@ namespace cell {
         undicht::vulkan::Framebuffer& frame_buffer = _shadow_map_target.getFramebuffer(_swap_image_id);
         VkClearValue depth_clear_value{1.0f, 0};
 
-        _draw_cmd.beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
-        _shadow_renderer.beginFrame(_draw_cmd, _global_descriptor_set);
+        getDrawCmd().beginRenderPass(_shadow_map_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _shadow_map_target.getExtent(), {depth_clear_value});
+        _shadow_renderer.beginFrame(getDrawCmd(), _global_descriptor_set, getFrameID());
 
     }
 
     void MasterRenderer::drawToShadowMap(const CellBuffer& world) {
         
-        _shadow_renderer.draw(world, _draw_cmd);
+        _shadow_renderer.draw(world, getDrawCmd());
     }
 
     void MasterRenderer::endShadowPass() {
 
         // end shadow pass
         if(_current_pass == SHADOW_PASS)
-            _draw_cmd.endRenderPass();
+            getDrawCmd().endRenderPass();
         
     }
 
@@ -192,36 +165,36 @@ namespace cell {
         };
 
         // begin main pass
-        _draw_cmd.beginRenderPass(_main_render_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _viewport, clear_values);
+        getDrawCmd().beginRenderPass(_main_render_target.getRenderPass().getRenderPass(), frame_buffer.getFramebuffer(), _viewport, clear_values);
 
     }
 
     void MasterRenderer::beginGeometrySubPass(const MaterialAtlas& materials) {
 
-        _world_renderer.beginFrame(materials, _global_descriptor_set, _draw_cmd);
+        _world_renderer.beginFrame(materials, _global_descriptor_set, getDrawCmd(), getFrameID());
     }
 
     void MasterRenderer::drawWorld(const CellBuffer& world) {
 
-        _world_renderer.draw(world, _draw_cmd);
+        _world_renderer.draw(world, getDrawCmd());
     }
 
     void MasterRenderer::beginLightSubPass() {
 
-        _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
+        getDrawCmd().nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
         const VkImageView& albedo_roughness = _main_render_target.getAttachment(_swap_image_id, 3);
         const VkImageView& normal_metalness = _main_render_target.getAttachment(_swap_image_id, 4);
         const VkImageView& position_rel_cam = _main_render_target.getAttachment(_swap_image_id, 5);
         const VkImageView& shadow_map_pos = _main_render_target.getAttachment(_swap_image_id, 6);
 
-        _light_renderer.beginFrame(_global_descriptor_set, _draw_cmd, albedo_roughness, normal_metalness, position_rel_cam, shadow_map_pos);
+        _light_renderer.beginFrame(_global_descriptor_set, getDrawCmd(), albedo_roughness, normal_metalness, position_rel_cam, shadow_map_pos, getFrameID());
 
     }
 
     void MasterRenderer::drawLights(const LightBuffer& lights) {
 
-        _light_renderer.draw(lights, _draw_cmd);
+        _light_renderer.draw(lights, getDrawCmd());
     }
 
     void MasterRenderer::drawLight(const Light& light) {
@@ -230,34 +203,34 @@ namespace cell {
         const VkImageView& shadow_map = _shadow_map_target.getAttachment(_swap_image_id, 0);
         const VkImageLayout shadow_map_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
-        _light_renderer.draw(light, _draw_cmd, shadow_map, shadow_map_layout, _SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT);
+        _light_renderer.draw(light, getDrawCmd(), shadow_map, shadow_map_layout, _SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT);
     }
 
     void MasterRenderer::drawAmbientLight(const Environment& env) {
 
-        _light_renderer.draw(env, _draw_cmd);
+        _light_renderer.draw(env, getDrawCmd());
     }
 
 
     void MasterRenderer::beginFinalSubPass() {
 
-        _draw_cmd.nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
+        getDrawCmd().nextSubPass(VK_SUBPASS_CONTENTS_INLINE);
 
         const VkImageView& light_hdr = _main_render_target.getAttachment(_swap_image_id, 2);
 
-        _final_renderer.beginFrame(_draw_cmd, light_hdr);
+        _final_renderer.beginFrame(getDrawCmd(), light_hdr, getFrameID());
     }
 
     void MasterRenderer::drawFinal(float exposure) {
 
-        _final_renderer.draw(_draw_cmd, exposure);
+        _final_renderer.draw(getDrawCmd(), exposure);
     }
 
     void MasterRenderer::endMainRenderPass() {
 
         // ending the main render pass
         if(_current_pass == MAIN_PASS)
-            _draw_cmd.endRenderPass();
+            getDrawCmd().endRenderPass();
 
     }
 
@@ -272,7 +245,7 @@ namespace cell {
 
     void MasterRenderer::drawImGui() {
 
-        undicht::vulkan::ImGuiAPI::render(_swap_image_id, _draw_cmd);
+        undicht::vulkan::ImGuiAPI::render(_swap_image_id, getDrawCmd());
     }
 
     void MasterRenderer::endImguiRenderPass() {
@@ -285,21 +258,23 @@ namespace cell {
 
     ////////////////////////////////////////////// other functions //////////////////////////////////////////////
 
-    void MasterRenderer::onSwapChainResize(undicht::vulkan::SwapChain& swap_chain) {
+    void MasterRenderer::onWindowResize(const undicht::graphics::Window& window) {
         
-        _viewport = {(uint32_t)swap_chain.getExtent().width, (uint32_t)swap_chain.getExtent().height};
+        FrameManager::onWindowResize(window);
+
+        _viewport = getSwapChain().getExtent();
 
         float inv_viewport[] = {1.0f / _viewport.width, 1.0f / _viewport.height};
         _global_uniform_buffer.setAttribute(4, &_viewport, sizeof(_viewport));
         _global_uniform_buffer.setAttribute(5, inv_viewport, 2 * sizeof(float));
 
-        _main_render_target.resize(_viewport, &swap_chain);
+        _main_render_target.resize(_viewport, &getSwapChain());
 
         _world_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _light_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
         _final_renderer.onViewportResize(_device_handle, _viewport, _main_render_target.getRenderPass());
 
-        undicht::vulkan::ImGuiAPI::onViewportResize(swap_chain);
+        undicht::vulkan::ImGuiAPI::onViewportResize(getSwapChain());
     }
 
     ///////////////////////////////////////// private functions /////////////////////////////////////////

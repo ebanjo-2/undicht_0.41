@@ -16,7 +16,7 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void LightRenderer::init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
+    void LightRenderer::init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
         
         // init the screen quad
         _screen_quad.init(gpu);
@@ -35,7 +35,7 @@ namespace cell {
         _local_descriptor_layout.setBinding(5, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT); // shadow map pos input
         _local_descriptor_layout.init(gpu.getDevice());
 
-        _descriptor_cache.init(gpu, {global_descriptor_layout, _local_descriptor_layout}, {0, 1});
+        _descriptor_cache.init(gpu, {global_descriptor_layout, _local_descriptor_layout}, {0, 1}, num_frames);
 
         // setting up the _point_light_renderer
         _point_light_renderer.setDeviceHandle(gpu);
@@ -48,7 +48,7 @@ namespace cell {
         _point_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         // hdr buffer, just add the light intensities
         _point_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE); 
-        _point_light_renderer.init(viewport, render_pass, subpass);
+        _point_light_renderer.init(viewport, render_pass, subpass, num_frames);
 
         // setting up the direct light renderer
         _direct_light_renderer.setDeviceHandle(gpu);
@@ -62,7 +62,7 @@ namespace cell {
         _direct_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
          // hdr buffer, just add the light intensities (multiplied by the shadow effect determined by the world renderer)
         _direct_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE);
-        _direct_light_renderer.init(viewport, render_pass, subpass);
+        _direct_light_renderer.init(viewport, render_pass, subpass, num_frames);
 
         // setting up the ambient light renderer
         _ambient_light_renderer.setDeviceHandle(gpu);
@@ -76,7 +76,7 @@ namespace cell {
         _ambient_light_renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
          // hdr buffer, just add the light intensities (multiplied by the shadow effect determined by the world renderer)
         _ambient_light_renderer.setBlending(0, true, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE, VK_BLEND_OP_ADD, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE);
-        _ambient_light_renderer.init(viewport, render_pass, subpass);
+        _ambient_light_renderer.init(viewport, render_pass, subpass, num_frames);
 
         // Sampler
         _offset_sampler.setMinFilter(VK_FILTER_NEAREST);
@@ -150,10 +150,14 @@ namespace cell {
         _ambient_light_renderer.resizeViewport(viewport);
     }
 
-    void LightRenderer::beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos){
+    void LightRenderer::beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos, uint32_t frame_id){
         
-        _descriptor_cache.reset({1});
-        _local_descriptor_set = _descriptor_cache.accquire(1);
+        _point_light_renderer.beginFrame(frame_id);
+        _direct_light_renderer.beginFrame(frame_id);
+        _ambient_light_renderer.beginFrame(frame_id);
+
+        _descriptor_cache.reset({1}, frame_id);
+        _local_descriptor_set = _descriptor_cache.accquire(1, frame_id);
 
         _direct_light_renderer.resetDescriptorCache(2);
         _ambient_light_renderer.resetDescriptorCache(2);

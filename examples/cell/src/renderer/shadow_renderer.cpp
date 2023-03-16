@@ -10,7 +10,7 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void ShadowRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
+    void ShadowRenderer::init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
         
         _device_handle = gpu;
 
@@ -24,7 +24,7 @@ namespace cell {
         _renderer.setRasterizer(true, true, false);
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         //_renderer.setBlending(0, false);
-        _renderer.init(viewport, render_pass, subpass);
+        _renderer.init(viewport, render_pass, subpass, num_frames);
 
     }
     
@@ -41,7 +41,9 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void ShadowRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set) {
+    void ShadowRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set, uint32_t frame_id) {
+
+        _renderer.beginFrame(frame_id);
 
         _last_used_chunk_ubo = -1;
         _renderer.resetDescriptorCache(2);

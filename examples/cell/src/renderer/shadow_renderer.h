@@ -20,12 +20,12 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
+        void init(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames);
         void cleanUp();
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
-        void beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set); // only one direct light for now
+        void beginFrame(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& global_descriptor_set, uint32_t frame_id); // only one direct light for now
         void draw(const CellBuffer& world, undicht::vulkan::CommandBuffer& cmd); // draw to shadow map
     
       protected:

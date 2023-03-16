@@ -13,11 +13,11 @@ namespace cell {
 
         UND_LOG << "App::init() gets called\n";
         
-        undicht::Engine::init(true, true);
+        undicht::Engine::init(true);
 
         UND_LOG << "initialized the engine\n";
 
-        _master_renderer.init(_vk_instance.getInstance(), (GLFWwindow*)_main_window.getWindow(), _gpu, _swap_chain);
+        _master_renderer.init(_vk_instance.getInstance(), _main_window, _gpu);
         _world.init(_gpu);
         _player.init();
         _player.setPosition(glm::vec3(0, -5, 10));
@@ -60,13 +60,13 @@ namespace cell {
         _env_gen.setSunDir(sun_dir);
         
         // darkish sky / clouds 
-        _env_gen.setCloudCoverage(1.1f); 
+        _env_gen.setCloudCoverage(1.1f);
         _env_gen.setCloudDensity(1.7f);
         _env_gen.setSkyBrightness(1.2f);
         _env_gen.setCloudBrightness(0.05f);
 
         // brightish sky / clouds 
-        /*_env_gen.setCloudCoverage(0.55f); 
+        /*_env_gen.setCloudCoverage(0.55f);
         _env_gen.setCloudDensity(2.5f);
         _env_gen.setSkyBrightness(1.0f);
         _env_gen.setCloudBrightness(1.0f);*/
@@ -116,7 +116,7 @@ namespace cell {
 
         // drawing a new frame
         _master_renderer.loadPlayerCamera(_player);
-        if(_master_renderer.beginFrame(_swap_chain)) {
+        if(_master_renderer.beginFrame()) {
             
             // shadow pass
             _master_renderer.beginShadowPass(_world.getSun(), _player.getPosition());
@@ -142,7 +142,7 @@ namespace cell {
             _master_renderer.endImguiRenderPass();
 
             // end frame
-            _master_renderer.endFrame(_swap_chain);
+            _master_renderer.endFrame();
 
         } else {
             // skipping a frame, recreating the swap chain
@@ -156,10 +156,7 @@ namespace cell {
         // adjusting the cameras aspect ratio
         _player.setAspectRatio(float(_main_window.getWidth()) / _main_window.getHeight());
 
-        // will recreate the swap chain
-        undicht::Engine::onWindowResize();
-
-        _master_renderer.onSwapChainResize(_swap_chain);
+        _master_renderer.onWindowResize(_main_window);
     }
 
 } // namespace cell

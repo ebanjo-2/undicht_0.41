@@ -17,19 +17,17 @@
 namespace undicht {
 
     class Engine {
+        // initializes vulkan and a window
     protected:
 
+        // glfw
         graphics::WindowAPI _window_api;
         graphics::Monitor _monitor;
         graphics::Window _main_window;
 
+        // vulkan
         vulkan::Instance _vk_instance;
         vulkan::LogicalDevice _gpu;
-        vulkan::SwapChain _swap_chain;
-        vulkan::RenderPass _default_render_pass;
-        
-        std::vector<vulkan::Image> _depth_buffers;
-        std::vector<vulkan::Framebuffer> _default_framebuffer; // one for each image of the swap chain
 
         bool _should_stop = false;
 
@@ -41,10 +39,9 @@ namespace undicht {
         Engine();
 
         /** @brief initializes core engine objects
-        * @param open_window opens a main window
         * chooses a physical gpu and creates a logical instance for the engine to use it
         * creates a swap chain to render to */
-        virtual void init(bool vsync = true, bool full_screen = false);
+        virtual void init(bool full_screen = false);
 
         /** can be implemented by a child "application" class */
         virtual void mainLoop(){};
@@ -74,9 +71,8 @@ namespace undicht {
         // default event handling
 
         // called when the default window was resized
-        virtual void onWindowResize();
-
-        virtual void onWindowMinimize();
+        virtual void onWindowResize() {};
+        virtual void onWindowMinimize() {};
 
     };
 

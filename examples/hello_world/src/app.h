@@ -18,6 +18,7 @@
 
 #include "images/image_file.h"
 #include "model_loading/collada/collada_file.h"
+#include "renderer/vulkan/render_target.h"
 
 #include "frame.h"
 
@@ -45,6 +46,7 @@ class HelloWorldApp : public undicht::Engine {
 
 protected:
 
+
     // handling multiple frames in flight
     std::vector<Frame> _frames;
     uint32_t _current_frame = 0;
@@ -53,6 +55,7 @@ protected:
     undicht::vulkan::Shader _shader;
 
     // Pipeline
+    undicht::vulkan::RenderTarget _visible_render_target;
     undicht::vulkan::DescriptorSetLayout _descriptor_set_layout;
     undicht::vulkan::Pipeline _pipeline;
 

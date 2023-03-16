@@ -53,14 +53,14 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass);
+        void init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames);
         void cleanUp();
 
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);
 
         //void loadEnvironment(const std::string& file_name);
 
-        void beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos);
+        void beginFrame(const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, VkImageView albedo_rough, VkImageView normal_metal, VkImageView position_rel_cam, VkImageView shadow_map_pos, uint32_t frame_id);
         void draw(const LightBuffer& lights, undicht::vulkan::CommandBuffer& cmd);
         void draw(const Light& light, undicht::vulkan::CommandBuffer& cmd, const VkImageView& shadow_map, const VkImageLayout& shadow_map_layout, uint32_t shadow_map_width, uint32_t shadow_map_height); // direct light only
         void draw(const Environment& env, undicht::vulkan::CommandBuffer& cmd); // ambient light / light from the environment map

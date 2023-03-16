@@ -12,7 +12,7 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
+    void WorldRenderer::init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
         
         _device_handle = gpu;
         
@@ -31,7 +31,7 @@ namespace cell {
         _renderer.setBlending(2, false); // position rel cam output
         _renderer.setBlending(3, false); // shadow map pos
 
-        _renderer.init(viewport, render_pass, subpass);
+        _renderer.init(viewport, render_pass, subpass, num_frames);
 
         // Sampler
         _tile_map_sampler.setMinFilter(VK_FILTER_NEAREST);
@@ -61,7 +61,9 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void WorldRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd) {
+    void WorldRenderer::beginFrame(const MaterialAtlas& materials, const undicht::vulkan::DescriptorSet& global_descriptor_set, undicht::vulkan::CommandBuffer& cmd, uint32_t frame_id) {
+
+        _renderer.beginFrame(frame_id);
 
         _last_used_chunk_ubo = -1;
         _renderer.resetDescriptorCache(1);

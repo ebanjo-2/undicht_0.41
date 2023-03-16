@@ -11,7 +11,7 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void FinalRenderer::init(const undicht::vulkan::LogicalDevice& device, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass) {
+    void FinalRenderer::init(const undicht::vulkan::LogicalDevice& device, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
 
         // init the screen quad
         _screen_quad.init(device);
@@ -30,7 +30,7 @@ namespace cell {
         _renderer.setRasterizer(false);
         _renderer.setInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         _renderer.setBlending(0, false);
-        _renderer.init(viewport, render_pass, subpass);
+        _renderer.init(viewport, render_pass, subpass, num_frames);
 
         // renderer
         _sampler.setMinFilter(VK_FILTER_NEAREST);
@@ -57,8 +57,9 @@ namespace cell {
         _renderer.resizeViewport(viewport);
     }
 
-    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, VkImageView light_hdr) {
+    void FinalRenderer::beginFrame(undicht::vulkan::CommandBuffer& cmd, VkImageView light_hdr, uint32_t frame_id) {
 
+        _renderer.beginFrame(frame_id);
         _renderer.resetDescriptorCache(1);
         _renderer.accquireDescriptorSet(1);
         

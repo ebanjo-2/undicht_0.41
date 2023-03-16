@@ -19,6 +19,13 @@ void HelloWorldApp::init() {
     _shader.addFragmentModule(_gpu.getDevice(), UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.frag.spv");
     _shader.init(_gpu.getDevice());
 
+    // init the visible render target
+    _visible_render_target.setDeviceHandle(_gpu, _swap_chain.getSwapImageCount());
+    _visible_render_target.addVisibleAttachment(_swap_chain, true, true); // 0
+    _visible_render_target.addAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, true, false); // 1
+    _visible_render_target.addSubPass({0, 1}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    _visible_render_target.init(_swap_chain.getExtent(), &_swap_chain);
+
     // init the pipeline
     _descriptor_set_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -35,7 +42,7 @@ void HelloWorldApp::init() {
     _pipeline.setInputAssembly();
     _pipeline.setRasterizationState(true, false, false);
     _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
-    _pipeline.init(_gpu.getDevice(), _default_render_pass.getRenderPass());
+    _pipeline.init(_gpu.getDevice(), _visible_render_target.getRenderPass().getRenderPass());
 
     // init frame objects
     _frames.resize(_swap_chain.getSwapImageCount());
@@ -80,6 +87,7 @@ void HelloWorldApp::mainLoop() {
     // beginning the next frame
     _current_frame = (_current_frame + 1) % _frames.size();
     _frames.at(_current_frame).begin();
+    _frames[_current_frame]._descriptor_set_caches[0].reset({0});
 
     // acquiring an image to render to
     int swap_image_id = _swap_chain.acquireNextSwapImage(_frames.at(_current_frame)._swap_image_ready.getAsSignal());
@@ -94,7 +102,7 @@ void HelloWorldApp::mainLoop() {
     VkClearValue depth_clear_value{1.0f, 0};
     _frames[_current_frame]._draw_command.resetCommandBuffer();
     _frames[_current_frame]._draw_command.beginCommandBuffer(true);
-    _frames[_current_frame]._draw_command.beginRenderPass(_default_render_pass.getRenderPass(),_default_framebuffer.at(swap_image_id).getFramebuffer(), _swap_chain.getExtent(), {color_clear_value, depth_clear_value});
+    _frames[_current_frame]._draw_command.beginRenderPass(_visible_render_target.getRenderPass().getRenderPass(), _visible_render_target.getFramebuffer(swap_image_id).getFramebuffer(), _swap_chain.getExtent(), {color_clear_value, depth_clear_value});
     _frames[_current_frame]._draw_command.bindGraphicsPipeline(_pipeline.getPipeline());
     
     for(int i = 0; i < _model._vertex_buffers.size(); i++) {
@@ -139,6 +147,7 @@ void HelloWorldApp::cleanUp() {
     // destroy the pipeline
     _pipeline.cleanUp();
     _descriptor_set_layout.cleanUp();
+    _visible_render_target.cleanUp();
 
     // destroy the shader
     _shader.cleanUp();
@@ -152,9 +161,11 @@ void HelloWorldApp::onWindowResize() {
     // will recreate the swap chain
     undicht::Engine::onWindowResize();
 
+    _visible_render_target.resize(_swap_chain.getExtent(), &_swap_chain);
+
     _pipeline.cleanUp();
     _pipeline.setViewport(_swap_chain.getExtent());
-    _pipeline.init(_gpu.getDevice(), _default_render_pass.getRenderPass());
+    _pipeline.init(_gpu.getDevice(), _visible_render_target.getRenderPass().getRenderPass());
 
 }
 

@@ -26,7 +26,7 @@ namespace undicht {
             return _in_use;
         }
 
-        const VkSemaphore& Semaphore::getAsSignal() {
+        VkSemaphore Semaphore::getAsSignal() {
             // the semaphore will be signaled
 
             _in_use = true;
@@ -34,7 +34,7 @@ namespace undicht {
             return _semaphore;
         }
 
-        const VkSemaphore& Semaphore::getAsWaitOn() {
+        VkSemaphore Semaphore::getAsWaitOn() {
             // the semaphore will be waited on
 
             if(_in_use) {

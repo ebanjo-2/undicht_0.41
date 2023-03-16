@@ -54,6 +54,7 @@ namespace cell {
         env_map.setPixels(hdr_sphere);
 
         load(env_map);
+        calcLightingMaps(env_map);
     }
 
     void Environment::load(const CubeMapData<float>& env_map) {

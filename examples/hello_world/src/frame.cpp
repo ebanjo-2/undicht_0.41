@@ -18,7 +18,6 @@ void Frame::init(const undicht::vulkan::LogicalDevice& device, const std::vector
         _descriptor_set_caches.push_back(cache);
     }
 
-
 }
 
 void Frame::cleanUp() {

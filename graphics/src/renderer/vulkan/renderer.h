@@ -44,6 +44,8 @@ namespace undicht {
 
             std::vector<undicht::vulkan::DescriptorSet*> _descriptor_sets;
 
+            uint32_t _frame_id = 0;
+
         public:
 
             // first thing to initialize!!!!
@@ -61,7 +63,7 @@ namespace undicht {
             virtual void setBlending(uint32_t attachment, bool enable_blending, VkBlendOp color_blend_op = {}, VkBlendFactor src_color_factor = {}, VkBlendFactor dst_color_factor = {}, VkBlendOp alpha_blend_op = {}, VkBlendFactor src_alpha_factor = {}, VkBlendFactor dst_alpha_factor = {});
 
             // init / cleanUp
-            virtual void init(VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t sub_pass = 0);
+            virtual void init(VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t sub_pass = 0, uint32_t num_frames = 1);
             virtual void cleanUp();
 
             // settings that can be changed after the pipeline is initialized
@@ -75,6 +77,7 @@ namespace undicht {
             void bindInputAttachment(uint32_t descriptor_set_slot, uint32_t binding, const VkImageView& image_view);
 
             // drawing
+            void beginFrame(uint32_t frame_id);
             void bindPipeline(undicht::vulkan::CommandBuffer& cmd);
             void bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, uint32_t slot = 0);
             void bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& descriptor_set, uint32_t slot = 0); // bind an external descriptor set

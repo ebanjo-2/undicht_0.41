@@ -1,6 +1,8 @@
 #ifndef CELL_MASTER_RENDERER_H
 #define CELL_MASTER_RENDERER_H
 
+#include "frame_manager.h"
+
 #include "core/vulkan/semaphore.h"
 #include "core/vulkan/fence.h"
 #include "core/vulkan/logical_device.h"
@@ -20,11 +22,12 @@
 #include "world/cells/cell_buffer.h"
 
 #include "3D/camera/perspective_camera_3d.h"
-#include "GLFW/glfw3.h"
+
+#include "window/glfw/window.h"
 
 namespace cell {
 
-    class MasterRenderer {
+    class MasterRenderer : public undicht::FrameManager {
 
       enum Pass {
         NO_PASS,
@@ -40,17 +43,10 @@ namespace cell {
         // handles to other objects
         undicht::vulkan::LogicalDevice _device_handle;
 
-        // managing frames
-        undicht::vulkan::Semaphore _swap_image_ready;
-        uint32_t _swap_image_id = -1;
-
         // used by all stages
         undicht::vulkan::DescriptorSetLayout _global_descriptor_layout; // used to bind the global uniform buffer
         undicht::vulkan::DescriptorSetCache _global_descriptor_cache;
         undicht::vulkan::DescriptorSet _global_descriptor_set;
-        undicht::vulkan::CommandBuffer _draw_cmd;
-        undicht::vulkan::Fence _render_finished_fence;
-        undicht::vulkan::Semaphore _render_finished_semaphore;
         undicht::vulkan::UniformBuffer _global_uniform_buffer;
 
         // keeping track of which pass we are currently in
@@ -72,13 +68,13 @@ namespace cell {
 
       public:
 
-        void init(const VkInstance& instance, GLFWwindow* window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::SwapChain& swap_chain, bool enable_imgui = true);
+        void init(const VkInstance& instance, undicht::graphics::Window& window, const undicht::vulkan::LogicalDevice& device, bool enable_imgui = true);
         void cleanUp();
 
         /// @brief to be called before rendering something
         /// @return returns false if the frame should be skipped because the swap chain is out of date
-        bool beginFrame(undicht::vulkan::SwapChain& swap_chain);
-        void endFrame(undicht::vulkan::SwapChain& swap_chain);
+        bool beginFrame();
+        void endFrame();
 
         // do before starting to render
         void loadPlayerCamera(undicht::tools::PerspectiveCamera3D& cam);
@@ -106,7 +102,7 @@ namespace cell {
         void endImguiRenderPass();
 
         // other functions
-        void onSwapChainResize(undicht::vulkan::SwapChain& swap_chain);
+        void onWindowResize(const undicht::graphics::Window& window);
 
       protected:
         // private functions
