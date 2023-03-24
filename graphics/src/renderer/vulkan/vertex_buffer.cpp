@@ -19,12 +19,12 @@ namespace undicht {
             _transfer_buffer.init(device.getDevice(), {device.getTransferQueueFamily()}, true, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
             // initializing the copy command buffer
-            _copy_cmd.init(device.getDevice(), device.getTransferCmdPool());
+            //_copy_cmd.init(device.getDevice(), device.getTransferCmdPool());
         }
 
         void VertexBuffer::cleanUp() {
 
-            _copy_cmd.cleanUp();
+            //_copy_cmd.cleanUp();
 
             _vertex_buffer.cleanUp();
             _index_buffer.cleanUp();
@@ -33,23 +33,23 @@ namespace undicht {
 
         }
 
-        void VertexBuffer::setVertexData(const void* data, uint32_t byte_size, uint32_t offset) {
+        void VertexBuffer::setVertexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd) {
 
-            transferData(data, byte_size, offset, _vertex_buffer);
-
-        }
-
-
-        void VertexBuffer::setIndexData(const void* data, uint32_t byte_size, uint32_t offset) {
-
-            transferData(data, byte_size, offset, _index_buffer);
+            transferData(data, byte_size, offset, _vertex_buffer, cmd);
 
         }
 
 
-        void VertexBuffer::setInstanceData(const void* data, uint32_t byte_size, uint32_t offset) {
+        void VertexBuffer::setIndexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd) {
 
-            transferData(data, byte_size, offset, _instance_buffer);
+            transferData(data, byte_size, offset, _index_buffer, cmd);
+
+        }
+
+
+        void VertexBuffer::setInstanceData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd) {
+
+            transferData(data, byte_size, offset, _instance_buffer, cmd);
         }
 
         const Buffer& VertexBuffer::getVertexBuffer() const {
@@ -69,7 +69,7 @@ namespace undicht {
 
         ////////////////////////////////////// internal funktions //////////////////////////////
 
-        void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst) {
+        void VertexBuffer::transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst, CommandBuffer& cmd) {
             
             // allocating memory + copying the old data if necessary
             if(dst.getAllocatedSize() <= (byte_size + offset)) {
@@ -79,7 +79,7 @@ namespace undicht {
                 new_dst.allocate(*_device_handle, byte_size + offset);
 
                 if(dst.getUsedSize() > 0) {
-                    copyData(dst, 0, dst.getUsedSize(), new_dst, 0);
+                    copyData(dst, 0, dst.getUsedSize(), new_dst, 0, cmd);
                 }
                 
                 dst.cleanUp();
@@ -94,21 +94,21 @@ namespace undicht {
             _transfer_buffer.setData(byte_size, 0, data);
 
             // using a command buffer to copy the data to the dst buffer
-            copyData(_transfer_buffer, 0, byte_size, dst, offset);
+            copyData(_transfer_buffer, 0, byte_size, dst, offset, cmd);
 
             dst.setUsedSize(std::max(dst.getUsedSize(), byte_size + offset));
         }
 
-        void VertexBuffer::copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst) {
+        void VertexBuffer::copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst, CommandBuffer& cmd) {
             // assuming that both buffers have sufficient memory allocated
 
             VkBufferCopy copy_info = Buffer::createBufferCopy(byte_size, offset_src, offset_dst);
-            _copy_cmd.beginCommandBuffer(true);
-            _copy_cmd.copy(src.getBuffer(), dst.getBuffer(), copy_info);
-            _copy_cmd.endCommandBuffer();
-            _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
+            /*cmd.beginCommandBuffer(true);*/
+            cmd.copy(src.getBuffer(), dst.getBuffer(), copy_info);
+           // cmd.endCommandBuffer();
+            /*_device_handle->submitOnTransferQueue(cmd.getCommandBuffer());
             _device_handle->waitTransferQueueIdle(); // waiting for the transfer to finish (should probably use semaphores or smth.)
-
+*/
         }
 
     } // vulkan

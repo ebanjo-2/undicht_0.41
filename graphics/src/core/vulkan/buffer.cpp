@@ -82,6 +82,8 @@ namespace undicht {
 
         void Buffer::allocate(const LogicalDevice& device, uint32_t byte_size) {
 
+            if(byte_size <= _allocated_mem_size) return;
+
             // freeing previously allocated memory 
             if(_buffer != VK_NULL_HANDLE) vkDestroyBuffer(_device_handle, _buffer, {});
             if(_memory != VK_NULL_HANDLE) vkFreeMemory(_device_handle, _memory, {});

@@ -52,6 +52,9 @@ namespace undicht {
             const VkCommandPool& getGraphicsCmdPool() const;
             const VkCommandPool& getTransferCmdPool() const;
 
+            void resetGraphicsCmdPool();
+            void resetTransferCmdPool();
+
             void submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {}) const;
             void submitOnTransferQueue(const VkCommandBuffer& cmd, VkFence signal_fen = VK_NULL_HANDLE, const std::vector<VkSemaphore>& wait_on = {}, const std::vector<VkPipelineStageFlags>& wait_stages = {}, const std::vector<VkSemaphore>& signal_sem = {}) const;
 

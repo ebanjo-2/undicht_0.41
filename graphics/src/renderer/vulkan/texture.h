@@ -31,8 +31,6 @@ namespace undicht {
             VkFormat _format = VK_FORMAT_R8G8B8A8_SRGB;
             VkImageLayout _layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            CommandBuffer _copy_cmd;
-            CommandBuffer _layout_cmd;
             Buffer _transfer_buffer;
 
         public:
@@ -52,13 +50,16 @@ namespace undicht {
             const Image& getImage() const;
             const VkImageLayout& getLayout() const;
 
-            void setData(const char* data, uint32_t byte_size, uint32_t layer = 0, uint32_t mip_level = 0, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
+            /** copies the data to a transfer buffer (cpu visible), then adds a copy command to the cmd buffer
+             * so dont issue multiple setData commands before executing the command buffer, because the data in the transfer buffer 
+             * will get overwritten and the first copy wont result in what you expect */
+            void setData(CommandBuffer& cmd, const char* data, uint32_t byte_size, uint32_t layer = 0, uint32_t mip_level = 0, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
 
         protected:
             // internal functions
 
-            void transitionToLayout(VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage);
-            void genMipMaps(VkImageLayout new_layout, VkAccessFlags new_access);
+            void transitionToLayout(CommandBuffer& cmd, VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage);
+            void genMipMaps(CommandBuffer& cmd, VkImageLayout new_layout, VkAccessFlags new_access);
 
             uint32_t static calcMipLevelCount(uint32_t width, uint32_t height);
         

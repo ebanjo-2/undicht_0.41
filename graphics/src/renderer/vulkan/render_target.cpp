@@ -100,6 +100,18 @@ namespace undicht {
             _render_pass.cleanUp();
         }
 
+        ////////////////////////////// call before / after drawing to the render target //////////////////////////////
+
+        void RenderTarget::beginRenderPass(CommandBuffer& draw_cmd, uint32_t frame_id, const std::vector<VkClearValue>& clear_values) {
+
+            draw_cmd.beginRenderPass(_render_pass.getRenderPass(), getFramebuffer(frame_id).getFramebuffer(), getExtent(), clear_values);
+        }
+
+        void RenderTarget::endRenderPass(CommandBuffer& draw_cmd) {
+
+            draw_cmd.endRenderPass();
+        }
+
         ////////////////////////// settings that can be changed after the pipeline is initialized /////////////////
 
         void RenderTarget::resize(const VkExtent2D &extent, const SwapChain* swap_chain) {

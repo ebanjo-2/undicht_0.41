@@ -5,12 +5,15 @@
 #include "renderer/vulkan/texture.h"
 #include "string"
 #include "images/cube_map_data.h"
+#include "core/vulkan/command_buffer.h"
 
 namespace cell {
 
     class Environment {
 
       protected:
+
+        undicht::vulkan::LogicalDevice _device_handle;
 
         const int _env_cube_map_size = 1024; // width and height of the cubemap faces
         undicht::vulkan::Texture _env_cube_map; // "sky box" (the environment map that the image based lighting is based on)

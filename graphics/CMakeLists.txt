@@ -84,6 +84,9 @@ set(GRAPHICS_RENDERER_SOURCES
 	  
 	  src/renderer/vulkan/render_target.h
 	  src/renderer/vulkan/render_target.cpp
+	  
+	  src/renderer/vulkan/immediate_command.h
+	  src/renderer/vulkan/immediate_command.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES

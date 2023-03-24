@@ -28,6 +28,7 @@ namespace cell {
 
       protected:
 
+        undicht::vulkan::LogicalDevice _device_handle;
         undicht::vulkan::VertexBuffer _buffer;
         std::vector<BufferEntry> _buffer_sections;
 

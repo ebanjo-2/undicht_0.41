@@ -45,17 +45,17 @@ namespace cell {
 
             _world_file.read(*(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk()), glm::ivec3(0,-255,0));
             _world.updateLightBuffer();
-
-            _world_file.readMaterials(_world.getMaterialAtlas());
             
-            //_world_file.readEnvironment(_world.getEnvironment());
+            _world_file.readMaterials(_world.getMaterialAtlas());
+
+            _world_file.readEnvironment(_world.getEnvironment());
 
         } else {
             UND_LOG << "failed to open the world file\n";
             //_world_file.newWorldFile();
         }
 
-        CubeMapData<float> env_map;
+        /*CubeMapData<float> env_map;
         _env_gen.init();
         _env_gen.setSunDir(sun_dir);
         
@@ -66,14 +66,16 @@ namespace cell {
         _env_gen.setCloudBrightness(0.05f);
 
         // brightish sky / clouds 
-        /*_env_gen.setCloudCoverage(0.55f);
-        _env_gen.setCloudDensity(2.5f);
-        _env_gen.setSkyBrightness(1.0f);
-        _env_gen.setCloudBrightness(1.0f);*/
+        //_env_gen.setCloudCoverage(0.55f);
+        //_env_gen.setCloudDensity(2.5f);
+        //_env_gen.setSkyBrightness(1.0f);
+        //_env_gen.setCloudBrightness(1.0f);
 
         _env_gen.generate(env_map);
         _world.getEnvironment().load(env_map);
-        _world.getEnvironment().calcLightingMaps(env_map);
+        _world.getEnvironment().calcLightingMaps(env_map);*/
+
+        _gpu.resetGraphicsCmdPool();
 
     }
 
@@ -89,7 +91,7 @@ namespace cell {
     }
 
     void App::mainLoop() {
-        
+
         // user input
         if(_main_window.isKeyPressed(GLFW_KEY_ESCAPE))
             stop();
@@ -112,7 +114,7 @@ namespace cell {
         
         // debug menu
         if(_main_window.isKeyPressed(GLFW_KEY_V)) 
-            _debug_menu.open();            
+            _debug_menu.open();
 
         // drawing a new frame
         _master_renderer.loadPlayerCamera(_player);

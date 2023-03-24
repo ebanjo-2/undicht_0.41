@@ -108,6 +108,16 @@ namespace undicht {
             return _transfer_cmds;
         }
 
+        void LogicalDevice::resetGraphicsCmdPool() {
+
+            vkResetCommandPool(_device, _graphics_cmds, {});
+        }
+
+        void LogicalDevice::resetTransferCmdPool() {
+
+            vkResetCommandPool(_device, _transfer_cmds, {});
+        }
+
         void LogicalDevice::submitOnGraphicsQueue(const VkCommandBuffer& cmd, VkFence signal_fen, const std::vector<VkSemaphore>& wait_on, const std::vector<VkPipelineStageFlags>& wait_stages, const std::vector<VkSemaphore>& signal_sem) const {
 
             VkSubmitInfo info = createSubmitInfo(cmd, wait_on, wait_stages, signal_sem);

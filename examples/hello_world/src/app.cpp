@@ -1,82 +1,73 @@
 #include "app.h"
 #include "debug.h"
 #include "file_tools.h"
-#include "core/vulkan/formats.h"
-#include "array"
+#include "types.h"
+#include "model_loading/collada/collada_file.h"
 #include "model_loading/obj/obj_file.h"
+#include "array"
+#include "core/vulkan/formats.h"
+#include "renderer/vulkan/immediate_command.h"
 
 using namespace undicht;
 using namespace tools;
+using namespace vulkan;
+
+const int NUM_FRAMES = 2;
 
 void HelloWorldApp::init() {
 
     UND_LOG << "Init HelloWorldApp\n";
 
-    undicht::Engine::init(false, false);
+    undicht::Engine::init(true);
+    undicht::FrameManager::init(_gpu, _main_window, false, NUM_FRAMES);
 
-    // init the shader
-    _shader.addVertexModule(_gpu.getDevice(), UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.vert.spv");
-    _shader.addFragmentModule(_gpu.getDevice(), UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.frag.spv");
-    _shader.init(_gpu.getDevice());
+    // visible render target
+    _render_target.setDeviceHandle(_gpu, getSwapChain().getSwapImageCount());
+    _render_target.addVisibleAttachment(getSwapChain()); // 0
+    _render_target.addAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, true, false); // 1
+    _render_target.addSubPass({0, 1}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+    _render_target.init(getSwapChain().getExtent(), &getSwapChain());
 
-    // init the visible render target
-    _visible_render_target.setDeviceHandle(_gpu, _swap_chain.getSwapImageCount());
-    _visible_render_target.addVisibleAttachment(_swap_chain, true, true); // 0
-    _visible_render_target.addAttachment(VK_FORMAT_D32_SFLOAT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, true, false); // 1
-    _visible_render_target.addSubPass({0, 1}, {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-    _visible_render_target.init(_swap_chain.getExtent(), &_swap_chain);
+    // renderer
+    _renderer.setDeviceHandle(_gpu);
+    _renderer.setShaders(UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.vert.spv", UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.frag.spv");
+    _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER}, 0);
+    _renderer.setVertexInputLayout(BufferLayout({UND_VEC3F, UND_VEC2F, UND_VEC3F}));
+    _renderer.setRasterizer(true);
+    _renderer.init(getSwapChain().getExtent(), _render_target.getRenderPass(), 0, NUM_FRAMES);
 
-    // init the pipeline
-    _descriptor_set_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    _descriptor_set_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-    _descriptor_set_layout.init(_gpu.getDevice());
-
-    _pipeline.setViewport(_swap_chain.getExtent());
-    _pipeline.setShaderStages(_shader.getShaderModules(), _shader.getShaderStages());
-    _pipeline.addVertexBinding(0, 8 * sizeof(float)); // per vertex data
-    _pipeline.addVertexAttribute(0, 0, 0, vulkan::translate(UND_VEC3F)); // position
-    _pipeline.addVertexAttribute(0, 1, 3 * sizeof(float), vulkan::translate(UND_VEC2F)); // uv
-    _pipeline.addVertexAttribute(0, 2, 5 * sizeof(float), vulkan::translate(UND_VEC3F)); // normal
-    _pipeline.setBlending(0, false);
-    _pipeline.setDepthStencilState(true, true);
-    _pipeline.setInputAssembly();
-    _pipeline.setRasterizationState(true, false, false);
-    _pipeline.setShaderInput(_descriptor_set_layout.getLayout());
-    _pipeline.init(_gpu.getDevice(), _visible_render_target.getRenderPass().getRenderPass());
-
-    // init frame objects
-    _frames.resize(_swap_chain.getSwapImageCount());
-    for(uint32_t i = 0; i < _frames.size(); i++) {
-        _frames[i].init(_gpu, {_descriptor_set_layout});
-    } 
-
-    // init the renderer
-    _sampler.setMinFilter(VK_FILTER_LINEAR);
+    // sampler
     _sampler.setMaxFilter(VK_FILTER_LINEAR);
+    _sampler.setMinFilter(VK_FILTER_LINEAR);
+    _sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_REPEAT);
     _sampler.setMipMapMode(VK_SAMPLER_MIPMAP_MODE_NEAREST);
     _sampler.init(_gpu.getDevice());
 
+    // uniform buffer
     _uniform_buffer.init(_gpu, BufferLayout({UND_MAT4F, UND_MAT4F}));
 
-    // init the scene
-    // loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza_collada/sponza.dae", _model);
-    loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model);
-
+    // camera
     _camera.setViewRange(1.0f, 10000.0f);
     _camera.setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
     _camera.setAxesRotation({0,0,90});
-    
+
+    // load model
+    {
+        ImmediateCommand transfer_cmd(_gpu); // just a single command to load the entire models textures
+        loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model, transfer_cmd);
+    }
+
 }
 
 void HelloWorldApp::mainLoop() {
 
+    // stopping after 500 frames
     _frame_counter++;
-
     if(_frame_counter == 50) {
         _start_time = getTimeMillesec();
     }
 
-    if(_frame_counter == 550) {
+    if(_frame_counter >= 550) {
         long total_time = getTimeMillesec() - _start_time;
         UND_LOG << "500 frames in " << total_time << "ms, average of " << 1000.0f / (total_time / 500.0f) << " FPS\n";
         stop();
@@ -84,46 +75,43 @@ void HelloWorldApp::mainLoop() {
 
     if(_main_window.isMinimized()) return;
 
-    // beginning the next frame
-    _current_frame = (_current_frame + 1) % _frames.size();
-    _frames.at(_current_frame).begin();
-    _frames[_current_frame]._descriptor_set_caches[0].reset({0});
-
-    // acquiring an image to render to
-    int swap_image_id = _swap_chain.acquireNextSwapImage(_frames.at(_current_frame)._swap_image_ready.getAsSignal());
-
-    // moving the camera
+    // move camera
     _camera.addTranslation(_camera.getViewDirection());
     _uniform_buffer.setAttribute(0, glm::value_ptr(_camera.getProjectionMatrix()), 16 * sizeof(float));
     _uniform_buffer.setAttribute(1, glm::value_ptr(_camera.getViewMatrix()), 16 * sizeof(float));
 
-    // record draw commands
+    // clear the visible render target
     VkClearValue color_clear_value{0.3f, 0.1f, 0.7f, 1.0f};
     VkClearValue depth_clear_value{1.0f, 0};
-    _frames[_current_frame]._draw_command.resetCommandBuffer();
-    _frames[_current_frame]._draw_command.beginCommandBuffer(true);
-    _frames[_current_frame]._draw_command.beginRenderPass(_visible_render_target.getRenderPass().getRenderPass(), _visible_render_target.getFramebuffer(swap_image_id).getFramebuffer(), _swap_chain.getExtent(), {color_clear_value, depth_clear_value});
-    _frames[_current_frame]._draw_command.bindGraphicsPipeline(_pipeline.getPipeline());
-    
-    for(int i = 0; i < _model._vertex_buffers.size(); i++) {
-        if(!_model._vertex_count.at(i)) continue;
-        undicht::vulkan::DescriptorSet& descriptor_set = _frames[_current_frame]._descriptor_set_caches[0].accquire(0);
-        descriptor_set.bindUniformBuffer(0, _uniform_buffer.getBuffer());
-        descriptor_set.bindImage(1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
+    std::vector<VkClearValue> clear_values = {color_clear_value, depth_clear_value};
 
-        _frames[_current_frame]._draw_command.bindVertexBuffer(_model._vertex_buffers.at(i).getVertexBuffer().getBuffer(), 0);
-        _frames[_current_frame]._draw_command.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout());
-        _frames[_current_frame]._draw_command.draw(_model._vertex_count.at(i), false);
+    // drawing
+    if(undicht::FrameManager::beginFrame()) {
+
+        _renderer.beginFrame(getFrameID());
+        _renderer.resetDescriptorCache(0);
+        _renderer.bindPipeline(getDrawCmd());
+
+        _render_target.beginRenderPass(getDrawCmd(), getSwapImageID(), clear_values);
+
+        for(int i = 0; i < _model._vertex_buffers.size(); i++) {
+
+            if(!_model._vertex_count.at(i)) continue;
+
+            _renderer.accquireDescriptorSet(0);
+            _renderer.bindUniformBuffer(0, 0, _uniform_buffer.getBuffer());
+            _renderer.bindImage(0 , 1, _model._textures[_model._texture_ids[i]].getImage().getImageView(), _model._textures[_model._texture_ids[i]].getLayout(), _sampler.getSampler());
+            _renderer.bindDescriptorSet(getDrawCmd(), 0);
+
+            _renderer.bindVertexBuffer(getDrawCmd(), _model._vertex_buffers.at(i));
+
+            _renderer.draw(getDrawCmd(), _model._vertex_count.at(i));
+        }
+
+        _render_target.endRenderPass(getDrawCmd());
+
+        undicht::FrameManager::endFrame();
     }
-
-    _frames[_current_frame]._draw_command.endRenderPass();
-    _frames[_current_frame]._draw_command.endCommandBuffer();
-
-    // submit the draw command
-    _gpu.submitOnGraphicsQueue(_frames[_current_frame]._draw_command.getCommandBuffer(), _frames.at(_current_frame)._render_finished_fence.getFence(), {_frames.at(_current_frame)._swap_image_ready.getAsWaitOn()}, {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT}, {_frames.at(_current_frame)._render_finished_semaphore.getAsSignal()});
-
-    // present the image
-    _gpu.presentOnPresentQueue(_swap_chain.getSwapchain(), swap_image_id, {_frames.at(_current_frame)._render_finished_semaphore.getAsWaitOn()});
 
 }
 
@@ -131,45 +119,26 @@ void HelloWorldApp::cleanUp() {
 
     UND_LOG << "CleanUp HelloWorldApp\n";
 
-    // waiting for processes to finish
     _gpu.waitForProcessesToFinish();
 
-    // destroy the scene
     _model.cleanUp();
-
-    // destroy the renderer
     _uniform_buffer.cleanUp();
     _sampler.cleanUp();
+    _renderer.cleanUp();
+    _render_target.cleanUp();
 
-    // destroy frame objects
-    for(Frame& f : _frames) f.cleanUp();
-
-    // destroy the pipeline
-    _pipeline.cleanUp();
-    _descriptor_set_layout.cleanUp();
-    _visible_render_target.cleanUp();
-
-    // destroy the shader
-    _shader.cleanUp();
-
+    undicht::FrameManager::cleanUp();
     undicht::Engine::cleanUp();
-
 }
 
 void HelloWorldApp::onWindowResize() {
 
-    // will recreate the swap chain
-    undicht::Engine::onWindowResize();
-
-    _visible_render_target.resize(_swap_chain.getExtent(), &_swap_chain);
-
-    _pipeline.cleanUp();
-    _pipeline.setViewport(_swap_chain.getExtent());
-    _pipeline.init(_gpu.getDevice(), _visible_render_target.getRenderPass().getRenderPass());
-
+    undicht::FrameManager::onWindowResize(_main_window);
+    _render_target.resize(getSwapChain().getExtent(), &getSwapChain());
+    _renderer.resizeViewport(getSwapChain().getExtent());
 }
 
-void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadTo) {
+void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
 
     // loading the data from the file
     std::vector<undicht::tools::MeshData> meshes;
@@ -197,7 +166,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 
         undicht::vulkan::Texture t;
         t.setMipMaps(true);
-        loadTexture(data, t);
+        loadTexture(data, t, transfer_cmd);
         _model._textures.push_back(t);
 
     }
@@ -215,15 +184,15 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 }
 
 
-void HelloWorldApp::loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo) {
+void HelloWorldApp::loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
 
     undicht::tools::ImageData<char> data;
     undicht::tools::ImageFile(file_name, data);
 
-    loadTexture(data, loadTo);
+    loadTexture(data, loadTo, transfer_cmd);
 }
 
-void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo) {
+void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
 
     if(data.getWidth() && data.getHeight()) {
         loadTo.setExtent(data.getWidth(), data.getHeight(), 1);
@@ -240,10 +209,10 @@ void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, und
     loadTo.init(_gpu);
 
     if(data.getPixelDataSize()) {
-        loadTo.setData(data.getPixelData(), data.getPixelDataSize());
+        loadTo.setData(transfer_cmd, data.getPixelData(), data.getPixelDataSize());
     } else {
         std::array<char, 4> pink = {0, 0, 0, 0}; // no texture color
-        loadTo.setData(pink.data(), pink.size());
+        loadTo.setData(transfer_cmd, pink.data(), pink.size());
     }
 
 }
@@ -252,10 +221,14 @@ void HelloWorldApp::loadMesh(const undicht::tools::MeshData& data, undicht::vulk
 
     loadTo.init(_gpu);
 
-    if(data.vertices.size())
-        loadTo.setVertexData(data.vertices.data(), data.vertices.size() * sizeof(float), 0);
+    if(data.vertices.size()) {
+        ImmediateCommand cmd(_gpu);
+        loadTo.setVertexData(data.vertices.data(), data.vertices.size() * sizeof(float), 0, cmd);
+    }
     
-    if(data.indices.size())
-        loadTo.setIndexData(data.indices.data(), data.indices.size() * sizeof(int), 0);
+    if(data.indices.size()) {
+        ImmediateCommand cmd(_gpu);
+        loadTo.setIndexData(data.indices.data(), data.indices.size() * sizeof(int), 0, cmd);
+    }
 
 }

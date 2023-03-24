@@ -20,7 +20,7 @@ namespace undicht {
             Buffer _instance_buffer;
             Buffer _transfer_buffer;
 
-            CommandBuffer _copy_cmd;
+            // CommandBuffer _copy_cmd;
 
 
         public:
@@ -31,9 +31,9 @@ namespace undicht {
             // writing to the individual buffers
             // if there isnt enough memory already allocated for the buffer, new memory will be allocated 
             // and the data that was stored in the buffer will be lost
-            void setVertexData(const void* data, uint32_t byte_size, uint32_t offset);
-            void setIndexData(const void* data, uint32_t byte_size, uint32_t offset);
-            void setInstanceData(const void* data, uint32_t byte_size, uint32_t offset);
+            void setVertexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
+            void setIndexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
+            void setInstanceData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
 
             const Buffer& getVertexBuffer() const;
             const Buffer& getIndexBuffer() const;
@@ -42,8 +42,8 @@ namespace undicht {
         protected:
             // internal functions
 
-            void transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst);
-            void copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst);
+            void transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst, CommandBuffer& cmd);
+            void copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst, CommandBuffer& cmd);
 
         };
 

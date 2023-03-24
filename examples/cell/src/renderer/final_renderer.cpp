@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include "renderer/vulkan/immediate_command.h"
 
 namespace cell {
 
@@ -15,8 +16,11 @@ namespace cell {
 
         // init the screen quad
         _screen_quad.init(device);
-        _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0);
-        
+        {
+            ImmediateCommand cmd(device);
+            _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, cmd);
+        }
+
         // setting up the renderer
         _renderer.setDeviceHandle(device);
         _renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/final.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/final.frag.spv");

@@ -19,7 +19,10 @@ namespace undicht {
             // the texture has to have 6 layers
 
             _is_cube_map = is_cube_map;
-            _layers = 6;
+
+            if(is_cube_map)
+                _layers = 6;
+
         }
 
         void Texture::setFormat(VkFormat format) {
@@ -48,17 +51,13 @@ namespace undicht {
 
             // init the transfer buffer
             _transfer_buffer.init(device.getDevice(), {device.getTransferQueueFamily()}, true, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-            
-            // initializing the command buffers
-            _copy_cmd.init(device.getDevice(), device.getTransferCmdPool());
-            _layout_cmd.init(device.getDevice(), device.getGraphicsCmdPool());
 
         }
 
         void Texture::cleanUp() {
 
-            _copy_cmd.cleanUp();
-            _layout_cmd.cleanUp();
+            /*_copy_cmd.cleanUp();
+            _layout_cmd.cleanUp();*/
             _transfer_buffer.cleanUp();
             _image.cleanUp();
 
@@ -75,7 +74,7 @@ namespace undicht {
         }
 
 
-        void Texture::setData(const char* data, uint32_t byte_size, uint32_t layer, uint32_t mip_level, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
+        void Texture::setData(CommandBuffer& cmd, const char* data, uint32_t byte_size, uint32_t layer, uint32_t mip_level, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
 
             if(data_image_extent.width == 0 && data_image_extent.height == 0){
                 data_image_extent = _image.getExtent();
@@ -84,7 +83,7 @@ namespace undicht {
             }
             
             // transition to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-            transitionToLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+            transitionToLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
             // store the data in the transfer buffer
             _transfer_buffer.allocate(*_device_handle, byte_size);
@@ -92,20 +91,16 @@ namespace undicht {
 
             // copy data from transfer buffer to texture
             VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer, mip_level);
-            _copy_cmd.beginCommandBuffer(true);
-            _copy_cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
-            _copy_cmd.endCommandBuffer();
-            _device_handle->submitOnTransferQueue(_copy_cmd.getCommandBuffer());
-            _device_handle->waitTransferQueueIdle();
+            cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
 
             if(_enable_mip_maps && _auto_gen_mip_maps) {
-                // generate MipMaps
+                // generate MipMaps (and transition to VK_ACCESS_SHADER_READ_BIT)
 
-                genMipMaps(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
+                genMipMaps(cmd, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT);
             } else {
-                // transition to VK_ACCESS_SHADER_READ_BIT
+                // transition to VK_ACCESS_SHADER_READ_BIT without generating mip maps
 
-                transitionToLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+                transitionToLayout(cmd, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
             }
 
         }
@@ -114,26 +109,22 @@ namespace undicht {
 
         //////////////////////////// internal functions ////////////////////////////
 
-        void Texture::transitionToLayout(VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
+        void Texture::transitionToLayout(CommandBuffer& cmd, VkImageLayout new_layout, VkAccessFlags src_access, VkAccessFlags dst_access, VkPipelineStageFlagBits src_stage, VkPipelineStageFlagBits dst_stage) {
 
             VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0, _mip_levels, 0, _layers);
             VkImageMemoryBarrier barrier = Image::createImageMemoryBarrier(_image.getImage(), range, _layout, new_layout, src_access, dst_access);
             
-            _layout_cmd.beginCommandBuffer(true);
-            _layout_cmd.pipelineBarrier(barrier, src_stage, dst_stage);
-            _layout_cmd.endCommandBuffer();
-            _device_handle->submitOnGraphicsQueue(_layout_cmd.getCommandBuffer());
-            _device_handle->waitGraphicsQueueIdle();
+            cmd.pipelineBarrier(barrier, src_stage, dst_stage);
 
             _layout = new_layout;
 
         }
 
-        void Texture::genMipMaps(VkImageLayout new_layout, VkAccessFlags new_access) {
+        void Texture::genMipMaps(CommandBuffer& cmd, VkImageLayout new_layout, VkAccessFlags new_access) {
             // will also transition the mip levels to the new layout
             // source: https://vulkan-tutorial.com/Generating_Mipmaps
 
-            _layout_cmd.beginCommandBuffer(true); // generating mip maps takes place on the graphics queue
+            //_layout_cmd.beginCommandBuffer(true); // generating mip maps takes place on the graphics queue
 
             VkImageSubresourceRange range = Image::createImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
             VkImageMemoryBarrier barrier;
@@ -148,15 +139,15 @@ namespace undicht {
                 range.baseMipLevel = i - 1;
                 range.levelCount = 1;
                 barrier = Image::createImageMemoryBarrier(_image.getImage(), range, _layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT);
-                _layout_cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+                cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
                 // blit operation
                 VkImageBlit blit = Image::createImageBlit(mip_width, mip_height, i - 1, i);
-                _layout_cmd.blitImage(_image.getImage(), blit);
+                cmd.blitImage(_image.getImage(), blit);
 
                 // transition the next higher level to new_layout
                 barrier = Image::createImageMemoryBarrier(_image.getImage(), range, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, new_layout, VK_ACCESS_TRANSFER_READ_BIT, new_access);
-                _layout_cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+                cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
  
                 // calc size of next mip level
                 if (mip_width > 1) mip_width /= 2;
@@ -167,12 +158,8 @@ namespace undicht {
             // transition the last mip level to new_layout
             range.baseMipLevel = _mip_levels - 1;
             barrier = Image::createImageMemoryBarrier(_image.getImage(), range, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, new_layout, VK_ACCESS_TRANSFER_WRITE_BIT, new_access);
-            _layout_cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            cmd.pipelineBarrier(barrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-            _layout_cmd.endCommandBuffer();
-
-            _device_handle->submitOnGraphicsQueue(_layout_cmd.getCommandBuffer());
-            _device_handle->waitGraphicsQueueIdle();
 
             _layout = new_layout;
 

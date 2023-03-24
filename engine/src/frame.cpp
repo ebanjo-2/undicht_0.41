@@ -11,22 +11,47 @@ namespace undicht {
         _render_finished_fence.init(device.getDevice(), true);
         _swap_image_ready.init(device.getDevice());
         _render_finished_semaphore.init(device.getDevice());
+        _transfer_finished_fence.init(device.getDevice(), true);
+        _transfer_finished_semaphore.init(device.getDevice());
 
         // init draw command
         _draw_command.init(device.getDevice(), device.getGraphicsCmdPool());
-
+        _transfer_command.init(device.getDevice(), device.getGraphicsCmdPool());
     }
 
     void Frame::cleanUp() {
 
         // destroy draw command
         _draw_command.cleanUp();
+        _transfer_command.cleanUp();
 
         // destroy sync objects
         _render_finished_fence.cleanUp();
         _swap_image_ready.cleanUp();
         _render_finished_semaphore.cleanUp();
+        _transfer_finished_fence.cleanUp();
+        _transfer_finished_semaphore.cleanUp();
 
+    }
+
+    void Frame::beginFramePreparation() {
+        // starts recording of the transfer command buffer
+
+        // technically the program could reach here again before the command has finished execution
+        // since its is only waited on when the draw command is waited on
+        _transfer_finished_fence.waitForProcessToFinish(true, 1000000000); // 1 sec
+
+        _transfer_command.resetCommandBuffer();
+        _transfer_command.beginCommandBuffer(true);
+
+    }
+
+    void Frame::endFramePreparation() {
+        // submit the transfer command buffer
+
+        // end transfer command
+        _transfer_command.endCommandBuffer();
+        _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), {}, {}, {_transfer_finished_semaphore.getAsSignal()});
     }
 
     void Frame::beginFrame() {
@@ -48,9 +73,19 @@ namespace undicht {
         std::vector<VkSemaphore> wait_on = {_swap_image_ready.getAsWaitOn()};
         std::vector<VkPipelineStageFlags> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
+        VkSemaphore transfer_finished = _transfer_finished_semaphore.getAsWaitOn();
+        if(transfer_finished != VK_NULL_HANDLE) {
+            wait_on.push_back(transfer_finished);
+            wait_stages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+        }
 
         _device_handle.submitOnGraphicsQueue(_draw_command.getCommandBuffer(), _render_finished_fence.getFence(), wait_on, wait_stages, {_render_finished_semaphore.getAsSignal()});
 
+    }
+
+    vulkan::CommandBuffer& Frame::getTransferCmd() const {
+
+        return (vulkan::CommandBuffer&)_transfer_command;
     }
 
     vulkan::CommandBuffer& Frame::getDrawCmd() const {              
@@ -72,5 +107,11 @@ namespace undicht {
         
         return (vulkan::Semaphore&)_render_finished_semaphore;
     }
+
+    vulkan::Semaphore& Frame::getTransferFinishedSemaphore() const {
+
+        return (vulkan::Semaphore&)_transfer_finished_semaphore;
+    }
+
 
 } // undicht

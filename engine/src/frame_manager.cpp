@@ -39,11 +39,25 @@ namespace undicht {
         return _frame_id;
     }
 
+    uint32_t FrameManager::getSwapImageID() const {
+
+        return _swap_image_id;
+    }
+
+    void FrameManager::beginFramePreparation() {
+
+        getCurrentFrame().beginFramePreparation();
+    }
+
+    void FrameManager::endFramePreparation() {
+
+        getCurrentFrame().endFramePreparation();
+    }
+
     bool FrameManager::beginFrame() {
         /// @brief begin the frame (starts the draw command buffer)
         /// @return true, if the frame was started successfully, false if not (maybe the swap chain is out of date?)
 
-        _frame_id = (_frame_id + 1) % _frames.size();
         _swap_image_id = _swap_chain.acquireNextSwapImage(getCurrentFrame().getSwapImageReadySemaphore().getAsSignal());
 
         if(_swap_image_id == -1) return false; // failed to accquire a swap image
@@ -61,6 +75,10 @@ namespace undicht {
 
         // submit the swap image
         _device_handle.presentOnPresentQueue(_swap_chain.getSwapchain(), _swap_image_id, {getCurrentFrame().getRenderFinishedSemaphore().getAsWaitOn()});
+    
+        // advance the frame id
+        _frame_id = (_frame_id + 1) % _frames.size();
+
     }
 
     Frame& FrameManager::getCurrentFrame() const {
@@ -74,6 +92,11 @@ namespace undicht {
             return (Frame&)_frames.back();
         else
             return (Frame&)_frames.at(_frame_id - 1);
+    }
+
+    vulkan::CommandBuffer& FrameManager::getTransferCmd() const {
+
+        return getCurrentFrame().getTransferCmd();
     }
 
     vulkan::CommandBuffer& FrameManager::getDrawCmd() const {

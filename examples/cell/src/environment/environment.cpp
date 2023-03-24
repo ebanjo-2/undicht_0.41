@@ -5,6 +5,7 @@
 #include "core/vulkan/formats.h"
 #include "debug.h"
 #include "images/image_file.h"
+#include "renderer/vulkan/immediate_command.h"
 
 namespace cell {
 
@@ -13,6 +14,8 @@ namespace cell {
     using namespace tools;
 
     void Environment::init(const undicht::vulkan::LogicalDevice& gpu) {
+
+        _device_handle = gpu;
 
         _env_cube_map.setExtent(_env_cube_map_size, _env_cube_map_size, 1, 6);
         _env_cube_map.setFormat(translate(UND_VEC4F)); // hdr (could be VEC4F16)
@@ -62,7 +65,8 @@ namespace cell {
         // store the faces in the cubemap
         for(int i = 0; i < 6; i++) {
             const ImageData<float>& face = env_map.getFace((CubeMapData<float>::Face)i);
-            _env_cube_map.setData((const char*)face.getPixelData(), face.getPixelDataSize(), i);
+            ImmediateCommand cmd(_device_handle);
+            _env_cube_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
         }
 
         UND_LOG << "finished loading the skybox\n";
@@ -78,7 +82,8 @@ namespace cell {
         // store the faces in the irradiance cubemap
         for(int i = 0; i < 6; i++) {
             const ImageData<float>& face = irradiance_map.getFace((CubeMapData<float>::Face)i);
-            _irradiance_map.setData((const char*)face.getPixelData(), face.getPixelDataSize(), i);
+            ImmediateCommand cmd(_device_handle);
+            _irradiance_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
         }
 
         UND_LOG << "finished calculating the diffuse lighting from the environment\n";
@@ -90,7 +95,8 @@ namespace cell {
         for(int mip_level = 0; mip_level < _specular_prefilter_mip_levels; mip_level++) {
             for(int i = 0; i < 6; i++) {
                 const ImageData<float>& face = prefilter_mip_maps.at(mip_level).getFace((CubeMapData<float>::Face)i);
-                _specular_prefilter_map.setData((const char*)face.getPixelData(), face.getPixelDataSize(), i, mip_level);
+                ImmediateCommand cmd(_device_handle);
+                _specular_prefilter_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i, mip_level);
             }
         }
 

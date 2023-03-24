@@ -9,6 +9,7 @@
 #include "materials/material_atlas.h"
 #include "environment/environment.h"
 #include "files/chunk_file.h"
+#include "core/vulkan/command_buffer.h"
 
 namespace cell {
 

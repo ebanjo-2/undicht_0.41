@@ -69,6 +69,12 @@ namespace undicht {
         void Renderer::setDeviceHandle(const undicht::vulkan::LogicalDevice& gpu) {
 
             _device_handle = gpu;
+
+            // init some settings to default values
+            setDepthStencilTest();
+            setRasterizer();
+            setInputAssembly();
+            setBlending();
         }
 
         //////////////////////// settings that have(!) to be set before the pipeline is initialized /////////////////
@@ -249,12 +255,13 @@ namespace undicht {
 
         void Renderer::bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, uint32_t slot) {
 
+            _descriptor_sets.at(slot)->update();
             cmd.bindDescriptorSet(_descriptor_sets.at(slot)->getDescriptorSet(), _pipeline.getPipelineLayout(), slot);
         }
 
         void Renderer::bindDescriptorSet(undicht::vulkan::CommandBuffer& cmd, const undicht::vulkan::DescriptorSet& descriptor_set, uint32_t slot) {
             // bind an external descriptor set
-
+            
             cmd.bindDescriptorSet(descriptor_set.getDescriptorSet(), _pipeline.getPipelineLayout(), slot);
         }
 

@@ -11,10 +11,11 @@ namespace cell {
     using namespace vulkan;
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
+    const bool ENABLE_VSYNC = true;
 
     void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, bool enable_imgui) {
         
-        FrameManager::init(device, window, true, MAX_FRAMES_IN_FLIGHT);
+        FrameManager::init(device, window, ENABLE_VSYNC, MAX_FRAMES_IN_FLIGHT);
 
         // storing handles
         _device_handle = device;
@@ -81,6 +82,7 @@ namespace cell {
         _global_descriptor_cache.reset({0}, getFrameID());
         _global_descriptor_set = _global_descriptor_cache.accquire(0, getFrameID());
         _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());
+        _global_descriptor_set.update();
 
         return true;
     }

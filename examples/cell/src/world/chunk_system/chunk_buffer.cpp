@@ -5,6 +5,7 @@
 
 #include "world/lights/light.h"
 #include "world/cells/cell.h"
+#include "renderer/vulkan/immediate_command.h"
 
 namespace cell {
 
@@ -16,6 +17,8 @@ namespace cell {
 
     template<typename T>
     void ChunkBuffer<T>::init(const undicht::vulkan::LogicalDevice& device) {
+
+        _device_handle = device;
 
         _buffer.init(device);
     }
@@ -31,13 +34,15 @@ namespace cell {
     template<typename T>
     void ChunkBuffer<T>::setBaseModel(const std::vector<float>& vertices) {
 
-        _buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0);
+        undicht::vulkan::ImmediateCommand cmd(_device_handle);
+        _buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0, cmd);
     }
 
     template<typename T>
     void ChunkBuffer<T>::setBaseModel(const char* vertices, uint32_t byte_size) {
 
-        _buffer.setVertexData(vertices, byte_size, 0);
+        undicht::vulkan::ImmediateCommand cmd(_device_handle);
+        _buffer.setVertexData(vertices, byte_size, 0, cmd);
     }
 
     //////////////////////////////// storing data in the buffer ///////////////////////////////
@@ -60,7 +65,10 @@ namespace cell {
         BufferEntry free_memory = findFreeMemory(chunk_buffer_size);
 
         // storing the data
-        _buffer.setInstanceData(chunk_buffer.data(), chunk_buffer.size(), free_memory.offset);
+        {
+            undicht::vulkan::ImmediateCommand cmd(_device_handle);
+            _buffer.setInstanceData(chunk_buffer.data(), chunk_buffer.size(), free_memory.offset, cmd);
+        }
 
         // storing the buffer entry
         free_memory._chunk_pos = chunk_pos;

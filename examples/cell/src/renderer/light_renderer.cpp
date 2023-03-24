@@ -9,6 +9,7 @@
 #include "glm/glm.hpp"
 #include "IBL/ibl.h"
 #include "array"
+#include "renderer/vulkan/immediate_command.h"
 
 namespace cell {
 
@@ -20,12 +21,18 @@ namespace cell {
         
         // init the screen quad
         _screen_quad.init(gpu);
-        _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0);
+        {
+            ImmediateCommand cmd(gpu);
+            _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, cmd);
+        }
 
         // init the sky box
         _sky_box.init(gpu);
-        _sky_box.setVertexData(SKY_BOX_VERTICES.data(), SKY_BOX_VERTICES.size() * sizeof(float), 0);
-        
+        {
+            ImmediateCommand cmd(gpu);
+            _sky_box.setVertexData(SKY_BOX_VERTICES.data(), SKY_BOX_VERTICES.size() * sizeof(float), 0, cmd);
+        }
+
         // descriptor layout for renderer local descriptors
         _local_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // local uniform buffer
         _local_descriptor_layout.setBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // shadow map offsets
@@ -100,6 +107,11 @@ namespace cell {
         _brdf_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
         _brdf_map_sampler.init(gpu.getDevice());
 
+        // create a temporary transfer command buffer
+        vulkan::CommandBuffer transfer_cmd;
+        transfer_cmd.init(gpu.getDevice(), gpu.getGraphicsCmdPool());
+        transfer_cmd.beginCommandBuffer(true);
+
         // create texture with random offsets for shadow sampling
         int num_filter_samples = _shadow_sampler_filter_size * _shadow_sampler_filter_size;
         std::vector<float> shadow_sampler_offsets;
@@ -107,9 +119,15 @@ namespace cell {
         _shadow_sampler_offsets.setExtent(num_filter_samples / 2, _shadow_sampler_window_size, _shadow_sampler_window_size);
         _shadow_sampler_offsets.setFormat(translate(UND_VEC4F));
         _shadow_sampler_offsets.init(gpu);
-        _shadow_sampler_offsets.setData((const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
+        _shadow_sampler_offsets.setData(transfer_cmd, (const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
 
-        _brdf_map.init(gpu);
+        _brdf_map.init(gpu, transfer_cmd);
+
+        // destroy temporary cmd buffer
+        transfer_cmd.endCommandBuffer();
+        gpu.submitOnGraphicsQueue(transfer_cmd.getCommandBuffer());
+        gpu.waitGraphicsQueueIdle();
+        transfer_cmd.cleanUp();
 
         // local uniform buffer
         // tile map tile size
@@ -186,6 +204,7 @@ namespace cell {
         _local_descriptor_set.bindInputAttachment(3, normal_metal);
         _local_descriptor_set.bindInputAttachment(4, position_rel_cam);
         _local_descriptor_set.bindInputAttachment(5, shadow_map_pos);
+        _local_descriptor_set.update();
 
         // binding the global descriptor set
         _point_light_renderer.bindDescriptorSet(cmd, global_descriptor_set, 0);

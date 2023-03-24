@@ -3,6 +3,7 @@
 #include "core/vulkan/formats.h"
 #include "images/image_file.h"
 #include "debug.h"
+#include "renderer/vulkan/immediate_command.h"
 
 namespace cell {
 
@@ -19,6 +20,8 @@ namespace cell {
     const FixedType MaterialAtlas::TILE_MAP_FORMAT = UND_R8G8B8A8_SRGB;
 
     void MaterialAtlas::init(const undicht::vulkan::LogicalDevice& device) {
+
+        _device_handle = device;
 
         _tile_map.setExtent(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 1, 2);
         _tile_map.setFormat(translate(TILE_MAP_FORMAT));
@@ -42,7 +45,7 @@ namespace cell {
         // looking if the material is already part of the atlas
         int id = getMaterialID(mat.getName());
         if(id != -1)
-            setMaterial(mat, id);
+            setMaterial(mat, id); // update the material
 
         // adding the material to the atlas
         for(int i = 0; i < _materials.size(); i++) {
@@ -73,8 +76,15 @@ namespace cell {
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        _tile_map.setData(diffuse_data.getPixelData(), diffuse_data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
-        _tile_map.setData(specular_data.getPixelData(), specular_data.getPixelDataSize(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        {
+            ImmediateCommand cmd(_device_handle);
+            _tile_map.setData(cmd, diffuse_data.getPixelData(), diffuse_data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        } // cmd will submit itself
+        {
+            ImmediateCommand cmd(_device_handle);
+            _tile_map.setData(cmd, specular_data.getPixelData(), specular_data.getPixelDataSize(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        } // cmd will submit itself
+
     }
 
     const Material* MaterialAtlas::getMaterial(const std::string& mat_name) const {

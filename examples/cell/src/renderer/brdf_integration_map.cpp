@@ -17,7 +17,7 @@ namespace cell {
     // the file in which the calculated brdf integration map is stored for faster loading in the future
     const std::string BRDF_INTEGRATION_FILE = getFilePath(UND_CODE_SRC_FILE) + "brdf_int_map.und"; // not sure about the file ending
 
-    void BRDFIntegrationMap::init(const undicht::vulkan::LogicalDevice& gpu) {
+    void BRDFIntegrationMap::init(const undicht::vulkan::LogicalDevice& gpu, undicht::vulkan::CommandBuffer& cmd) {
 
         _brdf_integration_map.setExtent(_brdf_integration_map_size, _brdf_integration_map_size);
         _brdf_integration_map.setFormat(translate(UND_VEC2F)); // could be VEC2F16
@@ -43,7 +43,7 @@ namespace cell {
         }
         
         // load the data to the texture
-        _brdf_integration_map.setData((const char*)brdf_map.getPixelData(), brdf_map.getPixelDataSize());
+        _brdf_integration_map.setData(cmd, (const char*)brdf_map.getPixelData(), brdf_map.getPixelDataSize());
 
     }
 

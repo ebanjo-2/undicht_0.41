@@ -50,6 +50,10 @@ namespace undicht {
             void init(const VkExtent2D &extent, const SwapChain* swap_chain = nullptr);
             void cleanUp();
 
+            // call before / after drawing to the render target
+            void beginRenderPass(CommandBuffer& draw_cmd, uint32_t frame_id, const std::vector<VkClearValue>& clear_values);
+            void endRenderPass(CommandBuffer& draw_cmd);
+
             // settings that can be changed after the render target is initialized
             void resize(const VkExtent2D& extent, const SwapChain* swap_chain = nullptr);
 

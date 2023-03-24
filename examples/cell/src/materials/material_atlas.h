@@ -6,6 +6,7 @@
 #include "materials/material.h"
 #include "vector"
 #include "images/image_file.h"
+#include "core/vulkan/command_buffer.h"
 
 namespace cell {
 
@@ -24,6 +25,7 @@ namespace cell {
     
       protected:
 
+        undicht::vulkan::LogicalDevice _device_handle;
         undicht::vulkan::Texture _tile_map;
         std::vector<Material> _materials;
 

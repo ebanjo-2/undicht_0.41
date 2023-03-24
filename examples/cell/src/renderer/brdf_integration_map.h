@@ -2,6 +2,7 @@
 #define BRDF_INTEGRATION_MAP_H
 
 #include "renderer/vulkan/texture.h"
+#include "core/vulkan/command_buffer.h"
 
 namespace cell {
 
@@ -14,7 +15,7 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu);
+        void init(const undicht::vulkan::LogicalDevice& gpu, undicht::vulkan::CommandBuffer& cmd);
         void cleanUp();
 
         const undicht::vulkan::Texture& getMap() const;
