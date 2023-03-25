@@ -5,6 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include "renderer/vulkan/immediate_command.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -12,15 +13,13 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void FinalRenderer::init(const undicht::vulkan::LogicalDevice& device, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
+    void FinalRenderer::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
 
         // init the screen quad
         _screen_quad.init(device);
-        {
-            ImmediateCommand cmd(device);
-            _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, cmd);
-        }
-
+        _screen_quad.allocateVertexBuffer(SCREEN_QUAD_VERTICES.size() * sizeof(float));
+        _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, load_cmd, load_buf);
+        
         // setting up the renderer
         _renderer.setDeviceHandle(device);
         _renderer.setShaders(getFilePath(UND_CODE_SRC_FILE) + "shader/bin/final.vert.spv", getFilePath(UND_CODE_SRC_FILE) + "shader/bin/final.frag.spv");

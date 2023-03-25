@@ -7,6 +7,7 @@
 #include "materials/material_atlas.h"
 #include "renderer/vulkan/descriptor_set_cache.h"
 #include "renderer/vulkan/renderer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 #include "core/vulkan/renderpass.h"
 #include "core/vulkan/shader.h"
 #include "core/vulkan/sampler.h"
@@ -27,7 +28,7 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& device, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames);
+        void init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames);
         void cleanUp();
         
         void onViewportResize(const undicht::vulkan::LogicalDevice& gpu, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass);

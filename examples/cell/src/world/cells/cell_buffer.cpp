@@ -53,10 +53,10 @@ namespace cell {
         1,0,1,  CELL_FACE_ZP,
     };
 
-    void CellBuffer::init(const undicht::vulkan::LogicalDevice& device) {
+    void CellBuffer::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
         ChunkBuffer<Cell>::init(device);
-        setBaseModel((char*)cube_vertices.data(), cube_vertices.size() * sizeof(uint8_t));
+        setBaseModel((char*)cube_vertices.data(), cube_vertices.size() * sizeof(uint8_t), load_cmd, load_buf);
 
     }
 

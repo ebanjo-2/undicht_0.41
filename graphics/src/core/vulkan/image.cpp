@@ -188,10 +188,10 @@ namespace undicht {
             return barrier;
         }
 
-        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer, uint32_t mip_level) {
+        VkBufferImageCopy Image::createBufferImageCopy(VkExtent3D image_extent, VkOffset3D image_offset, VkImageAspectFlags flags, uint32_t layer, uint32_t mip_level, uint32_t src_offset) {
 
             VkBufferImageCopy region{};
-            region.bufferOffset = 0; // layout of the data in the buffer
+            region.bufferOffset = src_offset; // layout of the data in the buffer
             region.bufferRowLength = 0;
             region.bufferImageHeight = 0;
 

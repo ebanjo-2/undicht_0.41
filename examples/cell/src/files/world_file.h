@@ -10,6 +10,7 @@
 #include "environment/environment.h"
 #include "files/chunk_file.h"
 #include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -44,8 +45,8 @@ namespace cell {
         bool read(LightChunk& chunk, const glm::ivec3& chunk_pos);
 
         // load other stuff from the file
-        bool readMaterials(MaterialAtlas& atlas);
-        bool readEnvironment(Environment& env);
+        bool readMaterials(MaterialAtlas& atlas, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
+        bool readEnvironment(Environment& env, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
 
       protected:
         // protected WorldFile functions

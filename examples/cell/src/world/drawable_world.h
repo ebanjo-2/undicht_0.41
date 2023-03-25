@@ -34,7 +34,7 @@ namespace cell {
 
       public:
       
-        void init(const undicht::vulkan::LogicalDevice& device);
+        void init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
         void cleanUp();
 
       public:
@@ -50,8 +50,8 @@ namespace cell {
         void setSunColor(const glm::vec3& color);
 
         // make sure the chunk is correctly stored in the world buffer
-        void updateWorldBuffer();
-        void updateLightBuffer();
+        void updateWorldBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+        void updateLightBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
       
       public:
         // access parts of the drawable world (for rendering)

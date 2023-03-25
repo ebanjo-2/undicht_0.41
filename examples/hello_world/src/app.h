@@ -63,10 +63,10 @@ protected:
 
     void onWindowResize();
 
-    void loadModel(const std::string& file_name, TexturedModel& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd);
-    void loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd);
-    void loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd);
-    void loadMesh(const undicht::tools::MeshData& data, undicht::vulkan::VertexBuffer& loadTo);
+    void loadModel(const std::string& file_name, TexturedModel& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer);
+    void loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer);
+    void loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer);
+    void loadMesh(const undicht::tools::MeshData& data, undicht::vulkan::VertexBuffer& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer);
 };
 
 #endif // HELLO_WORLD_APP_H

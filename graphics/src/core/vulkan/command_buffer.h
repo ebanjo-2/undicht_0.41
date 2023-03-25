@@ -11,6 +11,9 @@ namespace undicht {
 
         protected:
 
+            VkDevice _device_handle;
+            VkCommandPool _cmd_pool_handle;
+
             VkCommandBuffer _cmd_buffer;
 
         public:

@@ -7,6 +7,7 @@ namespace cell {
 
     using namespace undicht;
     using namespace tools;
+    using namespace vulkan;
 
     void DebugMenu::open() {
 
@@ -23,7 +24,7 @@ namespace cell {
         return _open;
     }
 
-    void DebugMenu::display(double fps, Environment& env) {
+    void DebugMenu::display(double fps, Environment& env, CommandBuffer& load_cmd, TransferBuffer& load_buf) {
 
         if(!_open) return;
 
@@ -52,11 +53,11 @@ namespace cell {
             gen.setCloudBrightness(_cloud_brightness);
 
             gen.generate(_env_map_data);
-            env.load(_env_map_data);
+            env.load(_env_map_data, load_cmd, load_buf);
         }
 
         if(calc_lighting) {
-            env.calcLightingMaps(_env_map_data);
+            env.calcLightingMaps(_env_map_data, load_cmd, load_buf);
         }
 
     }

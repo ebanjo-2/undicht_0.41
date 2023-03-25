@@ -8,6 +8,7 @@ namespace cell {
 
     using namespace undicht;
     using namespace tools;
+    using namespace vulkan;
 
     const std::string CURRENT_WORLD_VERSION = "0.0.2";
 
@@ -92,7 +93,7 @@ namespace cell {
 
     ///////////////////////////////////// load other stuff from the file////////////////////////////////////////
 
-    bool WorldFile::readMaterials(MaterialAtlas& atlas) {
+    bool WorldFile::readMaterials(MaterialAtlas& atlas, CommandBuffer& cmd, TransferBuffer& buf) {
         
         XmlElement* materials = getElement({"MATERIALS"});
         if(!materials) return false;
@@ -111,14 +112,14 @@ namespace cell {
 
         // store the materials in the atlas
         for(Material& m : all_materials)
-            atlas.setMaterial(m);
+            atlas.setMaterial(m, cmd, buf);
 
         UND_LOG << "loaded " << all_materials.size() << " materials\n";
 
         return true;
     }
 
-    bool WorldFile::readEnvironment(Environment& env) {
+    bool WorldFile::readEnvironment(Environment& env, CommandBuffer& cmd, TransferBuffer& buf) {
 
         XmlElement* materials = getElement({"ENVIRONMENT"});
         if(!materials) return false;
@@ -127,7 +128,7 @@ namespace cell {
 
         if(source) {
 
-            env.load(_file_path + source->getContent());
+            env.load(_file_path + source->getContent(), cmd, buf);
         }
 
         return true;

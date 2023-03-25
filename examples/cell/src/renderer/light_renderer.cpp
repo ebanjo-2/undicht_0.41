@@ -10,6 +10,7 @@
 #include "IBL/ibl.h"
 #include "array"
 #include "renderer/vulkan/immediate_command.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -17,21 +18,17 @@ namespace cell {
     using namespace tools;
     using namespace vulkan;
 
-    void LightRenderer::init(const undicht::vulkan::LogicalDevice& gpu, const undicht::vulkan::DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
+    void LightRenderer::init(const LogicalDevice& gpu, CommandBuffer& load_cmd, TransferBuffer& load_buf, const DescriptorSetLayout& global_descriptor_layout, VkExtent2D viewport, const undicht::vulkan::RenderPass& render_pass, uint32_t subpass, uint32_t num_frames) {
         
         // init the screen quad
         _screen_quad.init(gpu);
-        {
-            ImmediateCommand cmd(gpu);
-            _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, cmd);
-        }
-
+        _screen_quad.allocateVertexBuffer(SCREEN_QUAD_VERTICES.size() * sizeof(float));
+        _screen_quad.setVertexData(SCREEN_QUAD_VERTICES.data(), SCREEN_QUAD_VERTICES.size() * sizeof(float), 0, load_cmd, load_buf);
+            
         // init the sky box
         _sky_box.init(gpu);
-        {
-            ImmediateCommand cmd(gpu);
-            _sky_box.setVertexData(SKY_BOX_VERTICES.data(), SKY_BOX_VERTICES.size() * sizeof(float), 0, cmd);
-        }
+        _sky_box.allocateVertexBuffer(SKY_BOX_VERTICES.size() * sizeof(float));
+        _sky_box.setVertexData(SKY_BOX_VERTICES.data(), SKY_BOX_VERTICES.size() * sizeof(float), 0, load_cmd, load_buf);
 
         // descriptor layout for renderer local descriptors
         _local_descriptor_layout.setBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER); // local uniform buffer
@@ -107,11 +104,6 @@ namespace cell {
         _brdf_map_sampler.setRepeatMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
         _brdf_map_sampler.init(gpu.getDevice());
 
-        // create a temporary transfer command buffer
-        vulkan::CommandBuffer transfer_cmd;
-        transfer_cmd.init(gpu.getDevice(), gpu.getGraphicsCmdPool());
-        transfer_cmd.beginCommandBuffer(true);
-
         // create texture with random offsets for shadow sampling
         int num_filter_samples = _shadow_sampler_filter_size * _shadow_sampler_filter_size;
         std::vector<float> shadow_sampler_offsets;
@@ -119,15 +111,9 @@ namespace cell {
         _shadow_sampler_offsets.setExtent(num_filter_samples / 2, _shadow_sampler_window_size, _shadow_sampler_window_size);
         _shadow_sampler_offsets.setFormat(translate(UND_VEC4F));
         _shadow_sampler_offsets.init(gpu);
-        _shadow_sampler_offsets.setData(transfer_cmd, (const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
+        _shadow_sampler_offsets.setData(load_cmd, load_buf, (const char*)shadow_sampler_offsets.data(), shadow_sampler_offsets.size() * sizeof(float));
 
-        _brdf_map.init(gpu, transfer_cmd);
-
-        // destroy temporary cmd buffer
-        transfer_cmd.endCommandBuffer();
-        gpu.submitOnGraphicsQueue(transfer_cmd.getCommandBuffer());
-        gpu.waitGraphicsQueueIdle();
-        transfer_cmd.cleanUp();
+        _brdf_map.init(gpu, load_cmd, load_buf);
 
         // local uniform buffer
         // tile map tile size

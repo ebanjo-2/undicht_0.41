@@ -13,7 +13,7 @@ namespace cell {
       
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& device);
+        void init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
 
         uint32_t getPointLightModelVertexCount() const;
     };

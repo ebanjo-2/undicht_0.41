@@ -6,6 +6,7 @@
 #include "world/lights/light.h"
 #include "world/cells/cell.h"
 #include "renderer/vulkan/immediate_command.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -32,23 +33,24 @@ namespace cell {
     //////////////////////////////// setting the base model //////////////////////////////////
 
     template<typename T>
-    void ChunkBuffer<T>::setBaseModel(const std::vector<float>& vertices) {
+    void ChunkBuffer<T>::setBaseModel(const std::vector<float>& vertices, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
+        
+        _buffer.allocateVertexBuffer(vertices.size() * sizeof(float));
+        _buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0, load_cmd, load_buf);
 
-        undicht::vulkan::ImmediateCommand cmd(_device_handle);
-        _buffer.setVertexData(vertices.data(), vertices.size() * sizeof(float), 0, cmd);
     }
 
     template<typename T>
-    void ChunkBuffer<T>::setBaseModel(const char* vertices, uint32_t byte_size) {
-
-        undicht::vulkan::ImmediateCommand cmd(_device_handle);
-        _buffer.setVertexData(vertices, byte_size, 0, cmd);
+    void ChunkBuffer<T>::setBaseModel(const char* vertices, uint32_t byte_size, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
+        
+        _buffer.allocateVertexBuffer(byte_size);
+        _buffer.setVertexData(vertices, byte_size, 0, load_cmd, load_buf);
     }
 
     //////////////////////////////// storing data in the buffer ///////////////////////////////
 
     template<typename T>
-    void ChunkBuffer<T>::addChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
+    void ChunkBuffer<T>::addChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
         /*BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry != nullptr) {
@@ -65,10 +67,7 @@ namespace cell {
         BufferEntry free_memory = findFreeMemory(chunk_buffer_size);
 
         // storing the data
-        {
-            undicht::vulkan::ImmediateCommand cmd(_device_handle);
-            _buffer.setInstanceData(chunk_buffer.data(), chunk_buffer.size(), free_memory.offset, cmd);
-        }
+        _buffer.setInstanceData(chunk_buffer.data(), chunk_buffer.size(), free_memory.offset, load_cmd, load_buf);
 
         // storing the buffer entry
         free_memory._chunk_pos = chunk_pos;
@@ -78,18 +77,18 @@ namespace cell {
     }
 
     template<typename T>
-    void ChunkBuffer<T>::updateChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos) {
+    void ChunkBuffer<T>::updateChunk(const Chunk<T> &c, const glm::ivec3& chunk_pos, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
         
         BufferEntry* entry = findBufferEntry(chunk_pos);
         if(entry == nullptr) {
-            addChunk(c, chunk_pos);
+            addChunk(c, chunk_pos, load_cmd, load_buf);
             return;
         }
 
         // there are definitly better solutions
         // removing and readding should "update" the chunk
         freeChunk(c, chunk_pos);
-        addChunk(c, chunk_pos);
+        addChunk(c, chunk_pos, load_cmd, load_buf);
 
     }
 
@@ -104,6 +103,19 @@ namespace cell {
 
         // will remove the entry, because its byte_size is 0
         sortBufferEntries();
+    }
+
+    template<typename T>
+    void ChunkBuffer<T>::allocate(uint32_t byte_size) {
+
+        _buffer.allocateInstanceBuffer(byte_size, true);
+    }
+
+    template<typename T>
+    uint32_t ChunkBuffer<T>::getAllocatedSize() {
+        /// @return the size of allocated memory for chunks primitives
+
+        return _buffer.getInstanceBuffer().getAllocatedSize();
     }
 
     /////////////////////////////// accessing the vertex buffer ///////////////////////////////

@@ -52,6 +52,7 @@ set(GRAPHICS_CORE_SOURCES
     
     src/core/vulkan/sampler.h
     src/core/vulkan/sampler.cpp
+    
 )
 
 set(GRAPHICS_WINDOW_SOURCES
@@ -87,6 +88,9 @@ set(GRAPHICS_RENDERER_SOURCES
 	  
 	  src/renderer/vulkan/immediate_command.h
 	  src/renderer/vulkan/immediate_command.cpp
+	  
+	  src/renderer/vulkan/transfer_buffer.h
+	  src/renderer/vulkan/transfer_buffer.cpp
 )
 
 set(GRAPHICS_USER_INTERFACE_SOURCES

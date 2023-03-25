@@ -7,6 +7,7 @@
 #include "vector"
 #include "images/image_file.h"
 #include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -37,8 +38,8 @@ namespace cell {
         /// @brief adds/updates the material on the material atlas
         /// @param mat the material to update / add
         /// @return the id with which the material is associated and with which it can be accessed in the shader
-        uint32_t setMaterial(const Material& mat);
-        void setMaterial(const Material& mat, uint32_t fixed_id);
+        uint32_t setMaterial(const Material& mat, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
+        void setMaterial(const Material& mat, uint32_t fixed_id, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
 
         const Material* getMaterial(const std::string& mat_name) const; // nullptr if the material wasnt found
         const Material* getMaterial(uint32_t id) const; // nullptr if the material wasnt found

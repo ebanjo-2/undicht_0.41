@@ -17,6 +17,9 @@ namespace undicht {
         // init draw command
         _draw_command.init(device.getDevice(), device.getGraphicsCmdPool());
         _transfer_command.init(device.getDevice(), device.getGraphicsCmdPool());
+
+        // init transfer buffer
+        _transfer_buffer.init(device);
     }
 
     void Frame::cleanUp() {
@@ -24,6 +27,9 @@ namespace undicht {
         // destroy draw command
         _draw_command.cleanUp();
         _transfer_command.cleanUp();
+
+        // destroy transfer buffer
+        _transfer_buffer.cleanUp();
 
         // destroy sync objects
         _render_finished_fence.cleanUp();
@@ -44,14 +50,21 @@ namespace undicht {
         _transfer_command.resetCommandBuffer();
         _transfer_command.beginCommandBuffer(true);
 
+        _transfer_buffer.clearStagedTransfers();
+
+        _frame_in_preparation = true;
     }
 
     void Frame::endFramePreparation() {
         // submit the transfer command buffer
 
-        // end transfer command
-        _transfer_command.endCommandBuffer();
-        _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), {}, {}, {_transfer_finished_semaphore.getAsSignal()});
+        if(_frame_in_preparation) {
+            // end transfer command
+            _transfer_command.endCommandBuffer();
+            _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), {}, {}, {_transfer_finished_semaphore.getAsSignal()});
+        }
+
+        _frame_in_preparation = false;
     }
 
     void Frame::beginFrame() {
@@ -83,6 +96,11 @@ namespace undicht {
 
     }
 
+    vulkan::TransferBuffer& Frame::getTransferBuf() const {
+
+        return (vulkan::TransferBuffer&)_transfer_buffer;
+    }
+
     vulkan::CommandBuffer& Frame::getTransferCmd() const {
 
         return (vulkan::CommandBuffer&)_transfer_command;
@@ -112,6 +130,5 @@ namespace undicht {
 
         return (vulkan::Semaphore&)_transfer_finished_semaphore;
     }
-
 
 } // undicht

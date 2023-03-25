@@ -6,6 +6,8 @@
 #include "core/vulkan/command_buffer.h"
 #include "core/vulkan/buffer.h"
 
+#include "renderer/vulkan/transfer_buffer.h"
+
 namespace undicht {
 
     namespace vulkan {
@@ -31,8 +33,6 @@ namespace undicht {
             VkFormat _format = VK_FORMAT_R8G8B8A8_SRGB;
             VkImageLayout _layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            Buffer _transfer_buffer;
-
         public:
 
             // set the settings before initializing the texture
@@ -53,7 +53,7 @@ namespace undicht {
             /** copies the data to a transfer buffer (cpu visible), then adds a copy command to the cmd buffer
              * so dont issue multiple setData commands before executing the command buffer, because the data in the transfer buffer 
              * will get overwritten and the first copy wont result in what you expect */
-            void setData(CommandBuffer& cmd, const char* data, uint32_t byte_size, uint32_t layer = 0, uint32_t mip_level = 0, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
+            void setData(CommandBuffer& cmd, TransferBuffer& transfer_buffer, const char* data, uint32_t byte_size, uint32_t layer = 0, uint32_t mip_level = 0, VkExtent3D data_image_extent = {}, VkOffset3D offset_in_image = {});
 
         protected:
             // internal functions

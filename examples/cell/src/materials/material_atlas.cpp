@@ -37,7 +37,7 @@ namespace cell {
         _tile_map.cleanUp();
     }
 
-    uint32_t MaterialAtlas::setMaterial(const Material& mat) {
+    uint32_t MaterialAtlas::setMaterial(const Material& mat, CommandBuffer& cmd, TransferBuffer& buf) {
         /// @brief adds/updates the material on the material atlas
         /// @param mat the material to update / add
         /// @return the id with which the material is associated and with which it can be accessed in the shader
@@ -45,7 +45,7 @@ namespace cell {
         // looking if the material is already part of the atlas
         int id = getMaterialID(mat.getName());
         if(id != -1)
-            setMaterial(mat, id); // update the material
+            setMaterial(mat, id, cmd, buf); // update the material
 
         // adding the material to the atlas
         for(int i = 0; i < _materials.size(); i++) {
@@ -55,12 +55,12 @@ namespace cell {
             }
         }
 
-        setMaterial(mat, id);
+        setMaterial(mat, id, cmd, buf);
 
         return id;
     }
 
-    void MaterialAtlas::setMaterial(const Material& mat, uint32_t fixed_id) {
+    void MaterialAtlas::setMaterial(const Material& mat, uint32_t fixed_id, CommandBuffer& cmd, TransferBuffer& buf) {
 
         if(fixed_id >= _materials.size())
             return;
@@ -76,14 +76,8 @@ namespace cell {
         int pos_x = (fixed_id % TILE_MAP_COLS) * TILE_WIDTH;
         int pos_y = (fixed_id / TILE_MAP_COLS) * TILE_HEIGHT;
 
-        {
-            ImmediateCommand cmd(_device_handle);
-            _tile_map.setData(cmd, diffuse_data.getPixelData(), diffuse_data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
-        } // cmd will submit itself
-        {
-            ImmediateCommand cmd(_device_handle);
-            _tile_map.setData(cmd, specular_data.getPixelData(), specular_data.getPixelDataSize(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
-        } // cmd will submit itself
+        _tile_map.setData(cmd, buf, diffuse_data.getPixelData(), diffuse_data.getPixelDataSize(), 0, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
+        _tile_map.setData(cmd, buf, specular_data.getPixelData(), specular_data.getPixelDataSize(), 1, 0, {TILE_WIDTH, TILE_HEIGHT, 1}, {pos_x, pos_y, 0});
 
     }
 

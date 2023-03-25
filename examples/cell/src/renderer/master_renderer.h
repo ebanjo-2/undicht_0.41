@@ -8,6 +8,7 @@
 #include "core/vulkan/logical_device.h"
 #include "core/vulkan/swap_chain.h"
 #include "core/vulkan/renderpass.h"
+#include "core/vulkan/command_buffer.h"
 
 #include "renderer/world_renderer.h"
 #include "renderer/light_renderer.h"
@@ -15,6 +16,7 @@
 #include "renderer/shadow_renderer.h"
 #include "renderer/vulkan/texture.h"
 #include "renderer/vulkan/render_target.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 #include "world/lights/light.h"
 #include "world/lights/light_buffer.h"
@@ -68,7 +70,7 @@ namespace cell {
 
       public:
 
-        void init(const VkInstance& instance, undicht::graphics::Window& window, const undicht::vulkan::LogicalDevice& device, bool enable_imgui = true);
+        void init(const VkInstance& instance, undicht::graphics::Window& window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, bool enable_imgui = true);
         void cleanUp();
 
         /// @brief to be called before rendering something

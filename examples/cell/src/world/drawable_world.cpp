@@ -2,16 +2,21 @@
 #include "debug.h"
 #include "glm/gtx/string_cast.hpp"
 #include "algorithm"
+#include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
-    void DrawableWorld::init(const undicht::vulkan::LogicalDevice& device) {
+    void DrawableWorld::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
         
         _sun.setType(Light::Type::Directional);
-        _cell_buffer.init(device);
-        _light_buffer.init(device);
+        _cell_buffer.init(device, load_cmd, load_buf);
+        _light_buffer.init(device, load_cmd, load_buf);
         _materials.init(device);
         _environment.init(device);
+
+        _cell_buffer.allocate(10000000 * CELL_LAYOUT.getTotalSize()); // 10.000.000 = 10 million cells
+        _light_buffer.allocate(1000 * POINT_LIGHT_LAYOUT.getTotalSize());
     }
 
     void DrawableWorld::cleanUp() {
@@ -55,7 +60,7 @@ namespace cell {
         _sun.setColor(color);
     }
 
-    void DrawableWorld::updateWorldBuffer() {
+    void DrawableWorld::updateWorldBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
         // make sure each chunk is correctly stored in the world buffer
         for(int i = 0; i < _cell_world.getLoadedChunks().size(); i++) {
@@ -63,12 +68,12 @@ namespace cell {
             const CellChunk* chunk = (CellChunk*)_cell_world.getLoadedChunks().at(i);
             const glm::ivec3& chunk_pos = _cell_world.getChunkPositions().at(i);
 
-            _cell_buffer.updateChunk(*chunk, chunk_pos);
+            _cell_buffer.updateChunk(*chunk, chunk_pos, load_cmd, load_buf);
         }
 
     }
 
-    void DrawableWorld::updateLightBuffer() {
+    void DrawableWorld::updateLightBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
         // make sure each light chunk is correctly stored in the light buffer
         for(int i = 0; i < _light_world.getLoadedChunks().size(); i++) {
@@ -76,7 +81,7 @@ namespace cell {
             const LightChunk* chunk = (LightChunk*)_light_world.getLoadedChunks().at(i);
             const glm::ivec3& chunk_pos = _light_world.getChunkPositions().at(i);
 
-            _light_buffer.updateChunk(*chunk, chunk_pos);
+            _light_buffer.updateChunk(*chunk, chunk_pos, load_cmd, load_buf);
         }
 
     }

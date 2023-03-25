@@ -4,6 +4,7 @@
 #include "core/vulkan/buffer.h"
 #include "core/vulkan/logical_device.h"
 #include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace undicht {
 
@@ -18,22 +19,24 @@ namespace undicht {
             Buffer _vertex_buffer;
             Buffer _index_buffer;
             Buffer _instance_buffer;
-            Buffer _transfer_buffer;
-
-            // CommandBuffer _copy_cmd;
-
 
         public:
 
             void init(const LogicalDevice& device);
             void cleanUp();
 
-            // writing to the individual buffers
-            // if there isnt enough memory already allocated for the buffer, new memory will be allocated 
-            // and the data that was stored in the buffer will be lost
-            void setVertexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
-            void setIndexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
-            void setInstanceData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd);
+            /// @brief allocate memory for the buffer
+            /// @param copy_old_data copies the data from the old buffer to the new one
+            /// will wait for the gpu to finish the copying (because the old buffer will be deleted afterwards)
+            void allocateVertexBuffer(uint32_t byte_size, bool copy_old_data = false);
+            void allocateIndexBuffer(uint32_t byte_size, bool copy_old_data = false);
+            void allocateInstanceBuffer(uint32_t byte_size, bool copy_old_data = false);
+
+            /// @brief writing to the individual buffers
+            /// @return false, if there isnt enough memory already allocated for the buffer
+            bool setVertexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd, TransferBuffer& transfer_buffer);
+            bool setIndexData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd, TransferBuffer& transfer_buffer);
+            bool setInstanceData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd, TransferBuffer& transfer_buffer);
 
             const Buffer& getVertexBuffer() const;
             const Buffer& getIndexBuffer() const;
@@ -42,7 +45,14 @@ namespace undicht {
         protected:
             // internal functions
 
-            void transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst, CommandBuffer& cmd);
+            bool storeData(const void* data, uint32_t byte_size, uint32_t offset, CommandBuffer& cmd, Buffer& dst, TransferBuffer& transfer_buffer);
+            
+            /// @brief allocate memory for the buffer
+            /// @param copy_old_data copies the data from the old buffer to the new one
+            /// will wait for the gpu to finish the copying (because the old buffer will be deleted afterwards)
+            void allocateBufferMemory(Buffer& dst, uint32_t byte_size, bool copy_old_data);
+
+            //void transferData(const void* data, uint32_t byte_size, uint32_t offset, Buffer& dst, CommandBuffer& cmd);
             void copyData(Buffer& src, uint32_t offset_src, uint32_t byte_size, Buffer& dst, uint32_t offset_dst, CommandBuffer& cmd);
 
         };

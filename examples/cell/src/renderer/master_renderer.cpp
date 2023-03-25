@@ -13,7 +13,7 @@ namespace cell {
     const int MAX_FRAMES_IN_FLIGHT = 2;
     const bool ENABLE_VSYNC = true;
 
-    void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, bool enable_imgui) {
+    void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, bool enable_imgui) {
         
         FrameManager::init(device, window, ENABLE_VSYNC, MAX_FRAMES_IN_FLIGHT);
 
@@ -43,8 +43,8 @@ namespace cell {
 
         _shadow_renderer.init(device, {_SHADOW_MAP_WIDTH, _SHADOW_MAP_HEIGHT}, _shadow_map_target.getRenderPass(), 0, MAX_FRAMES_IN_FLIGHT);
         _world_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 0, MAX_FRAMES_IN_FLIGHT);
-        _light_renderer.init(device, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1, MAX_FRAMES_IN_FLIGHT);
-        _final_renderer.init(device, _viewport, _main_render_target.getRenderPass(), 2, MAX_FRAMES_IN_FLIGHT);
+        _light_renderer.init(device, load_cmd, load_buf, _global_descriptor_layout, _viewport, _main_render_target.getRenderPass(), 1, MAX_FRAMES_IN_FLIGHT);
+        _final_renderer.init(device, load_cmd, load_buf, _viewport, _main_render_target.getRenderPass(), 2, MAX_FRAMES_IN_FLIGHT);
 
         _enable_imgui = enable_imgui;
 
@@ -75,7 +75,7 @@ namespace cell {
 
     bool MasterRenderer::beginFrame() {
 
-        if(!FrameManager::beginFrame())
+        if(!FrameManager::beginFrame(true))
             return false;
 
         // bind global ubo in case no shadow pass is started, in which case the ubo will be rebound

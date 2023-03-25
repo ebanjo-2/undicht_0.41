@@ -6,6 +6,9 @@ namespace undicht {
 
         void CommandBuffer::init(const VkDevice& device, const VkCommandPool& command_pool) {
 
+            _device_handle = device;
+            _cmd_pool_handle = command_pool;
+
             // allocating the command buffer from the command pool
             VkCommandBufferAllocateInfo allocate_info = createCommandBufferAllocateInfo(command_pool, 1);
             vkAllocateCommandBuffers(device, &allocate_info, &_cmd_buffer);
@@ -15,6 +18,7 @@ namespace undicht {
         void CommandBuffer::cleanUp() {
 
             // the command buffer gets destroyed with the command pool
+            vkFreeCommandBuffers(_device_handle, _cmd_pool_handle, 1, &_cmd_buffer);
 
         }
 

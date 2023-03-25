@@ -7,6 +7,7 @@
 #include "array"
 #include "core/vulkan/formats.h"
 #include "renderer/vulkan/immediate_command.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 using namespace undicht;
 using namespace tools;
@@ -52,10 +53,14 @@ void HelloWorldApp::init() {
     _camera.setAxesRotation({0,0,90});
 
     // load model
+    TransferBuffer transfer_buffer;
+    transfer_buffer.init(_gpu);
+    transfer_buffer.allocateInternalBuffer(200000000);
     {
         ImmediateCommand transfer_cmd(_gpu); // just a single command to load the entire models textures
-        loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model, transfer_cmd);
+        loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model, transfer_cmd, transfer_buffer);
     }
+    transfer_buffer.cleanUp();
 
 }
 
@@ -138,7 +143,7 @@ void HelloWorldApp::onWindowResize() {
     _renderer.resizeViewport(getSwapChain().getExtent());
 }
 
-void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
+void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer) {
 
     // loading the data from the file
     std::vector<undicht::tools::MeshData> meshes;
@@ -166,7 +171,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 
         undicht::vulkan::Texture t;
         t.setMipMaps(true);
-        loadTexture(data, t, transfer_cmd);
+        loadTexture(data, t, transfer_cmd, transfer_buffer);
         _model._textures.push_back(t);
 
     }
@@ -175,7 +180,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
     for(undicht::tools::MeshData& data : meshes) {
 
         undicht::vulkan::VertexBuffer t;
-        loadMesh(data, t);
+        loadMesh(data, t, transfer_cmd, transfer_buffer);
         _model._vertex_buffers.push_back(t);
         _model._texture_ids.push_back(data.color_texture);
         _model._vertex_count.push_back(data.vertices.size() / 8);
@@ -184,15 +189,15 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 }
 
 
-void HelloWorldApp::loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
+void HelloWorldApp::loadTexture(const std::string& file_name, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer) {
 
     undicht::tools::ImageData<char> data;
     undicht::tools::ImageFile(file_name, data);
 
-    loadTexture(data, loadTo, transfer_cmd);
+    loadTexture(data, loadTo, transfer_cmd, transfer_buffer);
 }
 
-void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd) {
+void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, undicht::vulkan::Texture& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer) {
 
     if(data.getWidth() && data.getHeight()) {
         loadTo.setExtent(data.getWidth(), data.getHeight(), 1);
@@ -209,26 +214,26 @@ void HelloWorldApp::loadTexture(const undicht::tools::ImageData<char>& data, und
     loadTo.init(_gpu);
 
     if(data.getPixelDataSize()) {
-        loadTo.setData(transfer_cmd, data.getPixelData(), data.getPixelDataSize());
+        loadTo.setData(transfer_cmd, transfer_buffer, data.getPixelData(), data.getPixelDataSize());
     } else {
         std::array<char, 4> pink = {0, 0, 0, 0}; // no texture color
-        loadTo.setData(transfer_cmd, pink.data(), pink.size());
+        loadTo.setData(transfer_cmd, transfer_buffer, pink.data(), pink.size());
     }
 
 }
 
-void HelloWorldApp::loadMesh(const undicht::tools::MeshData& data, undicht::vulkan::VertexBuffer& loadTo) {
+void HelloWorldApp::loadMesh(const undicht::tools::MeshData& data, undicht::vulkan::VertexBuffer& loadTo, undicht::vulkan::CommandBuffer& transfer_cmd, undicht::vulkan::TransferBuffer& transfer_buffer) {
 
     loadTo.init(_gpu);
 
     if(data.vertices.size()) {
-        ImmediateCommand cmd(_gpu);
-        loadTo.setVertexData(data.vertices.data(), data.vertices.size() * sizeof(float), 0, cmd);
+        loadTo.allocateVertexBuffer(data.vertices.size() * sizeof(float));
+        loadTo.setVertexData(data.vertices.data(), data.vertices.size() * sizeof(float), 0, transfer_cmd, transfer_buffer);
     }
-    
+
     if(data.indices.size()) {
-        ImmediateCommand cmd(_gpu);
-        loadTo.setIndexData(data.indices.data(), data.indices.size() * sizeof(int), 0, cmd);
+        loadTo.allocateIndexBuffer(data.indices.size() * sizeof(int));
+        loadTo.setIndexData(data.indices.data(), data.indices.size() * sizeof(int), 0, transfer_cmd, transfer_buffer);
     }
 
 }

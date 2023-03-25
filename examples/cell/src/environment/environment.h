@@ -6,6 +6,7 @@
 #include "string"
 #include "images/cube_map_data.h"
 #include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -31,10 +32,10 @@ namespace cell {
         void cleanUp();
 
         /// loads the environment map from the hdr spherical map
-        void load(const std::string& file_name);
-        void load(const undicht::tools::CubeMapData<float>& env_map);
+        void load(const std::string& file_name, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
+        void load(const undicht::tools::CubeMapData<float>& env_map, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
 
-        void calcLightingMaps(const undicht::tools::CubeMapData<float>& env_map);
+        void calcLightingMaps(const undicht::tools::CubeMapData<float>& env_map, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
 
         const undicht::vulkan::Texture& getSkyBox() const;
         const undicht::vulkan::Texture& getIrradiance() const;

@@ -55,7 +55,7 @@ namespace cell {
                     glm::vec3 dir = dst.calcDir(x, y, (CubeMapData<float>::Face)face);
 
                     glm::vec3 final_color;
-                    glm::vec3 sky_color = glm::vec3(0.6f, 0.6f, 1.0f) * _sky_brightness;
+                    glm::vec3 sky_color = glm::vec3(0.2f, 0.2f, 0.6f) * _sky_brightness;
                     glm::vec3 cloud_color = glm::vec3(1.0f, 1.0f, 1.0f) * _cloud_brightness;
                     glm::vec3 fog_color = glm::vec3(0.7f, 0.7f, 0.7f);
 

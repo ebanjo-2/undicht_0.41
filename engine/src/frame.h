@@ -4,6 +4,9 @@
 #include "core/vulkan/logical_device.h"
 #include "core/vulkan/semaphore.h"
 #include "core/vulkan/fence.h"
+#include "core/vulkan/command_buffer.h"
+
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace undicht {
 
@@ -22,6 +25,10 @@ namespace undicht {
         vulkan::CommandBuffer _transfer_command;
         vulkan::CommandBuffer _draw_command;
 
+        vulkan::TransferBuffer _transfer_buffer;
+
+        bool _frame_in_preparation = false;
+
       public:
 
         void init(const undicht::vulkan::LogicalDevice& device);
@@ -34,6 +41,7 @@ namespace undicht {
         void beginFrame(); // starts recording of the draw command buffer 
         void endFrame(); // ends and submits the draw command buffer (will wait for the transfer buffer to finish)
 
+        vulkan::TransferBuffer& getTransferBuf() const;
         vulkan::CommandBuffer& getTransferCmd() const;
         vulkan::CommandBuffer& getDrawCmd() const;
         vulkan::Fence& getRenderFinishedFence() const;

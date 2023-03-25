@@ -4,6 +4,9 @@
 #include "environment/environment.h"
 #include "images/cube_map_data.h"
 
+#include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
+
 namespace cell {
 
     class DebugMenu {
@@ -25,7 +28,7 @@ namespace cell {
 
         bool isOpen() const;
 
-        void display(double fps, Environment& env);
+        void display(double fps, Environment& env, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
 
     };
 

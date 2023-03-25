@@ -38,13 +38,19 @@ namespace cell {
         virtual void cleanUp();
         
         // setting the base model
-        virtual void setBaseModel(const std::vector<float>& vertices);
-        virtual void setBaseModel(const char* vertices, uint32_t byte_size);
+        virtual void setBaseModel(const std::vector<float>& vertices, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+        virtual void setBaseModel(const char* vertices, uint32_t byte_size, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
 
         // storing data in the buffer
-        virtual void addChunk(const Chunk<T>& c, const glm::ivec3& chunk_pos);
-        virtual void updateChunk(const Chunk<T>& c, const glm::ivec3& chunk_pos);
+        virtual void addChunk(const Chunk<T>& c, const glm::ivec3& chunk_pos, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+        virtual void updateChunk(const Chunk<T>& c, const glm::ivec3& chunk_pos, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
         virtual void freeChunk(const Chunk<T>& c, const glm::ivec3& chunk_pos);
+
+        /// @brief allocates the specified size for storing chunk primitives
+        void allocate(uint32_t byte_size);
+
+        /// @return the size of allocated memory for chunks primitives        
+        uint32_t getAllocatedSize();
 
         // accessing the vertex buffer
         virtual const undicht::vulkan::VertexBuffer& getBuffer() const;

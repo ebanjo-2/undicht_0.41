@@ -44,17 +44,7 @@ namespace undicht {
         return _swap_image_id;
     }
 
-    void FrameManager::beginFramePreparation() {
-
-        getCurrentFrame().beginFramePreparation();
-    }
-
-    void FrameManager::endFramePreparation() {
-
-        getCurrentFrame().endFramePreparation();
-    }
-
-    bool FrameManager::beginFrame() {
+    bool FrameManager::beginFrame(bool begin_transfer_cmd) {
         /// @brief begin the frame (starts the draw command buffer)
         /// @return true, if the frame was started successfully, false if not (maybe the swap chain is out of date?)
 
@@ -64,11 +54,16 @@ namespace undicht {
 
         getCurrentFrame().beginFrame();
 
+        if(begin_transfer_cmd) 
+            getCurrentFrame().beginFramePreparation();
+
         return true;
     }
 
     void FrameManager::endFrame() {
         /// @brief submits the draw command buffer and the current swap image
+
+        getCurrentFrame().endFramePreparation();
 
         // submits the frames draw command
         getCurrentFrame().endFrame();
@@ -97,6 +92,11 @@ namespace undicht {
     vulkan::CommandBuffer& FrameManager::getTransferCmd() const {
 
         return getCurrentFrame().getTransferCmd();
+    }
+
+    vulkan::TransferBuffer& FrameManager::getTransferBuf() const {
+
+        return getCurrentFrame().getTransferBuf();
     }
 
     vulkan::CommandBuffer& FrameManager::getDrawCmd() const {

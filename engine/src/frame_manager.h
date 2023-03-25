@@ -5,6 +5,8 @@
 #include "vector"
 #include "core/vulkan/swap_chain.h"
 #include "window/glfw/window.h"
+#include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace undicht {
 
@@ -26,12 +28,9 @@ namespace undicht {
         void init(const vulkan::LogicalDevice& device, graphics::Window& window, bool vsync = true, uint32_t frames_in_flight = 1);
         void cleanUp();
 
-        void beginFramePreparation();
-        void endFramePreparation();
-
         /// @brief begin the frame (starts the draw command buffer)
         /// @return true, if the frame was started successfully, false if not (maybe the swap chain is out of date?)
-        bool beginFrame();
+        bool beginFrame(bool begin_transfer_cmd = false);
 
         /// @brief submits the draw command buffer and the current swap image
         void endFrame();
@@ -41,6 +40,7 @@ namespace undicht {
         Frame& getCurrentFrame() const;
         Frame& getPreviousFrame() const;
         vulkan::CommandBuffer& getTransferCmd() const;
+        vulkan::TransferBuffer& getTransferBuf() const;
         vulkan::CommandBuffer& getDrawCmd() const;
         vulkan::SwapChain& getSwapChain() const;
 

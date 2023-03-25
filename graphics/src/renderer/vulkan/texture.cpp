@@ -49,18 +49,11 @@ namespace undicht {
             _image.init(device.getDevice(), _is_cube_map);
             _image.allocate(device, _width, _height, _depth, _layers, _mip_levels, _format);
 
-            // init the transfer buffer
-            _transfer_buffer.init(device.getDevice(), {device.getTransferQueueFamily()}, true, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-
         }
 
         void Texture::cleanUp() {
 
-            /*_copy_cmd.cleanUp();
-            _layout_cmd.cleanUp();*/
-            _transfer_buffer.cleanUp();
             _image.cleanUp();
-
         }
 
         const Image& Texture::getImage() const {
@@ -74,7 +67,7 @@ namespace undicht {
         }
 
 
-        void Texture::setData(CommandBuffer& cmd, const char* data, uint32_t byte_size, uint32_t layer, uint32_t mip_level, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
+        void Texture::setData(CommandBuffer& cmd, TransferBuffer& transfer_buffer, const char* data, uint32_t byte_size, uint32_t layer, uint32_t mip_level, VkExtent3D data_image_extent, VkOffset3D offset_in_image) {
 
             if(data_image_extent.width == 0 && data_image_extent.height == 0){
                 data_image_extent = _image.getExtent();
@@ -86,12 +79,14 @@ namespace undicht {
             transitionToLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
             // store the data in the transfer buffer
-            _transfer_buffer.allocate(*_device_handle, byte_size);
-            _transfer_buffer.setData(byte_size, 0, data);
+            //_transfer_buffer.allocate(*_device_handle, byte_size);
+            //_transfer_buffer.setData(byte_size, 0, data);
+            VkBuffer transfer_src;
+            VkBufferImageCopy copy_info = transfer_buffer.stageTransfer(data, byte_size, transfer_src, data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer, mip_level);
 
             // copy data from transfer buffer to texture
-            VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer, mip_level);
-            cmd.copy(_transfer_buffer.getBuffer(), _image.getImage(), _layout, copy_info);
+            // VkBufferImageCopy copy_info = Image::createBufferImageCopy(data_image_extent, offset_in_image, VK_IMAGE_ASPECT_COLOR_BIT, layer, mip_level);
+            cmd.copy(transfer_src, _image.getImage(), _layout, copy_info);
 
             if(_enable_mip_maps && _auto_gen_mip_maps) {
                 // generate MipMaps (and transition to VK_ACCESS_SHADER_READ_BIT)

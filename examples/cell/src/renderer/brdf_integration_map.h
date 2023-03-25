@@ -3,6 +3,7 @@
 
 #include "renderer/vulkan/texture.h"
 #include "core/vulkan/command_buffer.h"
+#include "renderer/vulkan/transfer_buffer.h"
 
 namespace cell {
 
@@ -15,7 +16,7 @@ namespace cell {
 
       public:
 
-        void init(const undicht::vulkan::LogicalDevice& gpu, undicht::vulkan::CommandBuffer& cmd);
+        void init(const undicht::vulkan::LogicalDevice& gpu, undicht::vulkan::CommandBuffer& cmd, undicht::vulkan::TransferBuffer& buf);
         void cleanUp();
 
         const undicht::vulkan::Texture& getMap() const;

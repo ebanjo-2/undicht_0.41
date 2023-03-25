@@ -42,7 +42,7 @@ namespace cell {
         _specular_prefilter_map.cleanUp();
     }
 
-    void Environment::load(const std::string& file_name) {
+    void Environment::load(const std::string& file_name, CommandBuffer& cmd, TransferBuffer& buf) {
         /// loads the environment map from the hdr spherical map
         /// and calculates the lighting maps based on it
 
@@ -56,24 +56,23 @@ namespace cell {
         env_map.setExtent(_env_cube_map_size);
         env_map.setPixels(hdr_sphere);
 
-        load(env_map);
-        calcLightingMaps(env_map);
+        load(env_map, cmd, buf);
+        calcLightingMaps(env_map, cmd, buf);
     }
 
-    void Environment::load(const CubeMapData<float>& env_map) {
+    void Environment::load(const CubeMapData<float>& env_map, CommandBuffer& cmd, TransferBuffer& buf) {
 
         // store the faces in the cubemap
         for(int i = 0; i < 6; i++) {
             const ImageData<float>& face = env_map.getFace((CubeMapData<float>::Face)i);
-            ImmediateCommand cmd(_device_handle);
-            _env_cube_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
+            _env_cube_map.setData(cmd, buf, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
         }
 
         UND_LOG << "finished loading the skybox\n";
 
     }
 
-    void Environment::calcLightingMaps(const CubeMapData<float>& env_map) {
+    void Environment::calcLightingMaps(const CubeMapData<float>& env_map, CommandBuffer& cmd, TransferBuffer& buf) {
 
         // generate convoluted environment map (irradiance map)
         CubeMapData<float> irradiance_map;
@@ -82,8 +81,7 @@ namespace cell {
         // store the faces in the irradiance cubemap
         for(int i = 0; i < 6; i++) {
             const ImageData<float>& face = irradiance_map.getFace((CubeMapData<float>::Face)i);
-            ImmediateCommand cmd(_device_handle);
-            _irradiance_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
+            _irradiance_map.setData(cmd, buf, (const char*)face.getPixelData(), face.getPixelDataSize(), i);
         }
 
         UND_LOG << "finished calculating the diffuse lighting from the environment\n";
@@ -96,7 +94,7 @@ namespace cell {
             for(int i = 0; i < 6; i++) {
                 const ImageData<float>& face = prefilter_mip_maps.at(mip_level).getFace((CubeMapData<float>::Face)i);
                 ImmediateCommand cmd(_device_handle);
-                _specular_prefilter_map.setData(cmd, (const char*)face.getPixelData(), face.getPixelDataSize(), i, mip_level);
+                _specular_prefilter_map.setData(cmd, buf, (const char*)face.getPixelData(), face.getPixelDataSize(), i, mip_level);
             }
         }
 
