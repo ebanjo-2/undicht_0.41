@@ -1,6 +1,8 @@
 #include "image.h"
 #include "formats.h"
 
+#include "vma_global_allocator.h"
+
 namespace undicht {
 
     namespace vulkan {
@@ -10,7 +12,6 @@ namespace undicht {
             _device_handle = device;
 
             _is_cube_map = is_cube_map;
-            _mem_properties |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         }
 
@@ -33,8 +34,9 @@ namespace undicht {
         void Image::cleanUp() {
 
             if(_own_image) {
-                vkDestroyImage(_device_handle, _image, {});
-                vkFreeMemory(_device_handle, _memory, {});
+                vmaDestroyImage(vma::GlobalAllocator::get(), _image, _memory);
+                /*vkDestroyImage(_device_handle, _image, {});
+                vkFreeMemory(_device_handle, _memory, {});*/
             }
 
             vkDestroyImageView(_device_handle, _image_view, {});
@@ -69,34 +71,21 @@ namespace undicht {
             _mip_levels = mip_levels;
             
             // freeing previously allocated memory 
-            if(_image != VK_NULL_HANDLE) vkDestroyImage(_device_handle, _image, {});
             if(_image_view != VK_NULL_HANDLE) vkDestroyImageView(_device_handle, _image_view, {});
-            if(_memory != VK_NULL_HANDLE) vkFreeMemory(_device_handle, _memory, {});
+            if(_image != VK_NULL_HANDLE) vmaDestroyImage(vma::GlobalAllocator::get(), _image, _memory);//vkDestroyImage(_device_handle, _image, {});
 
             _own_image = true;
 
             // creating the image
             VkImageCreateFlags flags = _is_cube_map ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
-            VkImageCreateInfo info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
-            vkCreateImage(_device_handle, &info, {}, &_image);
+            VkImageCreateInfo image_info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
+            
+            VmaAllocationCreateInfo alloc_info{};
+            alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_info.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
-            // getting the drivers? requirements needed for the texture
-            VkMemoryRequirements mem_requirements;
-            vkGetImageMemoryRequirements(_device_handle, _image, &mem_requirements);
-
-            // declaring the memory type
-            VkMemoryType mem_type{};
-            mem_type.heapIndex = mem_requirements.memoryTypeBits;
-            mem_type.propertyFlags = _mem_properties;
-            uint32_t mem_type_index = device.getMemoryTypeIndex(mem_type);
-
-            // allocating the memory
-            VkMemoryAllocateInfo allocate_info = createMemoryAllocateInfo(mem_requirements.size, mem_type_index);
-            vkAllocateMemory(_device_handle, &allocate_info, {}, &_memory);
-
-            // binding the memory to the image
-            vkBindImageMemory(_device_handle, _image, _memory, 0);
-
+            vmaCreateImage(vma::GlobalAllocator::get(), &image_info, &alloc_info, &_image, &_memory, nullptr);
+            
             // creating the image view
             VkImageViewCreateInfo image_view_info = createImageViewCreateInfo(_image, _mip_levels, _layers, _extent, _is_cube_map, _format, chooseImageAspectFlags(_format));
             vkCreateImageView(_device_handle, &image_view_info, {}, &_image_view);

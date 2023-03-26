@@ -4,6 +4,8 @@
 #include "vulkan/vulkan.h"
 #include "logical_device.h"
 
+#include "vk_mem_alloc.h"
+
 namespace undicht {
 
     namespace vulkan {
@@ -15,8 +17,9 @@ namespace undicht {
             VkDevice _device_handle = VK_NULL_HANDLE;
 
             VkImage _image = VK_NULL_HANDLE;
-            VkDeviceMemory _memory = VK_NULL_HANDLE;
-            VkMemoryPropertyFlags _mem_properties{};
+            /*VkDeviceMemory _memory = VK_NULL_HANDLE;
+            VkMemoryPropertyFlags _mem_properties{};*/
+            VmaAllocation _memory;
             VkImageView _image_view = VK_NULL_HANDLE;
 
             VkFormat _format = VK_FORMAT_UNDEFINED;

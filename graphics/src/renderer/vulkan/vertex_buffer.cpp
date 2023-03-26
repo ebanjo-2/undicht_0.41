@@ -79,13 +79,13 @@ namespace undicht {
             /// @param copy_old_data copies the data from the old buffer to the new one
             /// will wait for the gpu to finish the copying (because the old buffer will be deleted afterwards)
 
-            if(copy_old_data && dst.getUsedSize()) {
+            if(copy_old_data && dst.getAllocatedSize()) {
                 Buffer new_buffer;
                 new_buffer.init(dst);
                 new_buffer.allocate(*_device_handle, byte_size);
                 {
                     ImmediateCommand cmd(*_device_handle);
-                    copyData(dst, 0, dst.getUsedSize(), new_buffer, 0, cmd);
+                    copyData(dst, 0, dst.getAllocatedSize(), new_buffer, 0, cmd);
                 } // cmd gets submitted
                 dst.cleanUp();
                 dst = new_buffer;
@@ -110,9 +110,6 @@ namespace undicht {
 
             // add the copy command to the cmd buffer
             cmd.copy(transfer_src, dst.getBuffer(), copy_info);
-
-            // update the used size
-            dst.setUsedSize(std::max(dst.getUsedSize(), byte_size + offset));
 
             return true;
         }  

@@ -4,6 +4,8 @@
 #include <cstring>
 #include "set"
 
+#include "vma_global_allocator.h"
+
 namespace undicht {
 
     namespace vulkan {
@@ -22,14 +24,8 @@ namespace undicht {
 
             // making sure that all queue ids are unique
             std::set<uint32_t> unique_queue_ids(queue_ids.begin(), queue_ids.end());
+            _queue_ids.clear();
             _queue_ids.insert(_queue_ids.begin(), unique_queue_ids.begin(), unique_queue_ids.end());
-
-            if(cpu_visible) {
-                _mem_properties |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-                _mem_properties |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-            } else {
-                _mem_properties |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-            }
 
         }
 
@@ -40,11 +36,9 @@ namespace undicht {
         }
 
         void Buffer::cleanUp() {
-            
-            vkFreeMemory(_device_handle, _memory, {});
-            vkDestroyBuffer(_device_handle, _buffer, {});
 
-            _allocated_mem_size = 0;
+            vmaDestroyBuffer(vma::GlobalAllocator::get(), _buffer, _vma_memory);
+            _vma_memory_info = {};
         }
 
         const VkBuffer& Buffer::getBuffer() const {
@@ -52,84 +46,59 @@ namespace undicht {
             return _buffer;
         }
 
-
         void Buffer::setData(uint32_t byte_size, uint32_t offset, const void* data) {
             /** @brief writes the specified data to the buffer
              * make sure that there is enough memory allocated before trying to set the data
              * will only work if the buffer is initialized as cpu visible */
 
-            if(byte_size + offset > _allocated_mem_size) {
+            if(byte_size + offset > getAllocatedSize()) {
                 UND_ERROR << "failed to store data in buffer: not enough memory allocated\n";
+                UND_LOG << "Note: allocated memory: " << getAllocatedSize() << " byte_size + offset: " << byte_size + offset << "\n";
                 return;
             }
 
-            if(!(_mem_properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)) {
+            if(!_cpu_visible) {
                 UND_ERROR << "failed to store data in buffer: memory is not accessible from the cpu\n";
                 return;
             }
 
-            _used_mem_size = std::max(_used_mem_size, byte_size + offset);
+            // if _cpu_visible is true, the memory is permanently mapped
+            if(_vma_memory_info.pMappedData != nullptr) {
+                std::memcpy(_vma_memory_info.pMappedData + offset, data, byte_size); 
+            } else {
+                UND_ERROR << "failed to copy data to buffer : memory hasnt been mapped\n";
+            }
 
-            void* mem_handle;
-            vkMapMemory(_device_handle, _memory, offset, byte_size, {}, &mem_handle);
-            if(mem_handle)
-                std::memcpy(mem_handle, data, byte_size);
-            else
-                UND_ERROR << "failed to map vram buffer to cpu accessible memory\n";
-            vkUnmapMemory(_device_handle, _memory);
-            
         }
 
         void Buffer::allocate(const LogicalDevice& device, uint32_t byte_size) {
 
-            if(byte_size <= _allocated_mem_size) return;
+            if(byte_size <= getAllocatedSize()) return;
 
-            // freeing previously allocated memory 
-            if(_buffer != VK_NULL_HANDLE) vkDestroyBuffer(_device_handle, _buffer, {});
-            if(_memory != VK_NULL_HANDLE) vkFreeMemory(_device_handle, _memory, {});
+            // freeing previously allocated memory
+            if(_buffer != VK_NULL_HANDLE) vmaDestroyBuffer(vma::GlobalAllocator::get(), _buffer, _vma_memory);
 
-            // creating the buffer
             VkBufferCreateInfo buffer_info = createBufferCreateInfo(byte_size, _usage, _queue_ids);
-            vkCreateBuffer(_device_handle, &buffer_info, {}, &_buffer);
+            VmaAllocationCreateInfo alloc_info = {};
+            
+            if(_cpu_visible) {
+                alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
+                alloc_info.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                alloc_info.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            } else {
+                alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            }
 
-            // getting the drivers? requirements for this buffers memory
-            VkMemoryRequirements mem_requirements;
-            vkGetBufferMemoryRequirements(_device_handle, _buffer, &mem_requirements);
-
-            byte_size = std::max(byte_size, (uint32_t)mem_requirements.size);
-
-            // declaring the memory type
-            VkMemoryType mem_type{};
-            mem_type.heapIndex = mem_requirements.memoryTypeBits;
-            mem_type.propertyFlags = _mem_properties;
-            uint32_t mem_type_index = device.getMemoryTypeIndex(mem_type);
-
-            // allocating the memory
-            VkMemoryAllocateInfo allocate_info = createMemoryAllocateInfo(byte_size, mem_type_index);
-            vkAllocateMemory(_device_handle, &allocate_info, {}, &_memory);
-
-            // linking the memory to the buffer
-            vkBindBufferMemory(_device_handle, _buffer, _memory, 0);
-            _allocated_mem_size = byte_size;
+            VkResult result = vmaCreateBuffer(vma::GlobalAllocator::get(), &buffer_info, &alloc_info, &_buffer, &_vma_memory, &_vma_memory_info);
+            if(result != VK_SUCCESS) {
+                UND_LOG << "failed to create buffer\n";
+            }
 
         }
 
         uint32_t Buffer::getAllocatedSize() const {
 
-            return _allocated_mem_size;
-        }
-
-
-        void Buffer::setUsedSize(uint32_t byte_size) {
-            // when the data is copyied into the buffer via a command buffer
-            // the size of the data stored in the buffer has to be manually set
-
-            _used_mem_size = byte_size;
-        }
-
-        uint32_t Buffer::getUsedSize() const {
-
-            return _used_mem_size;
+            return _vma_memory_info.size;
         }
 
         ///////////////////////////////// creating buffer related structs /////////////////////////////////
@@ -144,6 +113,7 @@ namespace undicht {
             info.pQueueFamilyIndices = queue_ids.data();
             info.sharingMode = queue_ids.size() == 1 ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT;
             info.size = byte_size;
+            info.flags = 0;
 
             return info;
         }
@@ -160,7 +130,7 @@ namespace undicht {
         }
 
         VkBufferCopy Buffer::createBufferCopy(uint32_t byte_size, uint32_t src_offset, uint32_t dst_offset) {
-
+            
             VkBufferCopy copy_info{};
             copy_info.size = byte_size;
             copy_info.srcOffset = src_offset;

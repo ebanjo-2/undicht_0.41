@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "debug.h"
+#include "vma_global_allocator.h"
 
 namespace undicht {
 
@@ -21,6 +22,9 @@ namespace undicht {
 
         // choosing a gpu
         _gpu.init(_vk_instance.chooseGPU(_main_window.getSurface()), _main_window.getSurface());
+
+        // init vma (vulkan memory allocator by amd)
+        vma::GlobalAllocator::init(_vk_instance.getInstance(), _gpu.getDevice(), _gpu.getPhysicalDevice());
 
     }
 
@@ -62,6 +66,9 @@ namespace undicht {
     void Engine::cleanUp() {
         /** clean up the core engine objects */
         // in the opposite order in which they were created
+
+        // destroying the vma global allocator
+        vma::GlobalAllocator::cleanUp();
 
         // releasing the logical device
         _gpu.cleanUp();

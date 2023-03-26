@@ -4,6 +4,7 @@
 #include <vector>
 #include "vulkan/vulkan.h"
 #include "logical_device.h"
+#include "vk_mem_alloc.h"
 
 namespace undicht {
 
@@ -16,17 +17,13 @@ namespace undicht {
             VkDevice _device_handle;
 
             VkBuffer _buffer = VK_NULL_HANDLE;
-            VkBufferUsageFlags _usage;
+            VmaAllocation _vma_memory = VK_NULL_HANDLE;
+            VmaAllocationInfo _vma_memory_info = {};
 
-            VkDeviceMemory _memory = VK_NULL_HANDLE;
-            VkMemoryPropertyFlags _mem_properties{};
-            bool _cpu_visible;
-            uint32_t _mem_type_index; // assigned by the device
-            uint32_t _allocated_mem_size = 0;
-            uint32_t _used_mem_size = 0;
+            VkBufferUsageFlags _usage = {};
+            bool _cpu_visible = false;
 
             std::vector<uint32_t> _queue_ids;
-
 
         public:
 
@@ -50,10 +47,7 @@ namespace undicht {
             void allocate(const LogicalDevice& device, uint32_t byte_size);
 
             uint32_t getAllocatedSize() const;
-            // when the data is copyied into the buffer via a command buffer
-            // the size of the data stored in the buffer has to be manually set
-            void setUsedSize(uint32_t byte_size); 
-            uint32_t getUsedSize() const;
+
 
         protected:
             // creating buffer related structs

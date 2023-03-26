@@ -27,7 +27,7 @@ namespace undicht {
             /// @brief frees all internal buffers, 
             /// no need to init() again if you want to use the transfer buffer again
 
-            UND_LOG << "freeing " << _transfer_buffers.size() << " transfer buffers\n";
+            // UND_LOG << "freeing " << _transfer_buffers.size() << " transfer buffers\n";
 
             for(InternalBufferData& internal_buffer : _transfer_buffers)
                 internal_buffer._buffer.cleanUp();
@@ -38,14 +38,12 @@ namespace undicht {
         TransferBuffer::InternalBufferData& TransferBuffer::allocateInternalBuffer(uint32_t byte_size) {
             /// @brief allocates a new internal buffer of the specified size
 
-            // avoid allocating small buffers
+            // avoid allocating very small buffers
             byte_size = std::max(byte_size, 4096u);
 
             InternalBufferData new_buffer;
             new_buffer._buffer.init(_device_handle.getDevice(), _queue_ids, true, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
             new_buffer._buffer.allocate(_device_handle, byte_size);
-            new_buffer._sizes.push_back(byte_size);
-            new_buffer._offsets.push_back(0);
 
             _transfer_buffers.push_back(new_buffer);
             return _transfer_buffers.back();
@@ -89,7 +87,7 @@ namespace undicht {
             * future transfers */
 
             for(InternalBufferData& internal_buffer : _transfer_buffers) {
-                internal_buffer._buffer.setUsedSize(0);
+                //internal_buffer._buffer.setUsedSize(0);
                 internal_buffer._offsets.clear();
                 internal_buffer._sizes.clear();
             }
@@ -104,7 +102,8 @@ namespace undicht {
             InternalBufferData& buffer_data = findInternalBuffer(byte_size);
 
             // store the data in that buffer
-            uint32_t offset = nextOffset(buffer_data._buffer.getUsedSize());
+            uint32_t offset = 0;
+            if(buffer_data._offsets.size()) offset = nextOffset(buffer_data._offsets.back() + buffer_data._sizes.back());
             buffer_data._buffer.setData(byte_size, offset, data);
             buffer_data._offsets.push_back(offset);
             buffer_data._sizes.push_back(byte_size);
@@ -120,10 +119,11 @@ namespace undicht {
             // searching for a buffer that has enough free memory
             for(InternalBufferData& internal_buffer : _transfer_buffers) {
 
-                uint32_t next_offset = nextOffset(internal_buffer._buffer.getUsedSize());
+                uint32_t next_offset = 0;
+                if(internal_buffer._offsets.size()) next_offset = nextOffset(internal_buffer._offsets.back() + internal_buffer._sizes.back());
+                next_offset = std::min(internal_buffer._buffer.getAllocatedSize(), next_offset); // to avoid negative numbers
 
                 if(internal_buffer._buffer.getAllocatedSize() - next_offset >= byte_size) {
-
                     return internal_buffer;
                 }
             }

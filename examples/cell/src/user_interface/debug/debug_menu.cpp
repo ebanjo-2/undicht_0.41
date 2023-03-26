@@ -35,7 +35,7 @@ namespace cell {
         bool calc_lighting;
 
         ImGui::Begin(title.data(), &_open);
-        ImGui::Text(frames.data());
+        ImGui::Text(frames.data(), "");
         ImGui::SliderFloat("Cloud Coverage", &_cloud_coverage, 0.0f, 2.0f);
         ImGui::SliderFloat("Cloud Density", &_cloud_density, 0.0f, 10.0f);
         ImGui::SliderFloat("Sky Brightness", &_sky_brightness, 0.0f, 2.0f);

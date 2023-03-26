@@ -24,7 +24,7 @@ namespace cell {
 
     uint32_t LightBuffer::getPointLightModelVertexCount() const {
 
-        return _buffer.getVertexBuffer().getUsedSize() / LIGHT_VERTEX_LAYOUT.getTotalSize();
+        return _buffer.getVertexBuffer().getAllocatedSize() / LIGHT_VERTEX_LAYOUT.getTotalSize();
     }
 
 

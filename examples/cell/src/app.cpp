@@ -22,7 +22,7 @@ namespace cell {
 
         TransferBuffer transfer_buffer;
         transfer_buffer.init(_gpu);
-        //transfer_buffer.allocateInternalBuffer(60000000); // 60mb
+        transfer_buffer.allocateInternalBuffer(100000000);
 
         { // loading stuff
             ImmediateCommand transfer_cmd(_gpu);
@@ -147,7 +147,7 @@ namespace cell {
             _master_renderer.drawLights(_world.getLightBuffer());
             _master_renderer.drawAmbientLight(_world.getEnvironment());
             _master_renderer.beginFinalSubPass();
-            _master_renderer.drawFinal(0.3f);
+            _master_renderer.drawFinal(1.0f);
             _master_renderer.endMainRenderPass();
 
             // imgui debug menu

@@ -55,7 +55,7 @@ void HelloWorldApp::init() {
     // load model
     TransferBuffer transfer_buffer;
     transfer_buffer.init(_gpu);
-    transfer_buffer.allocateInternalBuffer(200000000);
+    //transfer_buffer.allocateInternalBuffer(200000000);
     {
         ImmediateCommand transfer_cmd(_gpu); // just a single command to load the entire models textures
         loadModel(UND_ENGINE_SOURCE_DIR + "examples/hello_world/res/sponza/sponza.obj", _model, transfer_cmd, transfer_buffer);
@@ -168,7 +168,7 @@ void HelloWorldApp::loadModel(const std::string& file_name, TexturedModel& loadT
 
     // loading the textures
     for(undicht::tools::ImageData<char>& data : textures) {
-
+        //UND_LOG << "loading the textures\n";
         undicht::vulkan::Texture t;
         t.setMipMaps(true);
         loadTexture(data, t, transfer_cmd, transfer_buffer);

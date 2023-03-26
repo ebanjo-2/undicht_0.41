@@ -141,6 +141,11 @@ target_link_libraries(graphics imgui)
 target_include_directories(graphics PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(graphics ${Vulkan_LIBRARIES})
 
+# linking vma
+add_subdirectory(extern/vma)
+target_link_libraries(graphics vma)
+
+
 # adding a custom target for building the engines shaders
 add_custom_target(shader COMMAND python3 ${SHADER_COMPILE_SCRIPT} "${PROJECT_SOURCE_DIR}/graphics/src/shader")
 add_dependencies(graphics shader)
