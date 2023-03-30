@@ -105,10 +105,10 @@ namespace cell {
         return _loaded_chunks.size();
     }
 
-    ////////////////////////////////// protected functions //////////////////////////////////
+    ////////////////////////////////// static functions functions //////////////////////////////////
 
     template<typename T>
-    glm::ivec3 ChunkSystem<T>::calcChunkPosition(const glm::ivec3& world_pos) const {
+    glm::ivec3 ChunkSystem<T>::calcChunkPosition(const glm::ivec3& world_pos) {
         // takes a position in the world and calculates which chunk it belongs to
         glm::ivec3 chunk_pos;
         

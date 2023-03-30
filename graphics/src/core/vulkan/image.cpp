@@ -81,8 +81,8 @@ namespace undicht {
             VkImageCreateInfo image_info = createImageCreateInfo(_extent, layers, mip_levels, format, chooseImageUsageFlags(_format), flags);
             
             VmaAllocationCreateInfo alloc_info{};
-            alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
-            alloc_info.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            //alloc_info.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
             vmaCreateImage(vma::GlobalAllocator::get(), &image_info, &alloc_info, &_image, &_memory, nullptr);
             

@@ -2,6 +2,8 @@
 set(WORLD_SOURCES
     src/world/drawable_world.h
     src/world/drawable_world.cpp
+    src/world/world_loader.h
+    src/world/world_loader.cpp
 
     src/world/chunk_system/chunk_system.h
     src/world/chunk_system/chunk_system.cpp

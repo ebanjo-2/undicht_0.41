@@ -37,7 +37,7 @@ namespace undicht {
         /** the per frame transfer buffer can be used to update 
          * i.e. vertex buffers and textures that need to be ready before drawing */
         void beginFramePreparation(); // starts recording of the transfer command buffer
-        void endFramePreparation(); // submit the transfer command buffer
+        void endFramePreparation(const VkSemaphore& prev_frame_finished); // submit the transfer command buffer
         void beginFrame(); // starts recording of the draw command buffer 
         void endFrame(); // ends and submits the draw command buffer (will wait for the transfer buffer to finish)
 

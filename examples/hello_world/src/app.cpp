@@ -34,7 +34,7 @@ void HelloWorldApp::init() {
     _renderer.setShaders(UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.vert.spv", UND_ENGINE_SOURCE_DIR + "graphics/src/shader/bin/triangle.frag.spv");
     _renderer.setDescriptorSetLayout({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER}, 0);
     _renderer.setVertexInputLayout(BufferLayout({UND_VEC3F, UND_VEC2F, UND_VEC3F}));
-    _renderer.setRasterizer(true);
+    _renderer.setRasterizer(true, true);
     _renderer.init(getSwapChain().getExtent(), _render_target.getRenderPass(), 0, NUM_FRAMES);
 
     // sampler

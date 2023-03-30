@@ -44,7 +44,19 @@ namespace undicht {
         return _swap_image_id;
     }
 
-    bool FrameManager::beginFrame(bool begin_transfer_cmd) {
+    void FrameManager::beginFramePreperation() {
+        // begins the frames transfer cmd (can be used to load resources to the gpu for the frame)
+        
+        getCurrentFrame().beginFramePreparation();
+    } 
+    
+    void FrameManager::endFramePreperation() {
+        // if not called before, this will be called by endFrame()
+
+        getCurrentFrame().endFramePreparation(getPreviousFrame().getRenderFinishedSemaphore().getAsWaitOn());
+    }
+
+    bool FrameManager::beginFrame() {
         /// @brief begin the frame (starts the draw command buffer)
         /// @return true, if the frame was started successfully, false if not (maybe the swap chain is out of date?)
 
@@ -54,16 +66,13 @@ namespace undicht {
 
         getCurrentFrame().beginFrame();
 
-        if(begin_transfer_cmd) 
-            getCurrentFrame().beginFramePreparation();
-
         return true;
     }
 
     void FrameManager::endFrame() {
         /// @brief submits the draw command buffer and the current swap image
 
-        getCurrentFrame().endFramePreparation();
+        endFramePreperation();
 
         // submits the frames draw command
         getCurrentFrame().endFrame();

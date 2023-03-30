@@ -40,11 +40,11 @@ namespace cell {
         virtual const std::vector<glm::ivec3>& getChunkPositions() const;
         virtual uint32_t getNumberOfLoadedChunks() const;
 
-      protected:
-        // protected functions
+      public:
+        // public static functions
 
         // takes a position in the world and calculates which chunk it belongs to
-        glm::ivec3 calcChunkPosition(const glm::ivec3& world_pos) const;
+        glm::ivec3 static calcChunkPosition(const glm::ivec3& world_pos);
 
     };
 

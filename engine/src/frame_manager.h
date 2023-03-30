@@ -28,9 +28,12 @@ namespace undicht {
         void init(const vulkan::LogicalDevice& device, graphics::Window& window, bool vsync = true, uint32_t frames_in_flight = 1);
         void cleanUp();
 
+        void beginFramePreperation(); // begins the frames transfer cmd (can be used to load resources to the gpu for the frame)
+        void endFramePreperation(); // if not called before, this will be called by endFrame()
+
         /// @brief begin the frame (starts the draw command buffer)
         /// @return true, if the frame was started successfully, false if not (maybe the swap chain is out of date?)
-        bool beginFrame(bool begin_transfer_cmd = false);
+        bool beginFrame();
 
         /// @brief submits the draw command buffer and the current swap image
         void endFrame();

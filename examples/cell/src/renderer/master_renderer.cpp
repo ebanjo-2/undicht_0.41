@@ -75,7 +75,7 @@ namespace cell {
 
     bool MasterRenderer::beginFrame() {
 
-        if(!FrameManager::beginFrame(true))
+        if(!FrameManager::beginFrame())
             return false;
 
         // bind global ubo in case no shadow pass is started, in which case the ubo will be rebound

@@ -55,13 +55,22 @@ namespace undicht {
         _frame_in_preparation = true;
     }
 
-    void Frame::endFramePreparation() {
+    void Frame::endFramePreparation(const VkSemaphore& prev_frame_finished) {
         // submit the transfer command buffer
 
         if(_frame_in_preparation) {
             // end transfer command
+
+            std::vector<VkSemaphore> wait_on;
+            std::vector<VkPipelineStageFlags> wait_stages;
+
+            if(prev_frame_finished != VK_NULL_HANDLE) {
+                wait_on.push_back(prev_frame_finished);
+                wait_stages.push_back(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+            }
+
             _transfer_command.endCommandBuffer();
-            _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), {}, {}, {_transfer_finished_semaphore.getAsSignal()});
+            _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), wait_on, wait_stages, {_transfer_finished_semaphore.getAsSignal()});
         }
 
         _frame_in_preparation = false;

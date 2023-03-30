@@ -22,68 +22,23 @@ namespace cell {
 
         TransferBuffer transfer_buffer;
         transfer_buffer.init(_gpu);
-        transfer_buffer.allocateInternalBuffer(100000000);
+        //transfer_buffer.allocateInternalBuffer(100000000);
 
         { // loading stuff
             ImmediateCommand transfer_cmd(_gpu);
 
-            _master_renderer.init(_vk_instance.getInstance(), _main_window, _gpu, transfer_cmd, transfer_buffer);
-            _world.init(_gpu, transfer_cmd, transfer_buffer);
             _player.init();
             _player.setPosition(glm::vec3(0, -5, 10));
+            _master_renderer.init(_vk_instance.getInstance(), _main_window, _gpu, transfer_cmd, transfer_buffer);
 
-            glm::vec3 sun_dir = glm::vec3(0.5f,1.0,0.5f);
+            _world_loader.init(_gpu, transfer_cmd, transfer_buffer);
 
-            _world.setSunDirection(sun_dir);
-            _world.setSunColor(glm::vec3(23.47, 21.31, 20.79) * 0.5f);
-
-            if(_world_file.open(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.world")) {
-
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,0), new CellChunk()), glm::ivec3(0,-255,0));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,0), new CellChunk()), glm::ivec3(255,-255,0));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,0), new CellChunk()), glm::ivec3(-255,-255,0));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255,-255), new CellChunk()), glm::ivec3(0,-255,-255));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(0,-255, 255), new CellChunk()), glm::ivec3(0,-255, 255));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255,-255), new CellChunk()), glm::ivec3(255,-255,-255));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(255,-255, 255), new CellChunk()), glm::ivec3(255,-255, 255));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255,-255), new CellChunk()), glm::ivec3(-255,-255,-255));
-                _world_file.read(*(CellChunk*)_world.getCellWorld().loadChunk(glm::ivec3(-255,-255, 255), new CellChunk()), glm::ivec3(-255,-255, 255));
-
-                UND_LOG << "updating world buffer\n";
-                _world.updateWorldBuffer(transfer_cmd, transfer_buffer);
-                UND_LOG << "done updating the world buffer\n";
-
-                _world_file.read(*(LightChunk*)_world.getLightWorld().loadChunk(glm::ivec3(0,-255,0), new LightChunk()), glm::ivec3(0,-255,0));
-                _world.updateLightBuffer(transfer_cmd, transfer_buffer);
-                
-                _world_file.readMaterials(_world.getMaterialAtlas(), transfer_cmd, transfer_buffer);
-
-                //_world_file.readEnvironment(_world.getEnvironment());
-
-            } else {
+            if(!_world_loader.openWorldFile(UND_ENGINE_SOURCE_DIR + "examples/cell/worlds/first_world.world")) {
                 UND_LOG << "failed to open the world file\n";
-                //_world_file.newWorldFile();
-            }
+            } 
 
-            CubeMapData<float> env_map;
-            _env_gen.init();
-            _env_gen.setSunDir(sun_dir);
-            
-            // darkish sky / clouds 
-            _env_gen.setCloudCoverage(0.5f);
-            _env_gen.setCloudDensity(1.7f);
-            _env_gen.setSkyBrightness(1.0f);
-            _env_gen.setCloudBrightness(0.05f);
-
-            // brightish sky / clouds 
-            //_env_gen.setCloudCoverage(0.55f);
-            //_env_gen.setCloudDensity(2.5f);
-            //_env_gen.setSkyBrightness(1.0f);
-            //_env_gen.setCloudBrightness(1.0f);
-
-            _env_gen.generate(env_map);
-            _world.getEnvironment().load(env_map, transfer_cmd, transfer_buffer);
-            _world.getEnvironment().calcLightingMaps(env_map, transfer_cmd, transfer_buffer);
+            _world_loader.updateMaterials(transfer_cmd, transfer_buffer);
+            _world_loader.updateEnvironment(transfer_cmd, transfer_buffer);
 
         } // transfer command gets submitted
 
@@ -97,8 +52,9 @@ namespace cell {
         _gpu.waitForProcessesToFinish();
 
         _player.cleanUp();
-        _world.cleanUp();
         _master_renderer.cleanUp();
+
+        _world_loader.cleanUp();
 
         undicht::Engine::cleanUp();
     }
@@ -117,9 +73,12 @@ namespace cell {
             _player.enableMouseInput(true);
         }
 
+        _master_renderer.beginFramePreperation();
+
         // updating the world
-        _world.setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
+        _world_loader.getWorld().setSunDirection(glm::vec3(glm::sin(0.0000000001f * getTimeSinceEpoch()), 0.2, glm::cos(0.0000000001f * getTimeSinceEpoch()))); // will get normalized
         _player.move(getDeltaT(), _main_window);
+        _world_loader.loadChunks(_player.getPosition(), 0, _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
 
         // checking if the window is minimized
         if(_main_window.isMinimized())
@@ -130,29 +89,30 @@ namespace cell {
             _debug_menu.open();
 
         // drawing a new frame
+        _master_renderer.endFramePreperation();
         _master_renderer.loadPlayerCamera(_player);
         if(_master_renderer.beginFrame()) {
             
             // shadow pass
-            _master_renderer.beginShadowPass(_world.getSun(), _player.getPosition());
-            _master_renderer.drawToShadowMap(_world.getCellBuffer());
+            _master_renderer.beginShadowPass(_world_loader.getWorld().getSun(), _player.getPosition());
+            _master_renderer.drawToShadowMap(_world_loader.getWorld().getCellBuffer());
             _master_renderer.endShadowPass();
 
             // main render pass
             _master_renderer.beginMainRenderPass();
-            _master_renderer.beginGeometrySubPass(_world.getMaterialAtlas());
-            _master_renderer.drawWorld(_world.getCellBuffer());
+            _master_renderer.beginGeometrySubPass(_world_loader.getWorld().getMaterialAtlas());
+            _master_renderer.drawWorld(_world_loader.getWorld().getCellBuffer());
             _master_renderer.beginLightSubPass();
-            _master_renderer.drawLight(_world.getSun());
-            _master_renderer.drawLights(_world.getLightBuffer());
-            _master_renderer.drawAmbientLight(_world.getEnvironment());
+            _master_renderer.drawLight(_world_loader.getWorld().getSun());
+            _master_renderer.drawLights(_world_loader.getWorld().getLightBuffer());
+            _master_renderer.drawAmbientLight(_world_loader.getWorld().getEnvironment());
             _master_renderer.beginFinalSubPass();
             _master_renderer.drawFinal(1.0f);
             _master_renderer.endMainRenderPass();
 
             // imgui debug menu
             _master_renderer.beginImguiRenderPass();
-            _debug_menu.display(getFPS(), _world.getEnvironment(), _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
+            _debug_menu.display(getFPS(), _world_loader.getWorld().getEnvironment(), _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
             _master_renderer.drawImGui();
             _master_renderer.endImguiRenderPass();
 
