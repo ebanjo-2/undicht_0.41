@@ -58,6 +58,9 @@ namespace cell {
             return;
         }*/
 
+        if(!c.fillBuffer(nullptr))
+            return; // c has no data it wants to store
+
         // filling a buffer with the chunk data
         uint32_t chunk_buffer_size = c.fillBuffer(nullptr);
         std::vector<char> chunk_buffer(chunk_buffer_size);

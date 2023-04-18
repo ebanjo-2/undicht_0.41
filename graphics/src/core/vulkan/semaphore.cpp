@@ -1,6 +1,5 @@
 #include "semaphore.h"
 
-
 namespace undicht {
 
     namespace vulkan {
@@ -45,6 +44,8 @@ namespace undicht {
                 return VK_NULL_HANDLE;
             }
         }
+
+
         //////////////////////////////// creating semaphore related structs ////////////////////////////////
 
         VkSemaphoreCreateInfo Semaphore::createSemaphoreCreateInfo() {

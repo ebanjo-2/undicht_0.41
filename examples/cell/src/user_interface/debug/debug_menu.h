@@ -21,6 +21,9 @@ namespace cell {
         float _cloud_brightness = 1.0f;
         undicht::tools::CubeMapData<float> _env_map_data;
 
+        bool _update_environment = false;
+        bool _update_light_maps = false;
+
       public:
 
         void open();
@@ -28,7 +31,9 @@ namespace cell {
 
         bool isOpen() const;
 
-        void display(double fps, Environment& env, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+        void applyUpdates(Environment& env, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+
+        void display(double fps);
 
     };
 

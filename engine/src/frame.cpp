@@ -1,5 +1,6 @@
 #include "frame.h"
 #include "vulkan/vulkan.h"
+#include "debug.h"
 
 namespace undicht {
 
@@ -55,7 +56,7 @@ namespace undicht {
         _frame_in_preparation = true;
     }
 
-    void Frame::endFramePreparation(const VkSemaphore& prev_frame_finished) {
+    void Frame::endFramePreparation() {
         // submit the transfer command buffer
 
         if(_frame_in_preparation) {
@@ -63,11 +64,6 @@ namespace undicht {
 
             std::vector<VkSemaphore> wait_on;
             std::vector<VkPipelineStageFlags> wait_stages;
-
-            if(prev_frame_finished != VK_NULL_HANDLE) {
-                wait_on.push_back(prev_frame_finished);
-                wait_stages.push_back(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-            }
 
             _transfer_command.endCommandBuffer();
             _device_handle.submitOnGraphicsQueue(_transfer_command.getCommandBuffer(), _transfer_finished_fence.getFence(), wait_on, wait_stages, {_transfer_finished_semaphore.getAsSignal()});
@@ -92,6 +88,7 @@ namespace undicht {
         // end command buffer
         _draw_command.endCommandBuffer();
 
+        // Semaphores to wait on at different stages
         std::vector<VkSemaphore> wait_on = {_swap_image_ready.getAsWaitOn()};
         std::vector<VkPipelineStageFlags> wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
@@ -101,8 +98,10 @@ namespace undicht {
             wait_stages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
         }
 
-        _device_handle.submitOnGraphicsQueue(_draw_command.getCommandBuffer(), _render_finished_fence.getFence(), wait_on, wait_stages, {_render_finished_semaphore.getAsSignal()});
-
+        // Semaphores to signal once the rendering is completed
+        std::vector<VkSemaphore> signal_semaphores = {_render_finished_semaphore.getAsSignal()};
+        
+        _device_handle.submitOnGraphicsQueue(_draw_command.getCommandBuffer(), _render_finished_fence.getFence(), wait_on, wait_stages, signal_semaphores);
     }
 
     vulkan::TransferBuffer& Frame::getTransferBuf() const {

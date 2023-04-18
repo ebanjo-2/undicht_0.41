@@ -53,7 +53,7 @@ namespace undicht {
     void FrameManager::endFramePreperation() {
         // if not called before, this will be called by endFrame()
 
-        getCurrentFrame().endFramePreparation(getPreviousFrame().getRenderFinishedSemaphore().getAsWaitOn());
+        getCurrentFrame().endFramePreparation();
     }
 
     bool FrameManager::beginFrame() {

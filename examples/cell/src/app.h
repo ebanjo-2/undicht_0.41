@@ -21,10 +21,8 @@ namespace cell {
         DebugMenu _debug_menu;
 
         WorldLoader _world_loader;
+        DrawableWorld _world;
 
-        /*DrawableWorld _world;
-        WorldFile _world_file;
-        EnvironmentGenerator _env_gen;*/
 
     public:
 

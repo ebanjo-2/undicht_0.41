@@ -60,8 +60,6 @@ namespace undicht {
             std::vector<uint32_t> _pool_sizes;
             std::vector<DescriptorSetLayout> _layouts;
             std::vector<DescriptorPool> _descriptor_pools;
-            /*std::vector<std::vector<DescriptorSet>> _descriptor_sets;
-            std::vector<uint32_t> _unused_sets;*/
 
             std::vector<PerFrameData> _per_frame_data;
 
