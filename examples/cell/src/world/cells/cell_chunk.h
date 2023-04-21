@@ -21,9 +21,6 @@ namespace cell {
         // keeping track of which cells are no longer used and can be recycled
         std::vector<uint32_t> _unused_cells;
 
-        // keeping track of whether the chunk was edited (and needs to be updated in gpu memory)
-        //bool _has_changed = false;
-
       public:
 
         CellChunk();

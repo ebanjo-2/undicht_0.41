@@ -34,8 +34,6 @@ namespace cell {
         */
         void loadChunks(const glm::vec3& player_pos, DrawableWorld& world, int32_t chunk_distance, undicht::vulkan::Fence& prev_frame_finished, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);  
 
-        //DrawableWorld& getWorld();
-
     };
 
 } // cell

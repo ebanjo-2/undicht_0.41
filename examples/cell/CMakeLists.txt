@@ -31,6 +31,12 @@ set(WORLD_SOURCES
     src/world/lights/light_world.cpp
     src/world/lights/light_buffer.h
     src/world/lights/light_buffer.cpp
+    
+    src/world/edit/world_edit.h
+    src/world/edit/world_edit.cpp
+    src/world/edit/chunk_edit.h
+    src/world/edit/chunk_edit.cpp
+    
 )
 
 

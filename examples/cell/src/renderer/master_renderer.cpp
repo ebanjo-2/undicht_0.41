@@ -10,7 +10,7 @@ namespace cell {
     using namespace undicht;
     using namespace vulkan;
 
-    const int MAX_FRAMES_IN_FLIGHT = 2;
+    const int MAX_FRAMES_IN_FLIGHT = 1;
     const bool ENABLE_VSYNC = true;
 
     void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, bool enable_imgui) {
