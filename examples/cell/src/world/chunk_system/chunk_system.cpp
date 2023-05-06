@@ -72,19 +72,30 @@ namespace cell {
     std::vector<Chunk<T>*> ChunkSystem<T>::getChunksAt(const glm::ivec3& world_pos0, const glm::ivec3& world_pos1) const {
         /// @return all chunks within the volume between pos0 and pos1 (unloaded chunks will be added as nullptr)
 
+        std::vector<glm::ivec3> positions = getChunkPositionsAt(world_pos0, world_pos1);
         std::vector<Chunk<T>*> chunks;
+
+        for(glm::ivec3& pos : positions)
+            chunks.push_back(getChunkAt(pos)); // not loaded chunks will be added as nullptr
+
+        return chunks;
+    }
+
+    template<typename T>
+    std::vector<glm::ivec3> ChunkSystem<T>::getChunkPositionsAt(const glm::ivec3& world_pos0, const glm::ivec3& world_pos1) const {
+
+        std::vector<glm::ivec3> positions;
 
         for(int x = world_pos0.x; x <= world_pos1.x; x += 255) {
             for(int y = world_pos0.y; y <= world_pos1.y; y += 255) {
                 for(int z = world_pos0.z; z <= world_pos1.z; z += 255) {
                     
-                    // not loaded chunks will be added as nullptr
-                    chunks.push_back(getChunkAt(glm::ivec3(x, y, z)));
+                    positions.push_back(calcChunkPosition(glm::ivec3(x, y, z)));
                 }            
             }
         }
 
-        return chunks;
+        return positions;
     }
 
     template<typename T>

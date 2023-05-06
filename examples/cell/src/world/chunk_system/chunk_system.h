@@ -35,9 +35,10 @@ namespace cell {
 
         /// @return all chunks within the volume between pos0 and pos1 (unloaded chunks will be added as nullptr)
         virtual std::vector<Chunk<T>*> getChunksAt(const glm::ivec3& world_pos0, const glm::ivec3& world_pos1) const;
+        virtual std::vector<glm::ivec3> getChunkPositionsAt(const glm::ivec3& world_pos0, const glm::ivec3& world_pos1) const;
 
         virtual const std::vector<Chunk<T>*>& getLoadedChunks() const;
-        virtual const std::vector<glm::ivec3>& getChunkPositions() const;
+        virtual const std::vector<glm::ivec3>& getChunkPositions() const; // returns the positions of the loaded chunks
         virtual uint32_t getNumberOfLoadedChunks() const;
 
       public:

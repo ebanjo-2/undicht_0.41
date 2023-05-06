@@ -21,15 +21,12 @@ namespace cell {
 
         // cells
         CellWorld _cell_world;
-        CellBuffer _cell_buffer;
 
         // lights
         Light _sun; // cant be put into any chunk
         LightWorld _light_world;
-        LightBuffer _light_buffer; // point lights
 
         MaterialAtlas _materials;
-
         Environment _environment; // "skybox"
 
       public:
@@ -49,9 +46,8 @@ namespace cell {
         void setSunDirection(const glm::vec3& dir);
         void setSunColor(const glm::vec3& color);
 
-        // make sure the chunk is correctly stored in the world buffer
-        void updateWorldBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
-        void updateLightBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
+        // make sure each chunk is correctly stored in the vulkan buffers
+        void applyUpdates(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
       
       public:
         // access parts of the drawable world (for rendering)

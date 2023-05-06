@@ -25,7 +25,7 @@ namespace cell {
         setVisibleFaces(faces);
     }
 
-    void Cell::getPos0(uint32_t &x, uint32_t &y, uint32_t &z) const {
+    void Cell::getPos0(uint8_t &x, uint8_t &y, uint8_t &z) const {
         #ifdef LITTLE_ENDIAN
             x = (_pos_0 & 0x000000FF) >> 0;
             y = (_pos_0 & 0x0000FF00) >> 8;
@@ -37,7 +37,7 @@ namespace cell {
         #endif
     }
 
-    void Cell::getPos1(uint32_t &x, uint32_t &y, uint32_t &z) const {
+    void Cell::getPos1(uint8_t &x, uint8_t &y, uint8_t &z) const {
         #ifdef LITTLE_ENDIAN 
             x = (_pos_1 & 0x000000FF) >> 0;
             y = (_pos_1 & 0x0000FF00) >> 8;
@@ -49,7 +49,7 @@ namespace cell {
         #endif
     }
 
-    void Cell::getUV(uint32_t &u, uint32_t &v) const {
+    void Cell::getUV(uint8_t &u, uint8_t &v) const {
         #ifdef LITTLE_ENDIAN 
             u = _pos_0 & 0xFF000000;
             v = _pos_1 & 0xFF000000;
@@ -62,7 +62,7 @@ namespace cell {
     uint32_t Cell::getID() const {
         // combining the uv parts of pos_0 and pos_1 to form an id that is unique for the type of cell
         #ifdef LITTLE_ENDIAN 
-            return ((_pos_0 & 0xFF000000) >> 16) | ((_pos_1 & 0xFF000000) >> 24);
+            return ((_pos_0 & 0xFF000000) >> 24) | ((_pos_1 & 0xFF000000) >> 16);
         #else
             return ((_pos_0 & 0x000000FF) << 8) | (_pos_1 & 0x000000FF);
         #endif
@@ -128,15 +128,76 @@ namespace cell {
         _faces = faces;
     } 
 
+    bool Cell::hasVolume() const{
+        // returns false, if the cell has a volume of 0
+
+        // xor, if some coords are the same this will result in a 0 for that coord
+        uint32_t tmp = _pos_0 ^ _pos_1;
+
+        // check if any of the coords were the same
+        #ifdef LITTLE_ENDIAN
+            return (tmp & 0x000000FF) && (tmp & 0x0000FF00) && (tmp & 0x00FF0000);
+        #else
+            return (tmp & 0x0000FF00) && (tmp & 0x00FF0000) && (tmp & 0xFF000000);
+        #endif
+    } 
+
+    bool Cell::sharedVolume(const Cell &c1, const Cell &c2) {
+        /// @return true, if the cells have some shared volume ("touching" doesnt count)
+
+        uint8_t x11, y11, z11, x12, y12, z12;
+        c1.getPos0(x11, y11, z11);
+        c1.getPos1(x12, y12, z12);
+
+        uint8_t x21, y21, z21, x22, y22, z22;
+        c2.getPos0(x21, y21, z21);
+        c2.getPos1(x22, y22, z22);
+
+        /*if(!overlappingRanges<uint32_t>(x11, x12, x21, x22))
+            return false;
+        if(!overlappingRanges<uint32_t>(y11, y12, y21, y22))
+            return false;
+        if(!overlappingRanges<uint32_t>(z11, z12, z21, z22))
+            return false;*/
+
+        // can be "simplified" (made faster), since it is known that x11 < x12 and x21 < x22
+
+        if (x11 == x12 || x21 == x22 || y11 == y12 || y21 == y22 || z11 == z12 || z21 == z22)
+            return false; // one of the cells has no volume
+
+        if (x11 < x21) {
+            if (x12 <= x21)
+                return false;
+        } else if (x11 > x21)
+            if (x11 >= x22)
+                return false;
+
+        if (y11 < y21) {
+            if (y12 <= y21)
+                return false;
+        } else if (y11 > y21)
+            if (y11 >= y22)
+                return false;
+
+        if (z11 < z21) {
+            if (z12 <= z21)
+                return false;
+        } else if (z11 > z21)
+            if (z11 >= z22)
+                return false;
+
+        return true;
+    }
+
     ///////////////////////////////////////////// operator to print out cell data /////////////////////////////////////////
 
     std::ostream& operator<< (std::ostream& out, const Cell& c) {
 
-        uint32_t x1, y1, z1, x2, y2, z2;
+        uint8_t x1, y1, z1, x2, y2, z2;
         c.getPos0(x1, y1, z1);
         c.getPos1(x2, y2, z2);
 
-        out << x1 << ":" << y1 << ":" << z1 << " / " << x2 << ":" << y2 << ":" << z2 << " id:" << c.getID();
+        out << int(x1) << ":" << int(y1) << ":" << int(z1) << " / " << int(x2) << ":" << int(y2) << ":" << int(z2) << " id:" << c.getID();
 
         return out;
     }

@@ -9,6 +9,7 @@
 #include "world/world_loader.h"
 #include "player/player.h"
 #include "user_interface/debug/debug_menu.h"
+#include "world/edit/world_edit.h"
 
 namespace cell {
 
@@ -22,6 +23,7 @@ namespace cell {
 
         WorldLoader _world_loader;
         DrawableWorld _world;
+        WorldEdit _world_edit;
 
 
     public:

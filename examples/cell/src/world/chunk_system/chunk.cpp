@@ -17,7 +17,7 @@ namespace cell {
     }
 
     template<typename T>
-    bool Chunk<T>::getHasChanged() {
+    bool Chunk<T>::getHasChanged() const {
 
         return _has_changed;
     }

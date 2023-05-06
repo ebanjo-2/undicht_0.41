@@ -51,7 +51,7 @@ namespace cell {
     bool MiniChunk::withinVolume(const Cell &c) const {
         // @return wether the Cell overlaps with the volume of the mini chunk
 
-        uint32_t x1, y1, z1, x2, y2, z2;
+        uint8_t x1, y1, z1, x2, y2, z2;
         c.getPos0(x1, y1, z1);
         c.getPos1(x2, y2, z2);
 

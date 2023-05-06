@@ -26,6 +26,7 @@ namespace cell {
         CellChunk();
 
         // updating cells (adding, changing, removing)
+        /// @param check_volume: if true, cells with 0 volume wont be added / removed
         uint32_t addCell(const Cell& c); // returns an id with which the cell can be accessed
         void setCell(uint32_t id, const Cell& c);
         void removeCell(uint32_t id);
@@ -55,7 +56,6 @@ namespace cell {
         std::vector<const MiniChunk*> calcMiniChunks(const Cell& volume) const;
 
         bool withinVolume(const Cell& c, uint32_t x, uint32_t y, uint32_t z) const;
-        bool sharedVolume(const Cell& c1, const Cell& c2) const;
 
     };
 

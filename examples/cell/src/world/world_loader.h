@@ -32,7 +32,7 @@ namespace cell {
         /** @brief load the missing chunks around the player 
          * @param prev_frame_finished the fence will be waited on if vulkan buffers are modified
         */
-        void loadChunks(const glm::vec3& player_pos, DrawableWorld& world, int32_t chunk_distance, undicht::vulkan::Fence& prev_frame_finished, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);  
+        void loadChunks(const glm::vec3& player_pos, DrawableWorld& world, int32_t chunk_distance);  
 
     };
 

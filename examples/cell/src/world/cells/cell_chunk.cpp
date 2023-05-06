@@ -19,6 +19,9 @@ namespace cell {
 
         uint32_t cell_id;
 
+        if(!c.hasVolume())
+            return -1;
+
         if (_unused_cells.size()) { // trying to recycle an unused cell
             _cells.at(_unused_cells.back()) = c;
             cell_id = _unused_cells.back();
@@ -41,6 +44,11 @@ namespace cell {
 
         if (id >= _cells.size())
             return;
+
+        if(!c.hasVolume()) {
+            removeCell(id);
+            return;
+        }
 
         _cells.at(id) = c;
 
@@ -120,7 +128,12 @@ namespace cell {
         /// @return the ids of all cells within that volume
 
         std::vector<uint32_t> ids;
-        std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
+
+        for(uint32_t i = 0; i < _cells.size(); i++)
+            if(Cell::sharedVolume(*getCell(i), volume))
+                ids.push_back(i);
+
+        /*std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
 
         for (const MiniChunk *mc : mini_chunks) {
 
@@ -131,7 +144,7 @@ namespace cell {
                 if (cell && sharedVolume(*cell, volume))
                     ids.push_back(id);
             }
-        }
+        }*/
 
         return ids;
     }
@@ -140,6 +153,14 @@ namespace cell {
         /// @return all cells within the volume
 
         std::vector<const Cell *> cells;
+        for(const Cell& c : _cells)
+            if(Cell::sharedVolume(c, volume))
+                cells.push_back(&c);
+
+        return cells;
+
+
+        /*std::vector<const Cell *> cells;
         std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
 
         for (const MiniChunk *mc : mini_chunks) {
@@ -153,7 +174,7 @@ namespace cell {
             }
         }
 
-        return cells;
+        return cells;*/
     }
 
     uint32_t CellChunk::fillBuffer(char *buffer) const {
@@ -172,6 +193,8 @@ namespace cell {
 
         if(buffer != nullptr)
             _cells.insert(_cells.begin(), (Cell*)buffer, (Cell*)(buffer + byte_size));
+
+        _has_changed = true;
 
         initMiniChunks();
     }
@@ -229,7 +252,7 @@ namespace cell {
 
         std::vector<const MiniChunk *> mini_chunks;
 
-        uint32_t x1, y1, z1, x2, y2, z2;
+        uint8_t x1, y1, z1, x2, y2, z2;
         volume.getPos0(x1, y1, z1);
         volume.getPos1(x2, y2, z2);
 
@@ -249,7 +272,7 @@ namespace cell {
 
     bool CellChunk::withinVolume(const Cell &c, uint32_t x, uint32_t y, uint32_t z) const {
 
-        uint32_t x1, y1, z1, x2, y2, z2;
+        uint8_t x1, y1, z1, x2, y2, z2;
         c.getPos0(x1, y1, z1);
         c.getPos1(x2, y2, z2);
 
@@ -259,53 +282,6 @@ namespace cell {
             return false;
         if (z < z1 || z >= z2)
             return false;
-
-        return true;
-    }
-
-    bool CellChunk::sharedVolume(const Cell &c1, const Cell &c2) const {
-        /// @return true, if the cells have some shared volume ("touching" doesnt count)
-
-        uint32_t x11, y11, z11, x12, y12, z12;
-        c1.getPos0(x11, y11, z11);
-        c1.getPos1(x12, y12, z12);
-
-        uint32_t x21, y21, z21, x22, y22, z22;
-        c2.getPos0(x21, y21, z21);
-        c2.getPos1(x22, y22, z22);
-
-        /*if(!overlappingRanges<uint32_t>(x11, x12, x21, x22))
-            return false;
-        if(!overlappingRanges<uint32_t>(y11, y12, y21, y22))
-            return false;
-        if(!overlappingRanges<uint32_t>(z11, z12, z21, z22))
-            return false;*/
-
-        // can be "simplified" (made faster), since it is known that x11 < x12 and x21 < x22
-
-        if (x11 == x12 || x21 == x22 || y11 == y12 || y21 == y22 || z11 == z12 || z21 == z22)
-            return false; // one of the cells has no volume
-
-        if (x11 < x21) {
-            if (x12 <= x21)
-                return false;
-        } else if (x11 > x21)
-            if (x11 >= x22)
-                return false;
-
-        if (y11 < y21) {
-            if (y12 <= y21)
-                return false;
-        } else if (y11 > y21)
-            if (y11 >= y22)
-                return false;
-
-        if (z11 < z21) {
-            if (z12 <= z21)
-                return false;
-        } else if (z11 > z21)
-            if (z11 >= z22)
-                return false;
 
         return true;
     }

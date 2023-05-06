@@ -78,7 +78,7 @@ namespace cell {
         if(!FrameManager::beginFrame())
             return false;
 
-        // bind global ubo in case no shadow pass is started, in which case the ubo will be rebound
+        // bind global ubo in case no shadow pass is started, otherwise the ubo will be rebound
         _global_descriptor_cache.reset({0}, getFrameID());
         _global_descriptor_set = _global_descriptor_cache.accquire(0, getFrameID());
         _global_descriptor_set.bindUniformBuffer(0, _global_uniform_buffer.getBuffer());

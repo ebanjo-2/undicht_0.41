@@ -20,7 +20,7 @@ namespace cell {
         // common functions that should be implemented by all chunk classes
 
         virtual void markAsChanged(bool has_changed);
-        virtual bool getHasChanged();
+        virtual bool getHasChanged() const;
 
         virtual uint32_t fillBuffer(char* buffer) const = 0; // store the contents of the chunk in the buffer (if buffer != nullptr), return size of elements stored
         virtual void loadFromBuffer(const char* buffer, uint32_t byte_size) = 0; // initialize the complete data of the chunk from the buffer

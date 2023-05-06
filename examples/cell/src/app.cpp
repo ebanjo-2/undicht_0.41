@@ -16,7 +16,7 @@ namespace cell {
 
         UND_LOG << "App::init() gets called\n";
         
-        undicht::Engine::init(true);
+        undicht::Engine::init(false);
 
         UND_LOG << "initialized the engine\n";
 
@@ -83,11 +83,16 @@ namespace cell {
         if(_main_window.isKeyPressed(GLFW_KEY_V)) 
             _debug_menu.open();
 
+        // update the world
+        _player.move(getDeltaT(), _main_window);
+        _world_loader.loadChunks(_player.getPosition(), _world, 1);
+        _world_edit.remove(_world.getCellWorld(), glm::ivec3(_player.getPosition() - glm::vec3(1)), glm::ivec3(_player.getPosition() + glm::vec3(2)));
+        //_world_edit.place(_world.getCellWorld(), glm::ivec3(_player.getPosition() - glm::vec3(1)), glm::ivec3(_player.getPosition() + glm::vec3(1)), 1);
+        
         // frame preperation
         _master_renderer.beginFramePreperation();
-        _player.move(getDeltaT(), _main_window);
-        _world_loader.loadChunks(_player.getPosition(), _world, 0, _master_renderer.getPreviousFrame().getRenderFinishedFence(), _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
         _debug_menu.applyUpdates(_world.getEnvironment(), _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
+        _world.applyUpdates(_master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
         _master_renderer.loadPlayerCamera(_player);
         _master_renderer.endFramePreperation();
 
@@ -113,7 +118,7 @@ namespace cell {
 
             // imgui debug menu
             _master_renderer.beginImguiRenderPass();
-            _debug_menu.display(getFPS());
+            _debug_menu.display(getFPS(), _player.getPosition());
             _master_renderer.drawImGui();
             _master_renderer.endImguiRenderPass();
 

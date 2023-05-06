@@ -10,19 +10,17 @@ namespace cell {
     void DrawableWorld::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
         
         _sun.setType(Light::Type::Directional);
-        _cell_buffer.init(device, load_cmd, load_buf);
-        _light_buffer.init(device, load_cmd, load_buf);
+        _cell_world.init(device, load_cmd, load_buf);
+        _light_world.init(device, load_cmd, load_buf);
         _materials.init(device);
         _environment.init(device);
-
-        _cell_buffer.allocate(10000000 * CELL_LAYOUT.getTotalSize()); // 10.000.000 = 10 million cells
-        _light_buffer.allocate(1000 * POINT_LIGHT_LAYOUT.getTotalSize());
+        
     }
 
     void DrawableWorld::cleanUp() {
 
-        _cell_buffer.cleanUp();
-        _light_buffer.cleanUp();
+        _cell_world.cleanUp();
+        _light_world.cleanUp();
         _materials.cleanUp();
         _environment.cleanUp();
     }
@@ -60,42 +58,22 @@ namespace cell {
         _sun.setColor(color);
     }
 
-    void DrawableWorld::updateWorldBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
+    void DrawableWorld::applyUpdates(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
-        // make sure each chunk is correctly stored in the world buffer
-        for(int i = 0; i < _cell_world.getLoadedChunks().size(); i++) {
-
-            const CellChunk* chunk = (CellChunk*)_cell_world.getLoadedChunks().at(i);
-            const glm::ivec3& chunk_pos = _cell_world.getChunkPositions().at(i);
-
-            _cell_buffer.updateChunk(*chunk, chunk_pos, load_cmd, load_buf);
-        }
-
-    }
-
-    void DrawableWorld::updateLightBuffer(undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
-
-        // make sure each light chunk is correctly stored in the light buffer
-        for(int i = 0; i < _light_world.getLoadedChunks().size(); i++) {
-
-            const LightChunk* chunk = (LightChunk*)_light_world.getLoadedChunks().at(i);
-            const glm::ivec3& chunk_pos = _light_world.getChunkPositions().at(i);
-
-            _light_buffer.updateChunk(*chunk, chunk_pos, load_cmd, load_buf);
-        }
-
+        _cell_world.applyUpdates(load_cmd, load_buf);
+        _light_world.applyUpdates(load_cmd, load_buf);
     }
 
     /////////////////////////////////// access parts of the drawable world (for rendering) ///////////////////////////////////
 
     const CellBuffer& DrawableWorld::getCellBuffer() const {
 
-        return _cell_buffer;
+        return _cell_world.getBuffer();
     }
 
     const LightBuffer& DrawableWorld::getLightBuffer() const {
 
-        return _light_buffer;
+        return _light_world.getBuffer();
     }
 
     const Light& DrawableWorld::getSun() const {

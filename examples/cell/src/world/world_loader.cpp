@@ -35,7 +35,7 @@ namespace cell {
         _world_file.readEnvironment(world.getEnvironment(), load_cmd, load_buf);
     }
 
-    void WorldLoader::loadChunks(const glm::vec3& player_pos, DrawableWorld& world, int32_t chunk_distance, undicht::vulkan::Fence& prev_frame_finished, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
+    void WorldLoader::loadChunks(const glm::vec3& player_pos, DrawableWorld& world, int32_t chunk_distance) {
         /** @brief load the missing chunks around the player */
         
         // calculating the chunk positions of the chunks that should be loaded
@@ -84,17 +84,6 @@ namespace cell {
 
             }
 
-        }
-
-        // update the vertex buffers
-        if(update_cell_buffer) {
-            prev_frame_finished.waitForProcessToFinish(false);
-            world.updateWorldBuffer(load_cmd, load_buf);
-        } 
-
-        if(update_light_buffer) {
-            prev_frame_finished.waitForProcessToFinish(false);
-            world.updateLightBuffer(load_cmd, load_buf);
         }
 
     }

@@ -7,6 +7,8 @@
 #include "core/vulkan/command_buffer.h"
 #include "renderer/vulkan/transfer_buffer.h"
 
+#include "glm/glm.hpp"
+
 namespace cell {
 
     class DebugMenu {
@@ -33,7 +35,7 @@ namespace cell {
 
         void applyUpdates(Environment& env, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
 
-        void display(double fps);
+        void display(double fps, const glm::vec3& pos);
 
     };
 
