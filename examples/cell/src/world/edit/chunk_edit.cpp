@@ -19,20 +19,16 @@ namespace cell {
 
         chunk.addCell(volume);
 
-        UND_LOG << "placing Cell " << volume << "\n";
-
     }
 
     void ChunkEdit::subtract(CellChunk& chunk, const Cell& volume) {
-
-        //UND_LOG << "subtracting Cell " << volume << "\n";
 
         // get the cells that will be effected by the subtraction
         std::vector<uint32_t> affected_cells = chunk.getCellIDsInVolume(volume);
 
         // subtract the volume from each of the cells
         for(uint32_t id : affected_cells) {
-            //UND_LOG << "found affected cell: " << id << "\n";
+
             subtractFromCell(chunk, id, volume);
         }
 

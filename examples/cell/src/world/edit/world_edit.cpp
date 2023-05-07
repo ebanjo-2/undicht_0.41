@@ -42,8 +42,6 @@ namespace cell {
         // editing each of the chunks
         for(int i = 0; i < chunks.size(); i++) {
 
-            // UND_LOG << "editing chunk at: " << positions[i].x << " : " << positions[i].y << " : " << positions[i].z << "\n";
-                
             // check if the chunk is loaded
             if(chunks.at(i) == nullptr) {
                 UND_ERROR << "failed to remove material: chunk not loaded\n";
@@ -52,7 +50,6 @@ namespace cell {
             
             // calculate the volume that needs to be removed from the chunk
             Cell cell = calcVolumeInChunk(pos0, pos1, positions.at(i));
-            cell.setID(2);
 
             // place the cell
             _chunk_edit.subtract(*(CellChunk*)chunks.at(i), cell);

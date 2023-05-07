@@ -128,23 +128,18 @@ namespace cell {
         /// @return the ids of all cells within that volume
 
         std::vector<uint32_t> ids;
-
-        for(uint32_t i = 0; i < _cells.size(); i++)
-            if(Cell::sharedVolume(*getCell(i), volume))
-                ids.push_back(i);
-
-        /*std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
+        std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
 
         for (const MiniChunk *mc : mini_chunks) {
-
+            
             for (uint32_t id : mc->getCellRefs()) {
 
                 const Cell *cell = getCell(id);
 
-                if (cell && sharedVolume(*cell, volume))
+                if (cell && Cell::sharedVolume(*cell, volume))
                     ids.push_back(id);
             }
-        }*/
+        }
 
         return ids;
     }
@@ -153,14 +148,6 @@ namespace cell {
         /// @return all cells within the volume
 
         std::vector<const Cell *> cells;
-        for(const Cell& c : _cells)
-            if(Cell::sharedVolume(c, volume))
-                cells.push_back(&c);
-
-        return cells;
-
-
-        /*std::vector<const Cell *> cells;
         std::vector<const MiniChunk *> mini_chunks = calcMiniChunks(volume);
 
         for (const MiniChunk *mc : mini_chunks) {
@@ -169,12 +156,12 @@ namespace cell {
 
                 const Cell *cell = getCell(id);
 
-                if (cell && sharedVolume(*cell, volume))
+                if (cell && Cell::sharedVolume(*cell, volume))
                     cells.push_back(cell);
             }
         }
 
-        return cells;*/
+        return cells;
     }
 
     uint32_t CellChunk::fillBuffer(char *buffer) const {
@@ -205,6 +192,53 @@ namespace cell {
         loadFromBuffer((char*)buffer.data(), sizeof(Cell) * buffer.size());
     }
 
+    const Cell* CellChunk::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::uvec3& hit) const{
+        /// @brief casts a ray until it hits a cell
+        /// @param pos relative to the chunk, not a world position
+        /// @param hit the position, at which a cell was hit
+        /// @param dir should be normalized
+        /// @return false, if no cell was hit
+
+        glm::vec3 sample_point = pos;
+
+        while(sample_point.x < 256.0f && sample_point.y < 256.0f && sample_point.z < 256.0f && sample_point.x >= 0.0f && sample_point.y >= 0.0f && sample_point.z >= 0.0f) {
+            // the sample point is still inside the chunk
+
+            // test if there is a cell at this point
+            const Cell* cell = getCell(sample_point.x, sample_point.y, sample_point.z);
+            if(cell) {
+                hit = glm::uvec3(sample_point);
+                return cell;
+            }
+
+            // move the sample point until it is in the next cell
+            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(1));
+
+            /*// calculate the position of the current sample point relative to the cell we're in
+            glm::vec3 pos_in_cell = sample_point - glm::floor(sample_point);
+
+            // distance to move along the ray to cross the border with the next cell in each direction (x, y and z, positive and negative)
+            // if dir has a negative component, that same component will also be negative in dist_to_edge 
+            glm::vec3 dist_to_edge = ((glm::sign(dir) + 1.0f) * 0.5f) - pos_in_cell;
+
+            // steps to take in the direction to hit the edge of the cell / the next cell
+            glm::vec3 steps = dist_to_edge / dir;
+            
+            // taking the smallest step to get to the next cell
+            // and to not skip a cell
+            if((steps.x < steps.y) && (steps.x < steps.z)) // the next cell will be reached in x direction
+                sample_point += steps.x * dir;
+            else if (steps.y < steps.z) // the next cell will be reached in y direction
+                sample_point += steps.y * dir;
+            else // the next cell will be reached in y direction
+                sample_point += steps.z * dir;*/
+
+        }
+
+        // no cell was hit
+        return nullptr;
+    }
+
     /////////////////////////////////// protected chunk functions ////////////////////////////////////////
 
     void CellChunk::initMiniChunks() {
@@ -216,7 +250,7 @@ namespace cell {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
 
-                    _mini_chunks.emplace_back(MiniChunk(x, y, z));
+                    _mini_chunks.emplace_back(MiniChunk(x * 16, y * 16, z * 16));
                 }
             }
         }

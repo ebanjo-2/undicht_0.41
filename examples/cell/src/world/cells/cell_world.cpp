@@ -1,9 +1,11 @@
 #include "world/cells/cell_world.h"
 #include "debug.h"
+#include "math/math_tools.h"
 
 namespace cell {
 
     using namespace undicht;
+    using namespace tools;
 
     void CellWorld::init(const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf) {
 
@@ -42,6 +44,39 @@ namespace cell {
     const CellBuffer& CellWorld::getBuffer() const {
 
         return _buffer;
+    }
+
+    const Cell* CellWorld::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::ivec3& hit) const {
+        /// @brief casts a ray until it hits a cell
+        /// @param hit the position, at which a cell was hit
+        /// @param dir should be normalized
+        /// @return nullptr, if no cell was hit
+
+        glm::vec3 sample_point = pos;
+        glm::ivec3 chunk_pos = calcChunkPosition(glm::ivec3(sample_point));
+        const CellChunk* chunk = (CellChunk*)getChunkAt(chunk_pos);
+        glm::uvec3 local_hit;
+        glm::vec3 local_sample_point = sample_point - glm::vec3(chunk_pos);
+
+        while(chunk) {
+            
+            /*UND_LOG << "sampling chunk at: " << chunk_pos.x << " ; " << chunk_pos.y << " ; " << chunk_pos.z << "\n";
+            UND_LOG << "at point: " << local_sample_point.x << " ; " << local_sample_point.y << " ; " << local_sample_point.z << "\n";
+            */
+            const Cell* cell = chunk->rayCastCell(local_sample_point, dir, local_hit);
+            if(cell) {
+                hit = chunk_pos + glm::ivec3(local_hit);
+                return cell;
+            }
+
+            // moving the sample point until it intersects the next chunk
+            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(256));
+            chunk_pos = calcChunkPosition(glm::ivec3(sample_point));
+            local_sample_point = sample_point - glm::vec3(chunk_pos);
+            chunk = (CellChunk*)getChunkAt(chunk_pos);
+        }
+
+        return nullptr;
     }
 
 } // namespace cell

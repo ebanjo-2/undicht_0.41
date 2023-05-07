@@ -86,9 +86,16 @@ namespace cell {
         // update the world
         _player.move(getDeltaT(), _main_window);
         _world_loader.loadChunks(_player.getPosition(), _world, 1);
-        _world_edit.remove(_world.getCellWorld(), glm::ivec3(_player.getPosition() - glm::vec3(1)), glm::ivec3(_player.getPosition() + glm::vec3(2)));
-        //_world_edit.place(_world.getCellWorld(), glm::ivec3(_player.getPosition() - glm::vec3(1)), glm::ivec3(_player.getPosition() + glm::vec3(1)), 1);
-        
+
+        // some ray casting
+        glm::ivec3 pointed_at;
+        if(_world.getCellWorld().rayCastCell(_player.getPosition(), glm::normalize(_player.getViewDirection()), pointed_at)) {
+            if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+                _world_edit.remove(_world.getCellWorld(), pointed_at, pointed_at + 1);
+            if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+                _world_edit.place(_world.getCellWorld(), pointed_at - 2, pointed_at + 2, 0);
+        }
+
         // frame preperation
         _master_renderer.beginFramePreperation();
         _debug_menu.applyUpdates(_world.getEnvironment(), _master_renderer.getTransferCmd(), _master_renderer.getTransferBuf());
@@ -118,7 +125,7 @@ namespace cell {
 
             // imgui debug menu
             _master_renderer.beginImguiRenderPass();
-            _debug_menu.display(getFPS(), _player.getPosition());
+            _debug_menu.display(getFPS(), _player.getPosition(), _player.getViewDirection());
             _master_renderer.drawImGui();
             _master_renderer.endImguiRenderPass();
 

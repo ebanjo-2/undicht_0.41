@@ -167,6 +167,11 @@ namespace undicht {
             return glfwGetKey(m_window, key_id);
         }
 
+        bool Window::isMouseButtonPressed(int button_id) const {
+
+            return glfwGetMouseButton(m_window, button_id);
+        }
+
         void Window::getCursorPos(double& x, double& y) const {
 
             glfwGetCursorPos(m_window, &x, &y);

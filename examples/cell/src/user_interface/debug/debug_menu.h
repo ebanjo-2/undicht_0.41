@@ -35,7 +35,7 @@ namespace cell {
 
         void applyUpdates(Environment& env, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf);
 
-        void display(double fps, const glm::vec3& pos);
+        void display(double fps, const glm::vec3& pos, const glm::vec3& dir);
 
     };
 

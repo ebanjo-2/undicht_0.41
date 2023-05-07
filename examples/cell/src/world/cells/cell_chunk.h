@@ -48,6 +48,12 @@ namespace cell {
         void loadFromBuffer(const char* buffer, uint32_t byte_size); // initialize the complete data of the chunk from the buffer
         void loadFromBuffer(const std::vector<Cell>& buffer);
 
+        /// @brief casts a ray until it hits a cell
+        /// @param pos relative to the chunk, not a world position
+        /// @param hit the position, at which a cell was hit
+        /// @return nullptr, if no cell was hit
+        const Cell* rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::uvec3& hit) const;
+
       protected:
         // protected chunk functions
 

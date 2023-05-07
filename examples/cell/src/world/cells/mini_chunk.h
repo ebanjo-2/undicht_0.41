@@ -4,6 +4,7 @@
 #include "cstdint"
 #include "vector"
 #include "world/cells/cell.h"
+#include "glm/glm.hpp"
 
 namespace cell {
 
@@ -30,6 +31,8 @@ namespace cell {
 
         MiniChunk() = default;
         MiniChunk(uint32_t x, uint32_t y, uint32_t z);
+
+        glm::ivec3 getPosition() const;
 
         // adding / removing cell references
         // will first check if the cell is within the volume of the mini chunk

@@ -56,6 +56,7 @@ namespace undicht {
 
             // user input
             bool isKeyPressed(int key_id) const;
+            bool isMouseButtonPressed(int button_id) const;
             void getCursorPos(double& x, double& y) const;
 
             const VkSurfaceKHR& getSurface() const;

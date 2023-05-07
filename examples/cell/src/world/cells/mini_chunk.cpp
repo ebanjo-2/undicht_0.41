@@ -7,6 +7,11 @@ namespace cell {
     MiniChunk::MiniChunk(uint32_t x, uint32_t y, uint32_t z) : _x(x), _y(y), _z(z) {
     }
 
+    glm::ivec3 MiniChunk::getPosition() const {
+
+        return glm::ivec3(_x, _y, _z);
+    }
+
     ///////////////////////////// adding / removing cell references ///////////////////////////
 
     void MiniChunk::addCellRef(const Cell &c, uint32_t id) {

@@ -49,7 +49,7 @@ namespace cell {
 
     }
 
-    void DebugMenu::display(double fps, const glm::vec3& pos) {
+    void DebugMenu::display(double fps, const glm::vec3& pos, const glm::vec3& dir) {
 
         if(!_open) return;
 
@@ -58,11 +58,13 @@ namespace cell {
         std::string title = "Cell Debug Menu";
         std::string frames = "Frames: " + toStr(fps);
         std::string player_pos = "Position: " + toStr(pos.x) + " : " + toStr(pos.y) + " : " + toStr(pos.z);
+        std::string player_dir = "Direction: " + toStr(dir.x) + " : " + toStr(dir.y) + " : " + toStr(dir.z);
         std::string chunk_pos = "Chunk: " + toStr(chunk.x) + " : " + toStr(chunk.y) + " : " + toStr(chunk.z);
 
         ImGui::Begin(title.data(), &_open);
         ImGui::Text(frames.data(), "");
         ImGui::Text(player_pos.data(), "");
+        ImGui::Text(player_dir.data(), "");
         ImGui::Text(chunk_pos.data(), "");
         ImGui::SliderFloat("Cloud Coverage", &_cloud_coverage, 0.0f, 2.0f);
         ImGui::SliderFloat("Cloud Density", &_cloud_density, 0.0f, 10.0f);

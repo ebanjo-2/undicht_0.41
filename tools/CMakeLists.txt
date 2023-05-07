@@ -10,6 +10,7 @@ add_library("tools"
 	src/images/image_data_3d.cpp
 	
 	src/math/math_tools.h
+	src/math/math_tools.cpp
 	src/math/orientation_3d.h
 	src/math/orientation_3d.cpp
 	src/math/orthographic_projection.h
