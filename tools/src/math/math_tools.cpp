@@ -18,7 +18,7 @@ namespace undicht {
             // calculate the position of the current sample point relative to the voxel we're in
             glm::vec3 pos_in_voxel = sample_point - glm::floor(sample_point);
 
-            // distance to move along the ray to cross the border with the next voxel in each direction (x, y and z, positive and negative)
+            // distance to cross the border with the next voxel in each direction (x, y and z, positive and negative)
             // if dir has a negative component, that same component will also be negative in dist_to_edge 
             glm::vec3 dist_to_edge = ((glm::sign(dir) + 1.0f) * 0.5f) - pos_in_voxel;
 

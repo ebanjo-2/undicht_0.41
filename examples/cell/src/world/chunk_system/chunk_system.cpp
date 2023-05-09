@@ -86,9 +86,9 @@ namespace cell {
 
         std::vector<glm::ivec3> positions;
 
-        for(int x = world_pos0.x; x <= world_pos1.x; x += 255) {
-            for(int y = world_pos0.y; y <= world_pos1.y; y += 255) {
-                for(int z = world_pos0.z; z <= world_pos1.z; z += 255) {
+        for(int x = world_pos0.x; x <= world_pos1.x; x += glm::max(1, glm::min(world_pos1.x - x, 255))) {
+            for(int y = world_pos0.y; y <= world_pos1.y; y+= glm::max(1, glm::min(world_pos1.y - y, 255))) {
+                for(int z = world_pos0.z; z <= world_pos1.z; z += glm::max(1, glm::min(world_pos1.z - z, 255))) {
                     
                     positions.push_back(calcChunkPosition(glm::ivec3(x, y, z)));
                 }            

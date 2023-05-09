@@ -60,9 +60,9 @@ namespace cell {
 
         while(chunk) {
             
-            /*UND_LOG << "sampling chunk at: " << chunk_pos.x << " ; " << chunk_pos.y << " ; " << chunk_pos.z << "\n";
-            UND_LOG << "at point: " << local_sample_point.x << " ; " << local_sample_point.y << " ; " << local_sample_point.z << "\n";
-            */
+            //UND_LOG << "sampling chunk at: " << chunk_pos.x << " ; " << chunk_pos.y << " ; " << chunk_pos.z << "\n";
+            //UND_LOG << "sample point: " << sample_point.x << " ; " << sample_point.y << " ; " << sample_point.z << "\n";
+            
             const Cell* cell = chunk->rayCastCell(local_sample_point, dir, local_hit);
             if(cell) {
                 hit = chunk_pos + glm::ivec3(local_hit);
@@ -70,10 +70,11 @@ namespace cell {
             }
 
             // moving the sample point until it intersects the next chunk
-            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(256));
-            chunk_pos = calcChunkPosition(glm::ivec3(sample_point));
-            local_sample_point = sample_point - glm::vec3(chunk_pos);
+            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(255.0f));
+            chunk_pos = calcChunkPosition(glm::ivec3(sample_point + 0.5f * (glm::sign(dir) - 1.0f)));
             chunk = (CellChunk*)getChunkAt(chunk_pos);
+            local_sample_point = sample_point - glm::vec3(chunk_pos);
+
         }
 
         return nullptr;

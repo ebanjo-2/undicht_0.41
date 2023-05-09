@@ -62,7 +62,7 @@ namespace cell {
     }
 
     void App::mainLoop() {
-
+        
         // user input
         if(_main_window.isKeyPressed(GLFW_KEY_ESCAPE))
             stop();
