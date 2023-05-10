@@ -65,10 +65,6 @@ namespace undicht {
             return {sorted[1], sorted[2]};
         }
 
-        /// @brief calculates the next sample point for doing a ray cast in voxels
-        /// @param voxel_size tells the function what size of voxels youre casting through
-        /// for a cell, the voxel_size would be (1,1,1), for a chunk (255,255,255)
-        glm::vec3 rayCastSamplePoint(const glm::vec3& last_sample_point, const glm::vec3& dir, const glm::vec3& voxel_size);
 
     } // tools
  

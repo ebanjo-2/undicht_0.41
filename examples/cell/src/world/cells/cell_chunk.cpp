@@ -1,6 +1,7 @@
 #include "world/cells/cell_chunk.h"
 #include "iostream"
 #include "math/math_tools.h"
+#include "math/ray_cast.h"
 #include "debug.h"
 
 using namespace undicht::tools;
@@ -192,7 +193,7 @@ namespace cell {
         loadFromBuffer((char*)buffer.data(), sizeof(Cell) * buffer.size());
     }
 
-    const Cell* CellChunk::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::uvec3& hit) const{
+    const Cell* CellChunk::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::uvec3& hit, uint8_t& face) const{
         /// @brief casts a ray until it hits a cell
         /// @param pos relative to the chunk, not a world position
         /// @param hit the position, at which a cell was hit
@@ -212,26 +213,7 @@ namespace cell {
             }
 
             // move the sample point until it is in the next cell
-            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(1));
-
-            /*// calculate the position of the current sample point relative to the cell we're in
-            glm::vec3 pos_in_cell = sample_point - glm::floor(sample_point);
-
-            // distance to move along the ray to cross the border with the next cell in each direction (x, y and z, positive and negative)
-            // if dir has a negative component, that same component will also be negative in dist_to_edge 
-            glm::vec3 dist_to_edge = ((glm::sign(dir) + 1.0f) * 0.5f) - pos_in_cell;
-
-            // steps to take in the direction to hit the edge of the cell / the next cell
-            glm::vec3 steps = dist_to_edge / dir;
-            
-            // taking the smallest step to get to the next cell
-            // and to not skip a cell
-            if((steps.x < steps.y) && (steps.x < steps.z)) // the next cell will be reached in x direction
-                sample_point += steps.x * dir;
-            else if (steps.y < steps.z) // the next cell will be reached in y direction
-                sample_point += steps.y * dir;
-            else // the next cell will be reached in y direction
-                sample_point += steps.z * dir;*/
+            sample_point = rayCastSamplePoint(sample_point, dir, face, glm::vec3(1));
 
         }
 

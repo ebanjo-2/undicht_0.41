@@ -31,7 +31,7 @@ namespace cell {
         /// @brief casts a ray until it hits a cell
         /// @param hit the position, at which a cell was hit
         /// @return nullptr, if no cell was hit
-        const Cell* rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::ivec3& hit) const;
+        const Cell* rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::ivec3& hit, uint8_t& face) const;
 
     };
 

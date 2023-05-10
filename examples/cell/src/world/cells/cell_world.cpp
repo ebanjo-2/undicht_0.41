@@ -1,6 +1,8 @@
 #include "world/cells/cell_world.h"
 #include "debug.h"
 #include "math/math_tools.h"
+#include "math/ray_cast.h"
+#include "math/cell_math.h"
 
 namespace cell {
 
@@ -46,14 +48,14 @@ namespace cell {
         return _buffer;
     }
 
-    const Cell* CellWorld::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::ivec3& hit) const {
+    const Cell* CellWorld::rayCastCell(const glm::vec3& pos, const glm::vec3& dir, glm::ivec3& hit, uint8_t& face) const {
         /// @brief casts a ray until it hits a cell
         /// @param hit the position, at which a cell was hit
         /// @param dir should be normalized
         /// @return nullptr, if no cell was hit
 
         glm::vec3 sample_point = pos;
-        glm::ivec3 chunk_pos = calcChunkPosition(glm::ivec3(sample_point));
+        glm::ivec3 chunk_pos = calcChunkPosition(toCellPos(sample_point));
         const CellChunk* chunk = (CellChunk*)getChunkAt(chunk_pos);
         glm::uvec3 local_hit;
         glm::vec3 local_sample_point = sample_point - glm::vec3(chunk_pos);
@@ -63,15 +65,15 @@ namespace cell {
             //UND_LOG << "sampling chunk at: " << chunk_pos.x << " ; " << chunk_pos.y << " ; " << chunk_pos.z << "\n";
             //UND_LOG << "sample point: " << sample_point.x << " ; " << sample_point.y << " ; " << sample_point.z << "\n";
             
-            const Cell* cell = chunk->rayCastCell(local_sample_point, dir, local_hit);
+            const Cell* cell = chunk->rayCastCell(local_sample_point, dir, local_hit, face);
             if(cell) {
                 hit = chunk_pos + glm::ivec3(local_hit);
                 return cell;
             }
 
             // moving the sample point until it intersects the next chunk
-            sample_point = rayCastSamplePoint(sample_point, dir, glm::vec3(255.0f));
-            chunk_pos = calcChunkPosition(glm::ivec3(sample_point + 0.5f * (glm::sign(dir) - 1.0f)));
+            sample_point = rayCastSamplePoint(sample_point, dir, face, glm::vec3(255.0f));
+            chunk_pos = calcChunkPosition(toCellPos(sample_point + 0.5f * (glm::sign(dir) - 1.0f)));
             chunk = (CellChunk*)getChunkAt(chunk_pos);
             local_sample_point = sample_point - glm::vec3(chunk_pos);
 

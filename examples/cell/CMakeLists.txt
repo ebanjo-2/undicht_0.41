@@ -90,6 +90,13 @@ set(USER_INTERFACE_SOURCES
 	src/user_interface/debug/debug_menu.cpp
 )
 
+set(MATH_SOURCES
+	src/math/ray_cast.h
+	src/math/ray_cast.cpp
+	src/math/cell_math.h
+	src/math/cell_math.cpp
+)
+
 add_executable(cell 
 
     src/main.cpp
@@ -103,6 +110,7 @@ add_executable(cell
     ${FILES_SOURCES}
     ${ENVIRONMENT_SOURCES}
     ${USER_INTERFACE_SOURCES}
+    ${MATH_SOURCES}
 )
 
 target_link_libraries(cell core graphics tools engine)

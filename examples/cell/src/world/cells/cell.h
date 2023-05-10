@@ -4,6 +4,7 @@
 #include "iostream"
 
 #include "buffer_layout.h"
+#include "glm/glm.hpp"
 
 namespace cell {
 

@@ -5,6 +5,7 @@
 #include "files/chunk_file.h"
 #include "renderer/vulkan/immediate_command.h"
 #include "renderer/vulkan/transfer_buffer.h"
+#include "math/cell_math.h"
 
 namespace cell {
 
@@ -62,7 +63,7 @@ namespace cell {
     }
 
     void App::mainLoop() {
-        
+
         // user input
         if(_main_window.isKeyPressed(GLFW_KEY_ESCAPE))
             stop();
@@ -88,12 +89,19 @@ namespace cell {
         _world_loader.loadChunks(_player.getPosition(), _world, 1);
 
         // some ray casting
-        glm::ivec3 pointed_at;
-        if(_world.getCellWorld().rayCastCell(_player.getPosition(), glm::normalize(_player.getViewDirection()), pointed_at)) {
-            if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
-                _world_edit.remove(_world.getCellWorld(), pointed_at, pointed_at + 1);
-            if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
-                _world_edit.place(_world.getCellWorld(), pointed_at - 2, pointed_at + 2, 0);
+        if(getTimeSinceEpoch() - _last_edit > 200000000) {
+            glm::ivec3 pointed_at;
+            uint8_t face_pointed_at;
+            if(_world.getCellWorld().rayCastCell(_player.getPosition(), glm::normalize(_player.getViewDirection()), pointed_at, face_pointed_at)) {
+                if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT)) {
+                    _world_edit.remove(_world.getCellWorld(), pointed_at, pointed_at + 1);
+                    _last_edit = getTimeSinceEpoch();
+                }
+                if(_main_window.isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) {
+                    _world_edit.place(_world.getCellWorld(), pointed_at + calcFaceDir(face_pointed_at), pointed_at + calcFaceDir(face_pointed_at) + 1, 0);
+                    _last_edit = getTimeSinceEpoch();
+                }
+            }
         }
 
         // frame preperation

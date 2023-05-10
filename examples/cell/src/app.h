@@ -25,6 +25,8 @@ namespace cell {
         DrawableWorld _world;
         WorldEdit _world_edit;
 
+        double _last_edit = 0.0;
+
 
     public:
 
