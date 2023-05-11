@@ -73,7 +73,7 @@ namespace cell {
 
             // moving the sample point until it intersects the next chunk
             sample_point = rayCastSamplePoint(sample_point, dir, face, glm::vec3(255.0f));
-            chunk_pos = calcChunkPosition(toCellPos(sample_point + 0.5f * (glm::sign(dir) - 1.0f)));
+            chunk_pos = calcChunkPosition(toCellPos(sample_point/* + 0.5f * (glm::sign(dir) - 1.0f)*/));
             chunk = (CellChunk*)getChunkAt(chunk_pos);
             local_sample_point = sample_point - glm::vec3(chunk_pos);
 
