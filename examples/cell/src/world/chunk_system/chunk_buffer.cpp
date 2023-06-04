@@ -69,6 +69,10 @@ namespace cell {
         // finding a suitable location in the vertex buffer for the data to be stored
         BufferEntry free_memory = findFreeMemory(chunk_buffer_size);
 
+        // allocating memory if necessary
+        if(free_memory.offset + free_memory.byte_size > _buffer.getInstanceBuffer().getAllocatedSize())
+            _buffer.allocateInstanceBuffer((free_memory.offset + free_memory.byte_size) * 1.5f);
+
         // storing the data
         _buffer.setInstanceData(chunk_buffer.data(), chunk_buffer.size(), free_memory.offset, load_cmd, load_buf);
 

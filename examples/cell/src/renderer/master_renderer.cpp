@@ -10,7 +10,7 @@ namespace cell {
     using namespace undicht;
     using namespace vulkan;
 
-    const int MAX_FRAMES_IN_FLIGHT = 1;
+    const int MAX_FRAMES_IN_FLIGHT = 1; // more than one would require some sort of synchronisation for when buffers are edited
     const bool ENABLE_VSYNC = true;
 
     void MasterRenderer::init(const VkInstance& instance, graphics::Window& window, const undicht::vulkan::LogicalDevice& device, undicht::vulkan::CommandBuffer& load_cmd, undicht::vulkan::TransferBuffer& load_buf, bool enable_imgui) {

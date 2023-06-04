@@ -6,6 +6,7 @@
 #include "renderer/vulkan/immediate_command.h"
 #include "renderer/vulkan/transfer_buffer.h"
 #include "math/cell_math.h"
+#include "world/edit/chunk_optimizer.h"
 
 namespace cell {
 
@@ -74,6 +75,20 @@ namespace cell {
         } else {
             _main_window.setCursorEnabled(false);
             _player.enableMouseInput(true);
+        }
+
+        if(_main_window.isKeyPressed(GLFW_KEY_O)) {
+
+            glm::ivec3 chunk_pos = CellWorld::calcChunkPosition(glm::ivec3(_player.getPosition()));
+            CellChunk* optimized = new CellChunk();
+            CellChunk* old = (CellChunk*)_world.getCellWorld().getChunkAt(chunk_pos);
+            
+            UND_LOG << "optimizing chunk, cell count: " << old->getCellCount() << "\n";
+
+            optimizeChunk(*old, optimized);
+            _world.getCellWorld().loadChunk(chunk_pos, optimized);
+
+            UND_LOG << "new cell count: " << optimized->getCellCount() << "\n";
         }
 
         // checking if the window is minimized

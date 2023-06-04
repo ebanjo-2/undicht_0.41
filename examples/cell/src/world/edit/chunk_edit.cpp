@@ -43,6 +43,7 @@ namespace cell {
         // get the cell associated with the id
         const Cell* minuend_ptr = chunk.getCell(cell_id); // the one that volume is taken away from
         if(!minuend_ptr) return; // no cell at that id
+        const uint32_t minuend_faces = minuend_ptr->getVisibleFaces();
 
         uint32_t material = minuend_ptr->getID();
 
@@ -62,12 +63,12 @@ namespace cell {
         chunk.removeCell(cell_id);
         
         // calculate the new cells (some might have 0 volume)
-        chunk.addCell(Cell(old_x0, old_y0, old_z0, new_x0, old_y1, old_z1, material)); // -x
-        chunk.addCell(Cell(new_x1, old_y0, old_z0, old_x1, old_y1, old_z1, material)); // +x
-        chunk.addCell(Cell(new_x0, old_y0, old_z0, new_x1, new_y0, old_z1, material)); // -y
-        chunk.addCell(Cell(new_x0, new_y1, old_z0, new_x1, old_y1, old_z1, material)); // +y
-        chunk.addCell(Cell(new_x0, new_y0, old_z0, new_x1, new_y1, new_z0, material)); // -z
-        chunk.addCell(Cell(new_x0, new_y0, new_z1, new_x1, new_y1, old_z1, material)); // +z
+        chunk.addCell(Cell(old_x0, old_y0, old_z0, new_x0, old_y1, old_z1, material, CELL_FACE_XP | (minuend_faces & (0xFF ^ CELL_FACE_XP)))); // -x
+        chunk.addCell(Cell(new_x1, old_y0, old_z0, old_x1, old_y1, old_z1, material, CELL_FACE_XN | (minuend_faces & (0xFF ^ CELL_FACE_XN)))); // +x
+        chunk.addCell(Cell(new_x0, old_y0, old_z0, new_x1, new_y0, old_z1, material, CELL_FACE_YP | (minuend_faces & (0xFF ^ CELL_FACE_YP)))); // -y
+        chunk.addCell(Cell(new_x0, new_y1, old_z0, new_x1, old_y1, old_z1, material, CELL_FACE_YN | (minuend_faces & (0xFF ^ CELL_FACE_YN)))); // +y
+        chunk.addCell(Cell(new_x0, new_y0, old_z0, new_x1, new_y1, new_z0, material, CELL_FACE_ZP | (minuend_faces & (0xFF ^ CELL_FACE_ZP)))); // -z
+        chunk.addCell(Cell(new_x0, new_y0, new_z1, new_x1, new_y1, old_z1, material, CELL_FACE_ZN | (minuend_faces & (0xFF ^ CELL_FACE_ZN)))); // +z
 
     }
 

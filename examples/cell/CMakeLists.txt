@@ -36,7 +36,8 @@ set(WORLD_SOURCES
     src/world/edit/world_edit.cpp
     src/world/edit/chunk_edit.h
     src/world/edit/chunk_edit.cpp
-    
+    src/world/edit/chunk_optimizer.h
+    src/world/edit/chunk_optimizer.cpp
 )
 
 
